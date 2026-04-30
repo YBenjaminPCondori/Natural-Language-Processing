@@ -1,0 +1,50 @@
+{
+  "rows_per_split": {
+    "train": 28998,
+    "validation": 4799,
+    "test": 4895
+  },
+  "unique_labels": 20,
+  "label_counts": {
+    "Governing Laws": 4243,
+    "Counterparts": 3346,
+    "Notices": 3313,
+    "Entire Agreements": 3105,
+    "Severability": 2552,
+    "Survival": 1951,
+    "Amendments": 1948,
+    "Assignments": 1730,
+    "Expenses": 1577,
+    "Terms": 1511,
+    "Taxes": 1488,
+    "Insurances": 1441,
+    "Terminations": 1423,
+    "Compliance With Laws": 1335,
+    "Litigations": 1329,
+    "General": 1329,
+    "Confidentiality": 1328,
+    "Further Assurances": 1316,
+    "Indemnifications": 1228,
+    "Waivers": 1199
+  },
+  "word_count_stats": {
+    "count": 38692.0,
+    "mean": 103.74850098211516,
+    "std": 88.94443053222537,
+    "min": 3.0,
+    "25%": 45.0,
+    "50%": 76.0,
+    "75%": 130.0,
+    "max": 1167.0
+  },
+  "character_count_stats": {
+    "count": 38692.0,
+    "mean": 646.889176057066,
+    "std": 556.639066396473,
+    "min": 22.0,
+    "25%": 285.0,
+    "50%": 477.0,
+    "75%": 812.0,
+    "max": 7222.0
+  }
+}
