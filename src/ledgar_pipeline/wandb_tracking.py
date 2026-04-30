@@ -49,6 +49,20 @@ def require_wandb(config: WandbConfig | None = None) -> Any:
     return wandb
 
 
+def verify_wandb_auth(config: WandbConfig | None = None) -> None:
+    """Validate W&B authentication before doing experiment work."""
+    settings = config or WandbConfig()
+    wandb = require_wandb(settings)
+    try:
+        api = wandb.Api()
+        _ = api.viewer
+    except Exception as exc:
+        raise RuntimeError(
+            "W&B authentication failed. Run `wandb login --relogin` or set a valid "
+            "WANDB_API_KEY before running this compulsory-W&B pipeline."
+        ) from exc
+
+
 def start_wandb_run(
     *,
     run_name: str,

@@ -22,13 +22,14 @@ from train_classical import run_baselines, run_classical_models
 from train_transformer import run_transformer_experiments
 
 from .config import PipelineConfig, get_config
-from .wandb_tracking import log_preprocessing_run
+from .wandb_tracking import log_preprocessing_run, verify_wandb_auth
 
 
 def prepare_data(config: PipelineConfig) -> dict[str, Any]:
     """Load, preprocess, save, and log LEDGAR data with W&B."""
     paths = config.paths
     paths.ensure_dirs()
+    verify_wandb_auth(config.wandb)
 
     ds, dataset_metadata = load_ledgar_dataset(paths.root)
     raw_paths = {}
