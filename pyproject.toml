@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ledgar-clause-classification"
+version = "0.1.0"
+description = "Coursework support code for LexGLUE LEDGAR clause classification experiments."
+requires-python = ">=3.10"
+readme = "AGENTS.md"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = [
+  "evaluate",
+  "preprocess_ledgar",
+  "train_classical",
+  "train_transformer",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["ledgar_pipeline*"]

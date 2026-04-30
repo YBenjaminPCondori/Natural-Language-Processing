@@ -1,0 +1,25 @@
+# Install the local coursework modules from ./src in editable mode.
+-e .
+
+# Core data and notebook stack
+datasets>=2.18
+pandas>=2.0
+numpy>=1.24
+matplotlib>=3.7
+scikit-learn>=1.3
+joblib>=1.3
+jupyterlab>=4.0
+notebook>=7.0
+ipykernel>=6.0
+ipywidgets>=8.0
+
+# Required experiment tracking
+wandb>=0.16
+
+# Classical + transformer experiment support
+torch>=2.1
+transformers>=4.38
+accelerate>=0.27
+
+# Optional config-file support for later scripts
+pyyaml>=6.0
