@@ -14,6 +14,14 @@ import torch
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 from evaluate import append_result_row, evaluate_predictions, save_predictions_jsonl
+from ledgar_pipeline.config import WandbConfig
+from ledgar_pipeline.wandb_tracking import (
+    finish_wandb_run,
+    log_artifact_paths,
+    log_result_row,
+    log_table,
+    start_wandb_run,
+)
 
 
 RANDOM_STATE = 42
@@ -82,7 +90,7 @@ def build_training_arguments(TrainingArguments: Any, *, output_dir: Path, batch_
         "metric_for_best_model": "macro_f1",
         "greater_is_better": True,
         "save_total_limit": 1,
-        "report_to": "none",
+        "report_to": "wandb",
         "fp16": torch.cuda.is_available(),
         "seed": RANDOM_STATE,
     }
@@ -147,7 +155,9 @@ def train_one_transformer(
     outputs_dir: Path | str,
     predictions_dir: Path | str,
     models_dir: Path | str,
+    checkpoints_dir: Path | str,
     id_to_label: Mapping[int | str, str],
+    wandb_config: WandbConfig | None = None,
     max_length: int = 256,
     batch_size: int = 8,
     epochs: int = 3,
@@ -166,78 +176,109 @@ def train_one_transformer(
     outputs = Path(outputs_dir)
     predictions = Path(predictions_dir)
     models = Path(models_dir)
+    checkpoints = Path(checkpoints_dir)
     model_output_dir = models / output_subdir
+    checkpoint_output_dir = checkpoints / output_subdir
     id_to_label_int = coerce_id_to_label(id_to_label)
     label_to_id = {label: idx for idx, label in id_to_label_int.items()}
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    train_dataset, validation_dataset, test_dataset = prepare_transformer_datasets(
-        train_df,
-        validation_df,
-        test_df,
-        tokenizer,
-        max_length=max_length,
-    )
-
-    model = AutoModelForSequenceClassification.from_pretrained(
-        model_name,
-        num_labels=len(id_to_label_int),
-        id2label={idx: label for idx, label in id_to_label_int.items()},
-        label2id=label_to_id,
-    )
-
-    args = build_training_arguments(
-        TrainingArguments,
-        output_dir=model_output_dir,
-        batch_size=batch_size,
-        epochs=epochs,
-    )
-    trainer = Trainer(
-        model=model,
-        args=args,
-        train_dataset=train_dataset,
-        eval_dataset=validation_dataset,
-        tokenizer=tokenizer,
-        compute_metrics=make_compute_metrics(),
-    )
-
-    trainer.train()
-    trainer.save_model(model_output_dir)
-    tokenizer.save_pretrained(model_output_dir)
-
-    test_output = trainer.predict(test_dataset)
-    test_predictions = np.argmax(test_output.predictions, axis=-1).astype(int).tolist()
-    prediction_path = save_predictions_jsonl(
-        predictions / prediction_file,
-        test_df,
-        test_predictions,
-        id_to_label=id_to_label_int,
-        model_name=model_slug,
-        split="test",
-    )
-
-    labels = sorted(id_to_label_int)
-    target_names = [id_to_label_int[label_id] for label_id in labels]
-    result = evaluate_predictions(
-        test_df["label_id"].astype(int).tolist(),
-        test_predictions,
-        labels=labels,
-        target_names=target_names,
-        model_name=model_slug,
-        split="test",
-        params={
+    run = start_wandb_run(
+        run_name=f"ledgar-{model_slug}",
+        job_type="transformer-training",
+        config={
             "base_model": model_name,
+            "model_slug": model_slug,
             "max_length": max_length,
             "batch_size": batch_size,
             "epochs": epochs,
             "fp16": torch.cuda.is_available(),
-            "best_model_metric": "validation_macro_f1",
+            "checkpoint_dir": str(checkpoint_output_dir),
+            "final_model_dir": str(model_output_dir),
         },
+        tags=["coursework", "ledgar", "transformer", model_slug],
+        wandb_config=wandb_config,
     )
-    result["prediction_path"] = str(prediction_path)
-    result["model_path"] = str(model_output_dir)
-    append_result_row(outputs / TRANSFORMER_RESULTS, result)
-    return result
+
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        train_dataset, validation_dataset, test_dataset = prepare_transformer_datasets(
+            train_df,
+            validation_df,
+            test_df,
+            tokenizer,
+            max_length=max_length,
+        )
+
+        model = AutoModelForSequenceClassification.from_pretrained(
+            model_name,
+            num_labels=len(id_to_label_int),
+            id2label={idx: label for idx, label in id_to_label_int.items()},
+            label2id=label_to_id,
+        )
+
+        args = build_training_arguments(
+            TrainingArguments,
+            output_dir=checkpoint_output_dir,
+            batch_size=batch_size,
+            epochs=epochs,
+        )
+        trainer = Trainer(
+            model=model,
+            args=args,
+            train_dataset=train_dataset,
+            eval_dataset=validation_dataset,
+            tokenizer=tokenizer,
+            compute_metrics=make_compute_metrics(),
+        )
+
+        trainer.train()
+        trainer.save_model(model_output_dir)
+        tokenizer.save_pretrained(model_output_dir)
+
+        test_output = trainer.predict(test_dataset)
+        test_predictions = np.argmax(test_output.predictions, axis=-1).astype(int).tolist()
+        prediction_path = save_predictions_jsonl(
+            predictions / prediction_file,
+            test_df,
+            test_predictions,
+            id_to_label=id_to_label_int,
+            model_name=model_slug,
+            split="test",
+        )
+
+        labels = sorted(id_to_label_int)
+        target_names = [id_to_label_int[label_id] for label_id in labels]
+        result = evaluate_predictions(
+            test_df["label_id"].astype(int).tolist(),
+            test_predictions,
+            labels=labels,
+            target_names=target_names,
+            model_name=model_slug,
+            split="test",
+            params={
+                "base_model": model_name,
+                "max_length": max_length,
+                "batch_size": batch_size,
+                "epochs": epochs,
+                "fp16": torch.cuda.is_available(),
+                "best_model_metric": "validation_macro_f1",
+            },
+        )
+        result["prediction_path"] = str(prediction_path)
+        result["model_path"] = str(model_output_dir)
+        result["checkpoint_dir"] = str(checkpoint_output_dir)
+        append_result_row(outputs / TRANSFORMER_RESULTS, result)
+        log_result_row(run, result)
+        log_table(run, name=f"{model_slug}_test_predictions", dataframe=pd.read_json(prediction_path, lines=True))
+        log_artifact_paths(
+            run,
+            name=f"ledgar-{model_slug}-transformer-artifacts",
+            artifact_type="model",
+            paths=[model_output_dir, checkpoint_output_dir, prediction_path],
+        )
+        return result
+    finally:
+        finish_wandb_run(run)
 
 
 def run_transformer_experiments(
@@ -248,8 +289,10 @@ def run_transformer_experiments(
     outputs_dir: Path | str,
     predictions_dir: Path | str,
     models_dir: Path | str,
+    checkpoints_dir: Path | str,
     id_to_label: Mapping[int | str, str],
     run_transformers: bool = False,
+    wandb_config: WandbConfig | None = None,
     max_length: int = 256,
     batch_size: int = 8,
     epochs: int = 3,
@@ -279,7 +322,9 @@ def run_transformer_experiments(
                 outputs_dir=outputs_dir,
                 predictions_dir=predictions_dir,
                 models_dir=models_dir,
+                checkpoints_dir=checkpoints_dir,
                 id_to_label=id_to_label,
+                wandb_config=wandb_config,
                 max_length=max_length,
                 batch_size=batch_size,
                 epochs=epochs,

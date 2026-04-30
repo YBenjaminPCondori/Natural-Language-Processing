@@ -28,6 +28,14 @@ from evaluate import (
     write_json,
     write_jsonl,
 )
+from ledgar_pipeline.config import WandbConfig
+from ledgar_pipeline.wandb_tracking import (
+    finish_wandb_run,
+    log_artifact_paths,
+    log_result_row,
+    log_table,
+    start_wandb_run,
+)
 
 
 RANDOM_STATE = 42
@@ -133,6 +141,7 @@ def run_baselines(
     predictions_dir: Path | str,
     id_to_label: Mapping[int | str, str],
     reset_results: bool = False,
+    wandb_config: WandbConfig | None = None,
 ) -> list[dict[str, Any]]:
     """Run random and majority baselines on validation and test splits."""
     outputs = Path(outputs_dir)
@@ -140,6 +149,20 @@ def run_baselines(
     results_path = outputs / CLASSICAL_RESULTS
     if reset_results:
         reset_jsonl(results_path)
+
+    run = start_wandb_run(
+        run_name="ledgar-baselines",
+        job_type="baseline-training",
+        config={
+            "random_state": RANDOM_STATE,
+            "models": ["random_baseline", "majority_baseline"],
+            "train_rows": len(train_df),
+            "validation_rows": len(validation_df),
+            "test_rows": len(test_df),
+        },
+        tags=["coursework", "ledgar", "baseline"],
+        wandb_config=wandb_config,
+    )
 
     label_ids = sorted(coerce_id_to_label(id_to_label))
     train_counts = train_df["label_id"].astype(int).value_counts().sort_index()
@@ -164,40 +187,58 @@ def run_baselines(
         },
     }
 
-    result_rows: list[dict[str, Any]] = []
-    for model_name, spec in baseline_specs.items():
-        val_result = evaluate_split(
-            validation_df,
-            spec["validation"],
-            id_to_label=id_to_label,
-            model_name=model_name,
-            split="validation",
-            params=spec["params"],
-        )
-        append_result_row(results_path, val_result)
-        result_rows.append(val_result)
+    try:
+        result_rows: list[dict[str, Any]] = []
+        prediction_paths: list[Path] = []
+        for model_name, spec in baseline_specs.items():
+            val_result = evaluate_split(
+                validation_df,
+                spec["validation"],
+                id_to_label=id_to_label,
+                model_name=model_name,
+                split="validation",
+                params=spec["params"],
+            )
+            append_result_row(results_path, val_result)
+            log_result_row(run, val_result)
+            result_rows.append(val_result)
 
-        prediction_path = save_predictions_jsonl(
-            spec["test_predictions"],
-            test_df,
-            spec["test"],
-            id_to_label=coerce_id_to_label(id_to_label),
-            model_name=model_name,
-            split="test",
-        )
-        test_result = evaluate_split(
-            test_df,
-            spec["test"],
-            id_to_label=id_to_label,
-            model_name=model_name,
-            split="test",
-            params=spec["params"],
-        )
-        test_result = _result_with_paths(test_result, prediction_path=prediction_path)
-        append_result_row(results_path, test_result)
-        result_rows.append(test_result)
+            prediction_path = save_predictions_jsonl(
+                spec["test_predictions"],
+                test_df,
+                spec["test"],
+                id_to_label=coerce_id_to_label(id_to_label),
+                model_name=model_name,
+                split="test",
+            )
+            prediction_paths.append(Path(prediction_path))
+            test_result = evaluate_split(
+                test_df,
+                spec["test"],
+                id_to_label=id_to_label,
+                model_name=model_name,
+                split="test",
+                params=spec["params"],
+            )
+            test_result = _result_with_paths(test_result, prediction_path=prediction_path)
+            append_result_row(results_path, test_result)
+            log_result_row(run, test_result)
+            log_table(
+                run,
+                name=f"{model_name}_test_predictions",
+                dataframe=pd.read_json(prediction_path, lines=True),
+            )
+            result_rows.append(test_result)
 
-    return result_rows
+        log_artifact_paths(
+            run,
+            name="ledgar-baseline-results",
+            artifact_type="results",
+            paths=[results_path, *prediction_paths],
+        )
+        return result_rows
+    finally:
+        finish_wandb_run(run)
 
 
 def classical_model_grid() -> dict[str, list[dict[str, Any]]]:
@@ -248,14 +289,36 @@ def train_and_select_classical_model(
     predictions_dir: Path | str,
     figures_dir: Path | str,
     models_dir: Path | str,
+    checkpoints_dir: Path | str,
     id_to_label: Mapping[int | str, str],
+    wandb_config: WandbConfig | None = None,
 ) -> dict[str, Any]:
     """Train all configs for one classical model, select by validation macro-F1, and test."""
     outputs = Path(outputs_dir)
     predictions = Path(predictions_dir)
     figures = Path(figures_dir)
     models = Path(models_dir)
+    checkpoints = Path(checkpoints_dir)
+    checkpoints.mkdir(parents=True, exist_ok=True)
     results_path = outputs / CLASSICAL_RESULTS
+    checkpoint_results_path = checkpoints / f"{model_name}_validation_results.jsonl"
+    reset_jsonl(checkpoint_results_path)
+    best_checkpoint_path = checkpoints / f"{model_name}_best.joblib"
+
+    run = start_wandb_run(
+        run_name=f"ledgar-{model_name}",
+        job_type="classical-training",
+        config={
+            "model_name": model_name,
+            "random_state": RANDOM_STATE,
+            "train_rows": len(train_df),
+            "validation_rows": len(validation_df),
+            "test_rows": len(test_df),
+            "selection_metric": "validation_macro_f1",
+        },
+        tags=["coursework", "ledgar", "classical", model_name],
+        wandb_config=wandb_config,
+    )
 
     x_train = train_df["text"].tolist()
     y_train = train_df["label_id"].astype(int).tolist()
@@ -267,86 +330,128 @@ def train_and_select_classical_model(
     best_macro_f1 = -1.0
     all_validation_results: list[dict[str, Any]] = []
 
-    for config in classical_model_grid()[model_name]:
-        pipeline = build_model_pipeline(model_name, **config)
-        pipeline.fit(x_train, y_train)
-        val_predictions = pipeline.predict(x_val).astype(int).tolist()
+    try:
+        for config in classical_model_grid()[model_name]:
+            pipeline = build_model_pipeline(model_name, **config)
+            pipeline.fit(x_train, y_train)
+            val_predictions = pipeline.predict(x_val).astype(int).tolist()
 
-        serialisable_config = {
-            "ngram_range": list(config["ngram_range"]),
-            "max_features": config["max_features"],
-            "class_weight": "balanced",
-            "random_state": RANDOM_STATE,
-        }
-        val_result = evaluate_split(
-            validation_df,
-            val_predictions,
+            serialisable_config = {
+                "ngram_range": list(config["ngram_range"]),
+                "max_features": config["max_features"],
+                "class_weight": "balanced",
+                "random_state": RANDOM_STATE,
+            }
+            val_result = evaluate_split(
+                validation_df,
+                val_predictions,
+                id_to_label=id_to_label,
+                model_name=model_name,
+                split="validation",
+                params=serialisable_config,
+            )
+            append_result_row(results_path, val_result)
+            append_result_row(checkpoint_results_path, val_result)
+            log_result_row(run, val_result)
+            all_validation_results.append(val_result)
+
+            macro_f1 = val_result["metrics"]["macro_f1"]
+            if macro_f1 > best_macro_f1:
+                best_macro_f1 = macro_f1
+                best_pipeline = pipeline
+                best_config = serialisable_config
+                best_result = val_result
+                joblib.dump(best_pipeline, best_checkpoint_path)
+
+        if best_pipeline is None or best_config is None or best_result is None:
+            raise RuntimeError(f"No model was trained for {model_name}.")
+
+        test_predictions = best_pipeline.predict(test_df["text"].tolist()).astype(int).tolist()
+        prediction_path = save_predictions_jsonl(
+            predictions / f"{model_name}_test_predictions.jsonl",
+            test_df,
+            test_predictions,
+            id_to_label=coerce_id_to_label(id_to_label),
+            model_name=model_name,
+            split="test",
+        )
+
+        model_path = models / f"{model_name}.joblib"
+        model_path.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(best_pipeline, model_path)
+
+        report_path = outputs / f"classification_report_{model_name}.json"
+        figure_path = figures / f"confusion_matrix_{model_name}.png"
+        saved_report, saved_figure = save_report_and_confusion_matrix(
+            test_df,
+            test_predictions,
+            id_to_label=id_to_label,
+            report_path=report_path,
+            figure_path=figure_path,
+            title=f"Confusion Matrix: {model_name}",
+        )
+
+        test_result = evaluate_split(
+            test_df,
+            test_predictions,
             id_to_label=id_to_label,
             model_name=model_name,
-            split="validation",
-            params=serialisable_config,
+            split="test",
+            params=best_config,
         )
-        append_result_row(results_path, val_result)
-        all_validation_results.append(val_result)
+        test_result = _result_with_paths(
+            test_result,
+            prediction_path=prediction_path,
+            model_path=model_path,
+            report_path=saved_report,
+            figure_path=saved_figure,
+        )
+        test_result["checkpoint_path"] = str(best_checkpoint_path)
+        append_result_row(results_path, test_result)
+        log_result_row(run, test_result)
+        log_table(
+            run,
+            name=f"{model_name}_validation_results",
+            dataframe=pd.DataFrame(
+                [
+                    {
+                        "model_name": row["model_name"],
+                        "split": row["split"],
+                        **row["metrics"],
+                        **row["params"],
+                    }
+                    for row in all_validation_results
+                ]
+            ),
+        )
+        log_table(
+            run,
+            name=f"{model_name}_test_predictions",
+            dataframe=pd.read_json(prediction_path, lines=True),
+        )
+        log_artifact_paths(
+            run,
+            name=f"ledgar-{model_name}-artifacts",
+            artifact_type="model",
+            paths=[
+                model_path,
+                best_checkpoint_path,
+                checkpoint_results_path,
+                prediction_path,
+                saved_report,
+                saved_figure,
+            ],
+            metadata={"best_validation_macro_f1": best_macro_f1},
+        )
 
-        macro_f1 = val_result["metrics"]["macro_f1"]
-        if macro_f1 > best_macro_f1:
-            best_macro_f1 = macro_f1
-            best_pipeline = pipeline
-            best_config = serialisable_config
-            best_result = val_result
-
-    if best_pipeline is None or best_config is None or best_result is None:
-        raise RuntimeError(f"No model was trained for {model_name}.")
-
-    test_predictions = best_pipeline.predict(test_df["text"].tolist()).astype(int).tolist()
-    prediction_path = save_predictions_jsonl(
-        predictions / f"{model_name}_test_predictions.jsonl",
-        test_df,
-        test_predictions,
-        id_to_label=coerce_id_to_label(id_to_label),
-        model_name=model_name,
-        split="test",
-    )
-
-    model_path = models / f"{model_name}.joblib"
-    model_path.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump(best_pipeline, model_path)
-
-    report_path = outputs / f"classification_report_{model_name}.json"
-    figure_path = figures / f"confusion_matrix_{model_name}.png"
-    saved_report, saved_figure = save_report_and_confusion_matrix(
-        test_df,
-        test_predictions,
-        id_to_label=id_to_label,
-        report_path=report_path,
-        figure_path=figure_path,
-        title=f"Confusion Matrix: {model_name}",
-    )
-
-    test_result = evaluate_split(
-        test_df,
-        test_predictions,
-        id_to_label=id_to_label,
-        model_name=model_name,
-        split="test",
-        params=best_config,
-    )
-    test_result = _result_with_paths(
-        test_result,
-        prediction_path=prediction_path,
-        model_path=model_path,
-        report_path=saved_report,
-        figure_path=saved_figure,
-    )
-    append_result_row(results_path, test_result)
-
-    return {
-        "model_name": model_name,
-        "best_validation_result": best_result,
-        "test_result": test_result,
-        "all_validation_results": all_validation_results,
-    }
+        return {
+            "model_name": model_name,
+            "best_validation_result": best_result,
+            "test_result": test_result,
+            "all_validation_results": all_validation_results,
+        }
+    finally:
+        finish_wandb_run(run)
 
 
 def run_classical_models(
@@ -358,7 +463,9 @@ def run_classical_models(
     predictions_dir: Path | str,
     figures_dir: Path | str,
     models_dir: Path | str,
+    checkpoints_dir: Path | str,
     id_to_label: Mapping[int | str, str],
+    wandb_config: WandbConfig | None = None,
 ) -> dict[str, Any]:
     """Train and evaluate Logistic Regression and Linear SVM."""
     return {
@@ -371,7 +478,9 @@ def run_classical_models(
             predictions_dir=predictions_dir,
             figures_dir=figures_dir,
             models_dir=models_dir,
+            checkpoints_dir=checkpoints_dir,
             id_to_label=id_to_label,
+            wandb_config=wandb_config,
         )
         for model_name in ("logistic_regression", "linear_svm")
     }
@@ -388,6 +497,8 @@ def load_result_rows(path: Path | str) -> list[dict[str, Any]]:
 def create_final_comparison(
     outputs_dir: Path | str,
     figures_dir: Path | str,
+    *,
+    wandb_config: WandbConfig | None = None,
 ) -> pd.DataFrame:
     """Combine available classical and transformer test results."""
     outputs = Path(outputs_dir)
@@ -437,6 +548,28 @@ def create_final_comparison(
         fig.savefig(figures / filename, dpi=150, bbox_inches="tight")
         plt.close(fig)
 
+    run = start_wandb_run(
+        run_name="ledgar-final-comparison",
+        job_type="evaluation",
+        config={"rows": len(comparison), "primary_metric": "test_macro_f1"},
+        tags=["coursework", "ledgar", "comparison"],
+        wandb_config=wandb_config,
+    )
+    try:
+        log_table(run, name="final_model_comparison", dataframe=comparison)
+        log_artifact_paths(
+            run,
+            name="ledgar-final-comparison",
+            artifact_type="evaluation",
+            paths=[
+                outputs / "final_model_comparison.jsonl",
+                figures / "final_macro_f1_comparison.png",
+                figures / "final_weighted_f1_comparison.png",
+            ],
+        )
+    finally:
+        finish_wandb_run(run)
+
     return comparison
 
 
@@ -445,13 +578,14 @@ def create_error_analysis(
     figures_dir: Path | str,
     *,
     max_examples: int = 10,
+    wandb_config: WandbConfig | None = None,
 ) -> dict[str, Any]:
     """Create evidence-only error analysis for the best available model."""
     outputs = Path(outputs_dir)
     figures = Path(figures_dir)
     comparison_path = outputs / "final_model_comparison.jsonl"
     if not comparison_path.exists():
-        create_final_comparison(outputs, figures)
+        create_final_comparison(outputs, figures, wandb_config=wandb_config)
 
     comparison = pd.read_json(comparison_path, lines=True).sort_values("macro_f1", ascending=False)
     if comparison.empty:
@@ -520,4 +654,23 @@ def create_error_analysis(
         "incorrect_prediction_examples": incorrect_examples,
     }
     write_json(outputs / "error_analysis.json", analysis)
+    run = start_wandb_run(
+        run_name="ledgar-error-analysis",
+        job_type="error-analysis",
+        config={"best_model": best["model_name"], "max_examples": max_examples},
+        tags=["coursework", "ledgar", "error-analysis"],
+        wandb_config=wandb_config,
+    )
+    try:
+        log_table(run, name="top_confused_label_pairs", dataframe=pd.DataFrame(top_confusions))
+        log_table(run, name="incorrect_prediction_examples", dataframe=pd.DataFrame(incorrect_examples))
+        log_table(run, name="correct_prediction_examples", dataframe=pd.DataFrame(correct_examples))
+        log_artifact_paths(
+            run,
+            name="ledgar-error-analysis",
+            artifact_type="analysis",
+            paths=[outputs / "error_analysis.json", cm_path],
+        )
+    finally:
+        finish_wandb_run(run)
     return analysis
