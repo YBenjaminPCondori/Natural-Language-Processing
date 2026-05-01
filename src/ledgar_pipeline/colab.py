@@ -35,9 +35,9 @@ def is_project_root(path: Path | str) -> bool:
     """Check for the expected coursework repository markers."""
     candidate = Path(path).expanduser()
     return (
-        (candidate / "AGENTS.md").exists()
-        and (candidate / "pyproject.toml").exists()
+        (candidate / "pyproject.toml").exists()
         and (candidate / "src").exists()
+        and (candidate / "modules").exists()
     )
 
 
@@ -73,7 +73,7 @@ def find_project_root(
     raise FileNotFoundError(
         "Could not find the LEDGAR project root. In Colab, clone/upload the repo and "
         "set LEDGAR_PROJECT_ROOT or PROJECT_ROOT_OVERRIDE to the folder containing "
-        "AGENTS.md, pyproject.toml, and src/."
+        "pyproject.toml, src/, and modules/."
     )
 
 

@@ -11,7 +11,7 @@ Option A: clone to `/content`.
 !git clone https://github.com/YOUR_USERNAME/Natural-Language-Processing.git /content/Natural-Language-Processing
 ```
 
-Option B: upload/sync the repo to Google Drive, then set the notebook placeholder to the folder that contains `AGENTS.md`, `pyproject.toml`, and `src/`.
+Option B: upload/sync the repo to Google Drive, then set the notebook placeholder to the folder that contains `pyproject.toml`, `src/`, and `modules/`.
 
 ```python
 # TODO: edit this in the notebook if your Drive folder is different.

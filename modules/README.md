@@ -23,6 +23,6 @@ In Google Colab, use the Colab-specific install file from the repository root:
 ```
 
 Then set `LEDGAR_PROJECT_ROOT` or the notebook's `PROJECT_ROOT_OVERRIDE` placeholder
-to the folder that contains `AGENTS.md`, `pyproject.toml`, and `src/`.
+to the folder that contains `pyproject.toml`, `src/`, and `modules/`.
 
 W&B logging is compulsory for training and evaluation runs.
