@@ -31,3 +31,7 @@ In Google Colab:
 ```python
 %pip install -q -r requirements-colab.txt
 ```
+
+For Colab path setup, see `README_COLAB.md`. The notebook can mount Google
+Drive and auto-detect common project locations, or you can set
+`PROJECT_ROOT_OVERRIDE` in the first code cell.

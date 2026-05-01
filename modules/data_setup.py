@@ -49,18 +49,74 @@ def ensure_package(import_name: str, pip_name: str | None = None) -> None:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", pip_name or import_name])
 
 
-def find_project_root(start: Path | str = ".") -> Path:
-    """Find the project root from a notebook, Colab, or repo shell."""
+def running_in_colab() -> bool:
+    """Return whether this code is running inside Google Colab."""
+    return "COLAB_RELEASE_TAG" in os.environ or importlib.util.find_spec("google.colab") is not None
+
+
+def looks_like_project_root(path: Path | str) -> bool:
+    """Return whether a directory looks like this coursework project root."""
+    candidate = Path(path).expanduser()
+    return (candidate / "pyproject.toml").exists() and (candidate / "modules").is_dir()
+
+
+def colab_project_candidates() -> list[Path]:
+    """Common Google Colab locations for this repository."""
+    candidates = [
+        Path("/content/Natural-Language-Processing"),
+        Path("/content/DLIA/Natural-Language-Processing"),
+        Path("/content/drive/MyDrive/Natural-Language-Processing"),
+        Path("/content/drive/MyDrive/DLIA/Natural-Language-Processing"),
+        Path("/content/drive/MyDrive/NLP/Natural-Language-Processing"),
+        Path("/content/drive/MyDrive/Education/NLP/Natural-Language-Processing"),
+        Path("/content/drive/MyDrive/GitHub/Education/NLP/Natural-Language-Processing"),
+        Path("/content/drive/MyDrive/Colab Notebooks/Natural-Language-Processing"),
+    ]
+    for base in (Path("/content"), Path("/content/drive/MyDrive")):
+        if base.exists():
+            for pattern in (
+                "Natural-Language-Processing",
+                "*/Natural-Language-Processing",
+                "*/*/Natural-Language-Processing",
+                "*/*/*/Natural-Language-Processing",
+            ):
+                candidates.extend(base.glob(pattern))
+    return candidates
+
+
+def find_project_root(start: Path | str = ".", override: Path | str | None = None) -> Path:
+    """Find the project root from a local shell, notebook, or Google Colab runtime."""
+    env_override = os.getenv("LEDGAR_PROJECT_ROOT") or os.getenv("PROJECT_ROOT_OVERRIDE")
+    selected_override = override or env_override
+    if selected_override:
+        override_path = Path(selected_override).expanduser().resolve()
+        if looks_like_project_root(override_path):
+            return override_path
+        raise FileNotFoundError(
+            f"Configured project root does not contain pyproject.toml and modules/: {override_path}"
+        )
+
     start_path = Path(start).expanduser().resolve()
     for candidate in [start_path, *start_path.parents]:
-        if (candidate / "pyproject.toml").exists() and (candidate / "modules").exists():
+        if looks_like_project_root(candidate):
             return candidate
+
+    if running_in_colab():
+        for candidate in colab_project_candidates():
+            if candidate.exists() and looks_like_project_root(candidate):
+                return candidate.resolve()
+        raise FileNotFoundError(
+            "Could not find the project root in Colab. Upload or clone the whole "
+            "repository, then set LEDGAR_PROJECT_ROOT or PROJECT_ROOT_OVERRIDE to "
+            "the folder containing pyproject.toml and modules/."
+        )
+
     return start_path
 
 
-def build_project_paths(project_root: Path | str = ".") -> ProjectPaths:
+def build_project_paths(project_root: Path | str = ".", override: Path | str | None = None) -> ProjectPaths:
     """Create the canonical path object for the coursework project."""
-    root = find_project_root(project_root)
+    root = find_project_root(project_root, override=override)
     paths = ProjectPaths(
         project_root=root,
         raw_data_dir=root / "data" / "raw",
