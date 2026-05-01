@@ -108,6 +108,7 @@ def train_all(config: PipelineConfig) -> dict[str, Any]:
         predictions_dir=paths.predictions,
         id_to_label=id_to_label,
         reset_results=True,
+        wandb_config=config.wandb,
     )
     classical_results = {}
     if config.run_classical_models:
@@ -121,6 +122,7 @@ def train_all(config: PipelineConfig) -> dict[str, Any]:
             models_dir=paths.models_trained_classical,
             checkpoints_dir=paths.checkpoints_classical,
             id_to_label=id_to_label,
+            wandb_config=config.wandb,
         )
 
     transformer_results = run_transformer_experiments(
@@ -133,6 +135,7 @@ def train_all(config: PipelineConfig) -> dict[str, Any]:
         checkpoints_dir=paths.checkpoints_transformers,
         id_to_label=id_to_label,
         run_transformers=config.run_transformers,
+        wandb_config=config.wandb,
         max_length=config.transformer_max_length,
         batch_size=config.transformer_batch_size,
         epochs=config.transformer_epochs,

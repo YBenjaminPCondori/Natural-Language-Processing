@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import warnings
 from collections import Counter
@@ -25,7 +26,10 @@ REQUIRED_SCHEMA = ["text", "label", "label_id", "source_dataset", "source_id", "
 
 def project_paths(project_root: Path | str = ".") -> dict[str, Path]:
     """Return the standard project paths used by the notebook."""
-    root = Path(project_root).resolve()
+    root_input: Path | str = project_root
+    if str(project_root) == "." and os.getenv("LEDGAR_PROJECT_ROOT"):
+        root_input = os.environ["LEDGAR_PROJECT_ROOT"]
+    root = Path(root_input).expanduser().resolve()
     return {
         "root": root,
         "raw_lexglue": root / "data" / "raw" / "lexglue_ledgar",

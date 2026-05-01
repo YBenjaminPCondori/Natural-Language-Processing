@@ -19,5 +19,6 @@ py-modules = [
 ]
 packages = [
   "ledgar_pipeline",
+  "ledghar_pipeline",
   "modules",
 ]

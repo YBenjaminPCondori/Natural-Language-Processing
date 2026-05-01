@@ -11,6 +11,14 @@ from typing import Any
 RANDOM_STATE = 42
 
 
+def resolve_project_root(project_root: Path | str = ".") -> Path:
+    """Resolve the project root, honoring LEDGAR_PROJECT_ROOT for notebooks/Colab."""
+    root_input: Path | str = project_root
+    if str(project_root) == "." and os.getenv("LEDGAR_PROJECT_ROOT"):
+        root_input = os.environ["LEDGAR_PROJECT_ROOT"]
+    return Path(root_input).expanduser().resolve()
+
+
 @dataclass(frozen=True)
 class ProjectPaths:
     """Filesystem layout for data, outputs, models, and checkpoints."""
@@ -37,7 +45,7 @@ class ProjectPaths:
 
     @classmethod
     def from_root(cls, project_root: Path | str = ".") -> "ProjectPaths":
-        root = Path(project_root).resolve()
+        root = resolve_project_root(project_root)
         return cls(
             root=root,
             raw_lexglue=root / "data" / "raw" / "lexglue_ledgar",

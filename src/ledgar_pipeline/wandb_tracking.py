@@ -63,6 +63,31 @@ def verify_wandb_auth(config: WandbConfig | None = None) -> None:
         ) from exc
 
 
+def login_wandb_if_needed(config: WandbConfig | None = None, *, relogin: bool = False) -> None:
+    """Prompt for W&B login in notebooks/Colab when no API key is configured."""
+    settings = config or WandbConfig()
+    if not wandb_is_installed():
+        raise ImportError(
+            "wandb is required for this pipeline. Install it with `pip install wandb` "
+            "before running the W&B login cell."
+        )
+
+    mode = (settings.mode or os.getenv("WANDB_MODE", "online")).lower()
+    if settings.require_online and mode in DISALLOWED_WANDB_MODES:
+        raise RuntimeError(
+            "W&B is compulsory for this pipeline and must run online. "
+            "Unset WANDB_MODE or set WANDB_MODE=online before logging in."
+        )
+
+    os.environ["WANDB_MODE"] = "online"
+    import wandb
+
+    api_key = os.getenv("WANDB_API_KEY") or getattr(wandb.api, "api_key", None)
+    if not api_key or relogin:
+        wandb.login(relogin=relogin)
+    verify_wandb_auth(settings)
+
+
 def start_wandb_run(
     *,
     run_name: str,
