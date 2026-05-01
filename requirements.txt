@@ -3,6 +3,7 @@
 
 # Core data and notebook stack
 datasets>=2.18
+huggingface_hub>=0.20
 pandas>=2.0
 numpy>=1.24
 matplotlib>=3.7
