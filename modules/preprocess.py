@@ -1,3 +1,3 @@
-"""Preprocessing module for LexGLUE LEDGAR data."""
+"""Compatibility wrapper for preprocessing helpers."""
 
-from preprocess_ledgar import *  # noqa: F401,F403
+from modules.preprocessing import *  # noqa: F401,F403

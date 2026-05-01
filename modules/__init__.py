@@ -1,5 +1,5 @@
-"""User-facing modules for the LEDGAR coursework pipeline."""
+"""Coursework-facing modules for legal clause classification."""
 
-from .config import PipelineConfig, ProjectPaths, WandbConfig, get_config
+from .data_setup import ProjectPaths, build_project_paths, find_project_root, seed_everything
 
-__all__ = ["PipelineConfig", "ProjectPaths", "WandbConfig", "get_config"]
+__all__ = ["ProjectPaths", "build_project_paths", "find_project_root", "seed_everything"]

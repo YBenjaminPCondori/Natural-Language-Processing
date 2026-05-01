@@ -14,9 +14,6 @@ notebook>=7.0
 ipykernel>=6.0
 ipywidgets>=8.0
 
-# Required experiment tracking
-wandb>=0.16
-
 # Classical + transformer experiment support
 torch>=2.1
 transformers>=4.38

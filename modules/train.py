@@ -1,3 +1,5 @@
-"""Training orchestration module for LEDGAR experiments."""
+"""Compatibility namespace for training-related helpers."""
 
-from ledgar_pipeline.train import *  # noqa: F401,F403
+from modules.baselines import *  # noqa: F401,F403
+from modules.classical_models import *  # noqa: F401,F403
+from modules.transformer_model import *  # noqa: F401,F403

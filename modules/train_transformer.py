@@ -1,3 +1,3 @@
-"""Transformer training module for LEDGAR experiments."""
+"""Compatibility wrapper for transformer model helpers."""
 
-from train_transformer import *  # noqa: F401,F403
+from modules.transformer_model import *  # noqa: F401,F403

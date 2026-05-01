@@ -1,3 +1,3 @@
-"""Classical model training module for LEDGAR experiments."""
+"""Compatibility wrapper for classical model helpers."""
 
-from train_classical import *  # noqa: F401,F403
+from modules.classical_models import *  # noqa: F401,F403

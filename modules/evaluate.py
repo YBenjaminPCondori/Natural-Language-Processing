@@ -1,3 +1,3 @@
-"""Evaluation module for LEDGAR experiments."""
+"""Compatibility wrapper for evaluation helpers."""
 
-from evaluate import *  # noqa: F401,F403
+from modules.evaluation import *  # noqa: F401,F403

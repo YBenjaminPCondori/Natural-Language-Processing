@@ -1,28 +1,33 @@
 # Modules
 
-This folder exposes the main coursework pipeline modules with simple import paths:
+This folder contains the coursework-facing implementation for the LEDGAR legal
+clause classification notebook.
 
-```python
-from modules.config import get_config
-from modules.train import train_from_root
-from modules.inference import predict_from_jsonl
-from modules.preprocess import load_ledgar_dataset
-from modules.evaluate import compute_metrics
+```text
+modules/
+|-- data_setup.py          # dependency checks, paths, LEDGAR/CUAD download and raw loading
+|-- preprocessing.py       # LEDGAR schema standardisation, label filtering, EDA
+|-- baselines.py           # random and majority baselines
+|-- classical_models.py    # TF-IDF Logistic Regression, Linear SVM, Naive Bayes
+|-- transformer_model.py   # DistilBERT/LegalBERT fine-tuning wrapper
+|-- qwen_prompting.py      # Qwen2.5-Instruct zero/few-shot prompting baseline
+|-- evaluation.py          # metrics, reports, confusion matrices, comparison plots
+|-- error_analysis.py      # confused labels, misclassified examples, imbalance analysis
+`-- agentic_review.py      # small human-in-the-loop triage prototype
 ```
 
-The implementation lives in `src/` so it can also be installed with:
+Legacy files such as `preprocess.py`, `evaluate.py`, `train_classical.py`, and
+`train_transformer.py` remain as compatibility wrappers, but the actual
+coursework code now lives in the files above.
+
+Install dependencies from the repository root:
 
 ```powershell
 python -m pip install -r requirements.txt
 ```
 
-In Google Colab, use the Colab-specific install file from the repository root:
+In Google Colab:
 
 ```python
 %pip install -q -r requirements-colab.txt
 ```
-
-Then set `LEDGAR_PROJECT_ROOT` or the notebook's `PROJECT_ROOT_OVERRIDE` placeholder
-to the folder that contains `pyproject.toml`, `src/`, and `modules/`.
-
-W&B logging is compulsory for training and evaluation runs.
