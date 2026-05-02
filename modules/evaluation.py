@@ -100,7 +100,10 @@ def save_final_comparison(completed_results: list[dict[str, Any]], results_dir: 
         "accuracy",
         "macro_f1",
         "weighted_f1",
+        "invalid_prediction_rate",
         "notes",
+        "classification_report_path",
+        "confusion_matrix_path",
     ]
     comparison_df = pd.DataFrame(completed_results).reindex(columns=comparison_columns)
     comparison_df.to_csv(results_dir / "final_model_comparison.csv", index=False)

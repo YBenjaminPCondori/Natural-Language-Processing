@@ -159,6 +159,7 @@ def train_transformer_classifier(
             notes="Fine-tuned Hugging Face sequence classifier.",
         )
         pd.DataFrame([result]).to_csv(output_dir / "transformer_results.csv", index=False)
+        pred_df.to_csv(output_dir / "transformer_predictions.csv", index=False)
         trainer.save_model(output_dir / "model")
         tokenizer.save_pretrained(output_dir / "model")
         return {"result": result, "predictions": pred_df, "trainer": trainer, "skip_result": None}
