@@ -1,2 +1,3 @@
 model_family,model_name,training_type,dataset,eval_split,sample_size,accuracy,macro_f1,weighted_f1,invalid_prediction_rate,status,reason,notes
-llm_prompting,qwen_skipped,zero/few-shot prompting,LEDGAR,test,0,,,,,skipped,GPU/CUDA unavailable; Qwen/Qwen2.5-3B-Instruct was not loaded or run.,Skipped: GPU/CUDA unavailable; Qwen/Qwen2.5-3B-Instruct was not loaded or run.
+llm_prompting,qwen_zero_shot,zero_shot,LEDGAR,test,200,0.565,0.5039488016309485,0.5688091761624854,0.04500000000000004,completed,,Qwen prompting baseline. Invalid prediction rate=0.0450
+llm_prompting,qwen_few_shot,few_shot,LEDGAR,test,200,0.11,0.00990990990990991,0.0218018018018018,1.0,completed,,Qwen prompting baseline. Invalid prediction rate=1.0000

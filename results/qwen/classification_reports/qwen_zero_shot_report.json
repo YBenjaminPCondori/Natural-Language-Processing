@@ -1,0 +1,135 @@
+{
+  "Governing Laws": {
+    "precision": 0.55,
+    "recall": 1.0,
+    "f1-score": 0.7096774193548387,
+    "support": 22.0
+  },
+  "Notices": {
+    "precision": 1.0,
+    "recall": 0.5714285714285714,
+    "f1-score": 0.7272727272727273,
+    "support": 21.0
+  },
+  "Counterparts": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 14.0
+  },
+  "Entire Agreements": {
+    "precision": 0.9375,
+    "recall": 0.8823529411764706,
+    "f1-score": 0.9090909090909091,
+    "support": 17.0
+  },
+  "Severability": {
+    "precision": 0.625,
+    "recall": 0.625,
+    "f1-score": 0.625,
+    "support": 16.0
+  },
+  "Amendments": {
+    "precision": 0.6666666666666666,
+    "recall": 0.2,
+    "f1-score": 0.3076923076923077,
+    "support": 10.0
+  },
+  "Survival": {
+    "precision": 1.0,
+    "recall": 0.3333333333333333,
+    "f1-score": 0.5,
+    "support": 6.0
+  },
+  "Assignments": {
+    "precision": 0.7142857142857143,
+    "recall": 0.7142857142857143,
+    "f1-score": 0.7142857142857143,
+    "support": 7.0
+  },
+  "Expenses": {
+    "precision": 1.0,
+    "recall": 0.8571428571428571,
+    "f1-score": 0.9230769230769231,
+    "support": 7.0
+  },
+  "Terms": {
+    "precision": 0.75,
+    "recall": 0.25,
+    "f1-score": 0.375,
+    "support": 12.0
+  },
+  "Terminations": {
+    "precision": 0.14285714285714285,
+    "recall": 0.25,
+    "f1-score": 0.18181818181818182,
+    "support": 4.0
+  },
+  "Insurances": {
+    "precision": 1.0,
+    "recall": 0.125,
+    "f1-score": 0.2222222222222222,
+    "support": 8.0
+  },
+  "Taxes": {
+    "precision": 0.75,
+    "recall": 0.3,
+    "f1-score": 0.42857142857142855,
+    "support": 10.0
+  },
+  "Litigations": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1-score": 0.0,
+    "support": 6.0
+  },
+  "Further Assurances": {
+    "precision": 1.0,
+    "recall": 0.125,
+    "f1-score": 0.2222222222222222,
+    "support": 8.0
+  },
+  "Confidentiality": {
+    "precision": 1.0,
+    "recall": 0.6666666666666666,
+    "f1-score": 0.8,
+    "support": 3.0
+  },
+  "General": {
+    "precision": 0.14285714285714285,
+    "recall": 0.1111111111111111,
+    "f1-score": 0.125,
+    "support": 9.0
+  },
+  "Compliance With Laws": {
+    "precision": 0.13725490196078433,
+    "recall": 1.0,
+    "f1-score": 0.2413793103448276,
+    "support": 7.0
+  },
+  "Indemnifications": {
+    "precision": 0.8333333333333334,
+    "recall": 0.5555555555555556,
+    "f1-score": 0.6666666666666666,
+    "support": 9.0
+  },
+  "Waivers": {
+    "precision": 1.0,
+    "recall": 0.25,
+    "f1-score": 0.4,
+    "support": 4.0
+  },
+  "accuracy": 0.565,
+  "macro avg": {
+    "precision": 0.7124877450980392,
+    "recall": 0.49084383753501404,
+    "f1-score": 0.5039488016309485,
+    "support": 200.0
+  },
+  "weighted avg": {
+    "precision": 0.737610469187675,
+    "recall": 0.565,
+    "f1-score": 0.5688091761624854,
+    "support": 200.0
+  }
+}

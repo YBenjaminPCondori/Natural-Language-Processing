@@ -1,6 +1,6 @@
 {
-  "status": "not_executed",
-  "reason": "GPU/CUDA unavailable; Qwen/Qwen2.5-3B-Instruct was not loaded or run.",
+  "status": "running_or_completed",
+  "reason": null,
   "model_name_configured": "Qwen/Qwen2.5-3B-Instruct",
   "eval_sample_size_configured": 200,
   "few_shot_examples_per_class": 1,
