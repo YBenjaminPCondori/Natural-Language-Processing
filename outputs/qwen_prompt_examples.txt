@@ -1,0 +1,101 @@
+--- zero_shot prompt example ---
+You are a legal NLP classifier. Classify the following contract clause into exactly one of the allowed labels. Return only the label name.
+
+Allowed labels:
+- Governing Laws
+- Notices
+- Counterparts
+- Entire Agreements
+- Severability
+- Survival
+- Amendments
+- Assignments
+- Expenses
+- Terms
+- Terminations
+- Insurances
+- Taxes
+- Litigations
+- Confidentiality
+- Further Assurances
+- General
+- Compliance With Laws
+- Indemnifications
+- Waivers
+
+Clause:
+Notwithstanding any other provision of this Article IV , each Purchaser covenants that the Shares may be disposed of only pursuant to an effective registration statement under, and in compliance with the requirements of, the Securities Act, or pursuant to an available exemption from, or in a transaction not subject to, the registration requirements of the Securities Act, and in compliance with any applicable state and federal securities laws. In connection with any transfer of the Shares other than (i) pursuant to an effective registration statement, (ii) to the Company, (iii) pursuant to Rule 144 ( provided , that such Purchaser provides the Company with reasonable assurances (in the form of seller and, if applicable, broker representation letters) that the securities may be sold pursuant to such rule) or (iv) in connection with a bona fide pledge as contemplated in Section 4.1(b) , the Company may require the transferor thereof to provide to the Company an opinion of counsel selected by the transferor and reasonably acceptable to the Company, the form and substance of which opinion shall be reasonably satisfactory to the Company, to the effect that such transfer does not require registration of such transferred Shares under the Securities Act.
+
+Predicted label:
+
+--- few_shot prompt example ---
+You are a legal NLP classifier. Classify the following contract clause into exactly one of the allowed labels. Return only the label name.
+
+Allowed labels:
+- Governing Laws
+- Notices
+- Counterparts
+- Entire Agreements
+- Severability
+- Survival
+- Amendments
+- Assignments
+- Expenses
+- Terms
+- Terminations
+- Insurances
+- Taxes
+- Litigations
+- Confidentiality
+- Further Assurances
+- General
+- Compliance With Laws
+- Indemnifications
+- Waivers
+
+Examples:
+Clause: This Agreement shall be construed and enforced in accordance with the laws of the State of Minnesota (without reference to its conflicts of laws provisions).
+Predicted label: Governing Laws
+Clause: All notices required or permitted under this Agreement will be in writing, will reference this Agreement, and will be deemed given: (i) when delivered personally; (ii) one (1) business day after deposit with a nationally-recognized express courier, with written confirmation of receipt; or (iii) three (3) business days after having been sent by registered or certified mail, return receipt requested, postage prepaid. All such notices will be sent to the addresses set forth above or to such other address as may be specified by either party to the other party in accordance with this Section.
+Predicted label: Notices
+Clause: This Amendment may be executed by one or more of the parties hereto on any number of separate counterparts, and all of said counterparts taken together shall be deemed to constitute one and the same instrument. This Amendment may be delivered by facsimile or other electronic transmission of the relevant signature pages hereof.
+Predicted label: Counterparts
+Clause: This Agreement supersedes all prior agreements, whether oral or written, by any officer, employee or representative of any party hereto in respect of the subject matter contained herein; and any prior agreement of the parties hereto in respect of the subject matter contained herein is hereby terminated and cancelled (other than the Non-disclosure and Assignment of Inventions Agreement dated May 24, 2013 by and between Employee and the Company).
+Predicted label: Entire Agreements
+Clause: The validity or unenforceability of any provision or provisions of this Agreement shall not affect the validity or enforceability of any other provision hereof, which will remain in full force and effect. Should a court or other body of competent jurisdiction determine that any provision of this Agreement is excessive in scope or otherwise illegal, invalid, void or unenforceable, such provision shall be adjusted rather than voided, if possible, so that it is enforceable to the maximum extent possible.
+Predicted label: Severability
+Clause: All covenants, agreements, representations and warranties made by the Borrower herein and in the certificates or other instruments delivered in connection with or pursuant to this Agreement shall be considered to have been relied upon by the other parties hereto and shall survive the execution and delivery of this Agreement and the making of any Loans, regardless of any investigation made by any such other party or on its behalf and notwithstanding that the Administrative Agent or any Lender may have had notice or knowledge of any Default or incorrect representation or warranty at the time any credit is extended hereunder, and shall continue in full force and effect as long as the principal of or any accrued interest on any Loan or any fee or any other amount payable under this Agreement is outstanding. The provisions of Section 2.15 , Section 2.16 , Section 2.17 and Section 9.03 and Article VIII shall survive and remain in full force and effect regardless of the consummation of the transactions contemplated hereby, the repayment of the Loan, or the termination of this Agreement or any provision hereof.
+Predicted label: Survival
+Clause: The Committee has the right at any time, and from time to time, to amend, alter, suspend, discontinue or cancel the Option, prospectively or retroactively; provided, however , that no such amendment shall adversely affect the Participant’s material rights under this Agreement without the Participant’s written consent, and any such amendment shall be in accordance with Section 409A of the Code.
+Predicted label: Amendments
+Clause: This Agreement and any of the documents related hereto and the rights, duties, or obligations thereunder may not be assigned by the Applicant without the written consent of the Commissioner. Any assignment made without the written consent of the Commissioner shall be void and of no force or effect.
+Predicted label: Assignments
+Clause: The Borrower agrees (a) to pay or reimburse the Agents for all reasonable and documented out of pocket costs and expenses incurred in connection with the preparation, negotiation, syndication and execution of this Agreement and the other Loan Documents and any amendment, waiver, consent or other modification of the provisions hereof and thereof (whether or not the transactions contemplated thereby are consummated), and the consummation and administration of the transactions contemplated hereby and thereby, including all Attorney Costs of Cahill Gordon & Reindel LLP, and (b) to pay or reimburse the Administrative Agent and the Lenders for all reasonable and documented out-of-pocket costs and expenses incurred in connection with the enforcement of any rights or remedies under this Agreement or the other Loan Documents (including all such costs and expenses incurred during any legal proceeding, including any proceeding under any Debtor Relief Law, and including all Attorney Costs of counsel to the Administrative Agent). The agreements in this Section 10.04 shall survive the termination of the Aggregate Commitments and repayment of all other Obligations. All amounts due under this Section 10.04 shall be paid promptly following receipt by the Borrower of an invoice relating thereto setting forth such expenses in reasonable detail. If any Loan Party fails to pay when due any costs, expenses or other amounts payable by it hereunder or under any Loan Document, such amount may be paid on behalf of such Loan Party by the Administrative Agent in its sole discretion.
+Predicted label: Expenses
+Clause: Landlord and Tenant acknowledge and agree that the Lease Term commenced on May 1, 1996 and is scheduled to expire on April 30, 2017. Landlord and Tenant hereby extend the Lease Term for the period commencing on May 1, 2017 and expiring on July 31, 2020 (the “ Additional Term ”), unless further extended or earlier terminated in accordance with the provisions of the Lease.
+Predicted label: Terms
+Clause: Either party may cancel or terminate this Agreement by giving writing notice if the other party (i) becomes insolvent, is the subject of bankruptcy or administration proceedings that are not dismissed within ninety (90) days of filing or makes an assignment for the benefit of creditors, or (ii) materially breaches or defaults on any of such party’s obligations under this Agreement and fails to cure the breach or default within thirty (30) days after written notice describing the breach or default. Immediately upon expiration or any termination of this Agreement, Consultant shall promptly deliver, in a format acceptable to Company, all physical embodiments of the Work Product and all Proprietary Information and all copies thereof in Consultant’s possession or control. Sections 2, 5, 6, 7, 9 and 10 shall survive expiration and any termination of this Agreement.
+Predicted label: Terminations
+Clause: (a) Maintain, with financially sound and reputable insurance companies, insurance in such amounts and against such risks as are customarily maintained by similarly situated companies engaged in the same or similar businesses operating in the same or similar locations and cause, subject to the time periods set forth in clause (ix) of the definition of "Collateral Requirement" and Schedule 5.02(d) , if applicable, Agent to be listed as a co-loss payee on property and casualty policies and as an additional insured on liability policies.
+Predicted label: Insurances
+Clause: All Taxes shall be the financial responsibility of the party obligated to pay such Taxes as determined by applicable law and neither party is or shall be liable at any time for any of the other party’s Taxes incurred in connection with or related to amounts paid under this Agreement. No Tax shall be withheld by the Company on any Net Cash Proceeds payable to the Investors hereunder unless required by law.
+Predicted label: Taxes
+Clause: Except as disclosed in the SEC Reports, there is no action, suit, inquiry, notice of violation, proceeding or investigation pending or, to the knowledge of the Company, threatened against or affecting the Company, any Subsidiary or any of their respective properties before or by any court, arbitrator, governmental or administrative agency or regulatory authority (federal, state, county, local or foreign) (collectively, an " Action ") which (i) adversely affects or challenges the legality, validity or enforceability of any of the Transaction Documents or the Securities or (ii) could, if there were an unfavorable decision, have or reasonably be expected to result in a Material Adverse Effect. Neither the Company nor any Subsidiary, nor any director or officer thereof, is or has been the subject of any Action involving a claim of violation of or liability under federal or state securities laws or a claim of breach of fiduciary duty. There has not been, and to the knowledge of the Company, there is not pending or contemplated, any investigation by the Commission involving the Company or any current or former director or officer of the Company. The Commission has not issued any stop order or other order suspending the effectiveness of any registration statement filed by the Company or any Subsidiary under the Exchange Act or the Securities Act.
+Predicted label: Litigations
+Clause: You agree to hold the facts and circumstances surrounding the execution of this Agreement and the Supplemental Release in strictest confidence.
+Predicted label: Confidentiality
+Clause: From time to time, as and when required by the Surviving Corporation or by its successors or assigns, there shall be executed and delivered on behalf of Ashford (DE) such deeds and other instruments, and there shall be taken or caused to be taken by it all such further and other action, as shall be appropriate, advisable or necessary in order to vest, perfect or confirm, of record or otherwise, in the Surviving Corporation the title to and possession of all property, interests, assets, rights, privileges, immunities, powers, franchises and authority of Ashford (DE), and otherwise to carry out the purposes of this Agreement. The officers and directors of the Surviving Corporation are fully authorized in the name and on behalf of Ashford (DE) or otherwise, to take any and all such action and to execute and deliver any and all such deeds and other instruments.
+Predicted label: Further Assurances
+Clause: Subject to the terms and conditions set forth herein, at the request of any Account Party the Lenders agree at any time and from time to time during the Availability Period to issue Non-Syndicated Letters of Credit for the account of such Account Party in an aggregate amount that will not result in the Aggregate Credit Exposure exceeding the Commitments (it being understood that Non-Syndicated Letters of Credit may be issued, or be outstanding, for the account of more than one of the Account Parties at any time).
+Predicted label: General
+Clause: Neither the Company’s ownership of the assets, nor, to such Assignor’s knowledge, the operation of the Company’s assets is in violation of any applicable laws, licenses and permits, including any applicable environmental laws, licenses and permits, in any material respect.
+Predicted label: Compliance With Laws
+Clause: Employer shall indemnify Executive (and, upon Executive’s death, Executive’s heirs, executors and administrators) to the fullest extent permitted by law against all expenses, including reasonable attorneys’ fees, court and investigative costs, judgments, fines and amounts paid in settlement (collectively, “ Expenses ”) reasonably incurred by Executive in connection with or arising out of any pending, threatened or completed action, suit or proceeding in which Executive becomes involved by reason of Executive’s having been an officer or director of Employer. The indemnification rights provided for herein are not exclusive and shall supplement any rights to indemnification that Executive may have under any applicable bylaw or charter provision of Employer, or any resolution of Employer, or any applicable statute.
+Predicted label: Indemnifications
+Clause: Except as otherwise set forth in this Debenture, the Company, for itself and its legal representatives, successors and assigns, expressly waives presentment, protest, demand, notice of dishonor, notice of nonpayment, notice of maturity, notice of protest, presentment for the purpose of accelerating maturity, and diligence in collection.
+Predicted label: Waivers
+
+Clause:
+Notwithstanding any other provision of this Article IV , each Purchaser covenants that the Shares may be disposed of only pursuant to an effective registration statement under, and in compliance with the requirements of, the Securities Act, or pursuant to an available exemption from, or in a transaction not subject to, the registration requirements of the Securities Act, and in compliance with any applicable state and federal securities laws. In connection with any transfer of the Shares other than (i) pursuant to an effective registration statement, (ii) to the Company, (iii) pursuant to Rule 144 ( provided , that such Purchaser provides the Company with reasonable assurances (in the form of seller and, if applicable, broker representation letters) that the securities may be sold pursuant to such rule) or (iv) in connection with a bona fide pledge as contemplated in Section 4.1(b) , the Company may require the transferor thereof to provide to the Company an opinion of counsel selected by the transferor and reasonably acceptable to the Company, the form and substance of which opinion shall be reasonably satisfactory to the Company, to the effect that such transfer does not require registration of such transferred Shares under the Securities Act.
+
+Predicted label:

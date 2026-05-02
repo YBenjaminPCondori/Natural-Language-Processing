@@ -1,0 +1,29 @@
+{
+  "created_at_utc": "2026-05-02T13:39:44.193545+00:00",
+  "generated_files": [
+    "outputs/data_summary.csv",
+    "outputs/label_distribution.csv",
+    "outputs/main_results.csv",
+    "outputs/per_class_results.csv",
+    "outputs/confusion_pairs.csv",
+    "outputs/misclassified_examples.csv",
+    "outputs/environment.json",
+    "outputs/transformer_results.csv",
+    "outputs/transformer_results.json",
+    "outputs/transformer_predictions.csv",
+    "outputs/classification_report_transformer.json",
+    "outputs/confusion_matrix_transformer.json",
+    "outputs/transformer_training_args.json",
+    "outputs/transformer_runtime.json",
+    "outputs/qwen_results.csv",
+    "outputs/qwen_predictions.csv",
+    "outputs/qwen_invalid_outputs.csv",
+    "outputs/qwen_prompt_examples.txt",
+    "outputs/qwen_run_config.json"
+  ],
+  "not_generated_as_metrics": [
+    "Transformer actual metrics/predictions/classification report/confusion matrix image: CUDA unavailable.",
+    "Qwen actual metrics/predictions/invalid-output analysis: CUDA unavailable.",
+    "Naive Bayes metrics: no existing artifact found."
+  ]
+}

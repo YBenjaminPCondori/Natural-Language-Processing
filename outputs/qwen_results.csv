@@ -1,0 +1,3 @@
+model_name,model_family,training_type,eval_split,configured_sample_size,actual_sample_size,accuracy,macro_f1,weighted_f1,invalid_prediction_rate,status,reason
+qwen_zero_shot,llm_prompting,zero-shot prompting,test_sample,200,0,,,,,skipped_cuda_unavailable_in_current_runtime,CUDA unavailable; Qwen/Qwen2.5-3B-Instruct was not loaded or run.
+qwen_few_shot,llm_prompting,few-shot prompting,test_sample,200,0,,,,,skipped_cuda_unavailable_in_current_runtime,CUDA unavailable; Qwen/Qwen2.5-3B-Instruct was not loaded or run.

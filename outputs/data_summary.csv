@@ -1,0 +1,17 @@
+metric,value,evidence_file,notes
+dataset,LexGLUE LEDGAR,modules/data_setup.py; src/preprocess_ledgar.py,"Local code uses load_dataset(""coastalcph/lex_glue"", ""ledgar"") when raw JSONL is missing."
+raw_total_examples,80000,data/raw/lexglue_ledgar/*.jsonl,Counted from local raw JSONL files.
+raw_train_examples,60000,data/raw/lexglue_ledgar/ledgar_train.jsonl,Official train split export.
+raw_validation_examples,10000,data/raw/lexglue_ledgar/ledgar_validation.jsonl,Official validation split export.
+raw_test_examples,10000,data/raw/lexglue_ledgar/ledgar_test.jsonl,Official test split export.
+raw_unique_labels,100,outputs/label_counts.json,Label count artifact sums across raw examples.
+top_k_labels,20,outputs/selected_labels.json,Selected labels for processed experiment.
+processed_total_examples,38692,data/processed/*.jsonl; outputs/dataset_summary.json,Filtered to selected top-20 labels.
+processed_train_examples,28998,data/processed/ledgar_train.jsonl,Filtered train split.
+processed_validation_examples,4799,data/processed/ledgar_validation.jsonl,Filtered validation split.
+processed_test_examples,4895,data/processed/ledgar_test.jsonl,Filtered test split.
+processed_unique_labels,20,outputs/dataset_summary.json,Number of labels retained after filtering.
+average_clause_length_words,103.74850098211516,outputs/dataset_summary.json,Mean over processed train/validation/test examples.
+maximum_clause_length_words,1167.0,outputs/dataset_summary.json,Maximum over processed train/validation/test examples.
+average_clause_length_characters,646.889176057066,outputs/dataset_summary.json,Mean over processed train/validation/test examples.
+maximum_clause_length_characters,7222.0,outputs/dataset_summary.json,Maximum over processed train/validation/test examples.

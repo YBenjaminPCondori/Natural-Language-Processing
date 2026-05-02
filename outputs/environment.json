@@ -1,0 +1,24 @@
+{
+  "created_at_utc": "2026-05-02T13:39:44.156548+00:00",
+  "project_root": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\NLP\\Natural-Language-Processing",
+  "report_tex_inspected": "C:\\Users\\ybenj\\Downloads\\report.tex",
+  "random_seed": 42,
+  "python_version": "3.11.7 | packaged by Anaconda, Inc. | (main, Dec 15 2023, 18:05:47) [MSC v.1916 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26100-SP0",
+  "torch_version": "2.5.1+cpu",
+  "cuda_available": false,
+  "cuda_device_count": 0,
+  "cuda_version": null,
+  "gpu_name": null,
+  "packages": {
+    "pandas": "2.1.4",
+    "numpy": "1.26.4",
+    "scikit-learn": "1.8.0",
+    "matplotlib": "3.8.0",
+    "datasets": "4.8.5",
+    "transformers": "5.7.0",
+    "accelerate": "1.13.0",
+    "joblib": "1.5.3"
+  },
+  "runtime_note": "Current runtime is CPU-only; transformer fine-tuning and Qwen2.5-3B inference were not run here."
+}

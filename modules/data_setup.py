@@ -60,6 +60,31 @@ def looks_like_project_root(path: Path | str) -> bool:
     return (candidate / "pyproject.toml").exists() and (candidate / "modules").is_dir()
 
 
+def project_root_candidates_near(path: Path | str) -> list[Path]:
+    """Find plausible project roots at, above, or a few levels below a path."""
+    start = Path(path).expanduser()
+    candidates = [start, *start.parents]
+    if start.exists() and start.is_dir():
+        for pattern in (
+            "pyproject.toml",
+            "*/pyproject.toml",
+            "*/*/pyproject.toml",
+            "*/*/*/pyproject.toml",
+        ):
+            candidates.extend(pyproject.parent for pyproject in start.glob(pattern))
+    deduped: list[Path] = []
+    seen = set()
+    for candidate in candidates:
+        try:
+            resolved = candidate.resolve()
+        except Exception:
+            resolved = candidate
+        if resolved not in seen:
+            deduped.append(resolved)
+            seen.add(resolved)
+    return deduped
+
+
 def colab_project_candidates() -> list[Path]:
     """Common Google Colab locations for this repository."""
     candidates = [
@@ -71,6 +96,7 @@ def colab_project_candidates() -> list[Path]:
         Path("/content/drive/MyDrive/Education/NLP/Natural-Language-Processing"),
         Path("/content/drive/MyDrive/GitHub/Education/NLP/Natural-Language-Processing"),
         Path("/content/drive/MyDrive/Colab Notebooks/Natural-Language-Processing"),
+        Path("/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing"),
     ]
     for base in (Path("/content"), Path("/content/drive/MyDrive")):
         if base.exists():
@@ -90,10 +116,12 @@ def find_project_root(start: Path | str = ".", override: Path | str | None = Non
     selected_override = override or env_override
     if selected_override:
         override_path = Path(selected_override).expanduser().resolve()
-        if looks_like_project_root(override_path):
-            return override_path
+        for candidate in project_root_candidates_near(override_path):
+            if looks_like_project_root(candidate):
+                return candidate.resolve()
         raise FileNotFoundError(
-            f"Configured project root does not contain pyproject.toml and modules/: {override_path}"
+            "Configured project root does not contain pyproject.toml and modules/, "
+            f"and no nested project root was found under it: {override_path}"
         )
 
     start_path = Path(start).expanduser().resolve()

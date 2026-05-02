@@ -1,0 +1,41 @@
+model_name,label,precision,recall,f1_score,support,is_best_model,evidence_file,f1_rank_within_model
+linear_svm,Governing Laws,0.9965457685664939,0.9914089347079038,0.9939707149009475,582,True,outputs\classification_report_linear_svm.json,2
+linear_svm,Notices,0.9832134292565947,0.9715639810426541,0.9773539928486293,422,True,outputs\classification_report_linear_svm.json,6
+linear_svm,Counterparts,0.9979591836734694,0.9979591836734694,0.9979591836734694,490,True,outputs\classification_report_linear_svm.json,1
+linear_svm,Entire Agreements,0.979002624671916,0.9920212765957447,0.9854689564068693,376,True,outputs\classification_report_linear_svm.json,4
+linear_svm,Severability,0.9830917874396136,0.9878640776699029,0.9854721549636803,412,True,outputs\classification_report_linear_svm.json,3
+linear_svm,Survival,0.9773755656108597,0.972972972972973,0.9751693002257337,222,True,outputs\classification_report_linear_svm.json,8
+linear_svm,Amendments,0.9504504504504504,0.9419642857142857,0.9461883408071748,224,True,outputs\classification_report_linear_svm.json,16
+linear_svm,Assignments,0.94,0.9641025641025641,0.9518987341772152,195,True,outputs\classification_report_linear_svm.json,15
+linear_svm,Expenses,0.9621621621621622,0.9726775956284153,0.967391304347826,183,True,outputs\classification_report_linear_svm.json,12
+linear_svm,Terms,0.9176470588235294,0.8863636363636364,0.9017341040462428,176,True,outputs\classification_report_linear_svm.json,18
+linear_svm,Terminations,0.8487394957983193,0.8559322033898306,0.8523206751054853,118,True,outputs\classification_report_linear_svm.json,19
+linear_svm,Insurances,0.9699248120300752,0.9699248120300752,0.9699248120300752,133,True,outputs\classification_report_linear_svm.json,11
+linear_svm,Taxes,0.9289340101522843,0.9891891891891892,0.9581151832460733,185,True,outputs\classification_report_linear_svm.json,14
+linear_svm,Litigations,0.984251968503937,0.9689922480620154,0.9765625,129,True,outputs\classification_report_linear_svm.json,7
+linear_svm,Confidentiality,0.9709302325581395,1.0,0.9852507374631269,167,True,outputs\classification_report_linear_svm.json,5
+linear_svm,Further Assurances,0.9736842105263158,0.9736842105263158,0.9736842105263158,152,True,outputs\classification_report_linear_svm.json,9
+linear_svm,General,0.8469945355191257,0.7635467980295566,0.8031088082901554,203,True,outputs\classification_report_linear_svm.json,20
+linear_svm,Compliance With Laws,0.9711538461538461,0.9711538461538461,0.9711538461538461,208,True,outputs\classification_report_linear_svm.json,10
+linear_svm,Indemnifications,0.961038961038961,0.9736842105263158,0.9673202614379085,152,True,outputs\classification_report_linear_svm.json,13
+linear_svm,Waivers,0.9239766081871345,0.9518072289156626,0.9376854599406528,166,True,outputs\classification_report_linear_svm.json,17
+logistic_regression,Governing Laws,0.9982517482517482,0.9810996563573883,0.9896013864818024,582,False,outputs\classification_report_logistic_regression.json,2
+logistic_regression,Notices,0.9827160493827161,0.943127962085308,0.9625151148730351,422,False,outputs\classification_report_logistic_regression.json,10
+logistic_regression,Counterparts,0.9959100204498977,0.9938775510204082,0.9948927477017365,490,False,outputs\classification_report_logistic_regression.json,1
+logistic_regression,Entire Agreements,0.9814814814814815,0.9867021276595744,0.9840848806366047,376,False,outputs\classification_report_logistic_regression.json,4
+logistic_regression,Severability,0.9902676399026764,0.9878640776699029,0.9890643985419197,412,False,outputs\classification_report_logistic_regression.json,3
+logistic_regression,Survival,0.9728506787330317,0.9684684684684685,0.9706546275395034,222,False,outputs\classification_report_logistic_regression.json,6
+logistic_regression,Amendments,0.9354838709677419,0.90625,0.9206349206349206,224,False,outputs\classification_report_logistic_regression.json,17
+logistic_regression,Assignments,0.9637305699481865,0.9538461538461539,0.9587628865979382,195,False,outputs\classification_report_logistic_regression.json,13
+logistic_regression,Expenses,0.9776536312849162,0.9562841530054644,0.9668508287292817,183,False,outputs\classification_report_logistic_regression.json,8
+logistic_regression,Terms,0.8987341772151899,0.8068181818181818,0.8502994011976047,176,False,outputs\classification_report_logistic_regression.json,18
+logistic_regression,Terminations,0.8114754098360656,0.8389830508474576,0.825,118,False,outputs\classification_report_logistic_regression.json,19
+logistic_regression,Insurances,0.9699248120300752,0.9699248120300752,0.9699248120300752,133,False,outputs\classification_report_logistic_regression.json,7
+logistic_regression,Taxes,0.9378238341968912,0.9783783783783784,0.9576719576719577,185,False,outputs\classification_report_logistic_regression.json,14
+logistic_regression,Litigations,0.9541984732824428,0.9689922480620154,0.9615384615384615,129,False,outputs\classification_report_logistic_regression.json,12
+logistic_regression,Confidentiality,0.9485714285714286,0.9940119760479041,0.9707602339181287,167,False,outputs\classification_report_logistic_regression.json,5
+logistic_regression,Further Assurances,0.9607843137254902,0.9671052631578947,0.9639344262295081,152,False,outputs\classification_report_logistic_regression.json,9
+logistic_regression,General,0.7174887892376681,0.7881773399014779,0.7511737089201879,203,False,outputs\classification_report_logistic_regression.json,20
+logistic_regression,Compliance With Laws,0.9528301886792453,0.9711538461538461,0.9619047619047619,208,False,outputs\classification_report_logistic_regression.json,11
+logistic_regression,Indemnifications,0.9483870967741935,0.9671052631578947,0.9576547231270358,152,False,outputs\classification_report_logistic_regression.json,15
+logistic_regression,Waivers,0.9028571428571428,0.9518072289156626,0.9266862170087975,166,False,outputs\classification_report_logistic_regression.json,16

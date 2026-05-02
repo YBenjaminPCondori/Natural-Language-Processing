@@ -1,0 +1,22 @@
+{
+  "status": "not_executed_in_current_runtime",
+  "reason": "CUDA unavailable; current torch build is CPU-only.",
+  "model_name_configured": "distilbert-base-uncased",
+  "candidate_models_from_report": [
+    "distilbert-base-uncased",
+    "nlpaueb/legal-bert-base-uncased",
+    "nlpaueb/bert-base-uncased-contracts"
+  ],
+  "max_sequence_length": 256,
+  "learning_rate": 2e-05,
+  "num_train_epochs": 3,
+  "weight_decay": 0.01,
+  "batch_size_policy": "16 if GPU memory > 12GB else 8, per modules/transformer_model.py",
+  "fp16_policy": "torch.cuda.is_available()",
+  "selection_metric": "validation_macro_f1",
+  "seed": 42,
+  "source_files": [
+    "notebooks/ledgar_clause_classification_pipeline.ipynb",
+    "modules/transformer_model.py"
+  ]
+}
