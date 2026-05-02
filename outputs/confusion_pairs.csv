@@ -1,21 +1,16 @@
-rank,model_name,true_label,predicted_label,count,evidence_file
-1,linear_svm,General,Terminations,9,outputs/error_analysis.json
-2,linear_svm,Terms,General,9,outputs/error_analysis.json
-3,linear_svm,General,Taxes,6,outputs/error_analysis.json
-4,linear_svm,General,Assignments,6,outputs/error_analysis.json
-5,linear_svm,Terminations,Terms,5,outputs/error_analysis.json
-6,linear_svm,Notices,General,5,outputs/error_analysis.json
-7,linear_svm,Terminations,General,5,outputs/error_analysis.json
-8,linear_svm,Amendments,Entire Agreements,5,outputs/error_analysis.json
-9,linear_svm,General,Terms,5,outputs/error_analysis.json
-10,linear_svm,General,Waivers,4,outputs/error_analysis.json
-11,linear_svm,Terms,Terminations,4,outputs/error_analysis.json
-12,linear_svm,Expenses,Taxes,3,outputs/error_analysis.json
-13,linear_svm,Terminations,Amendments,3,outputs/error_analysis.json
-14,linear_svm,Waivers,Amendments,3,outputs/error_analysis.json
-15,linear_svm,Compliance With Laws,Taxes,3,outputs/error_analysis.json
-16,linear_svm,Terminations,Survival,3,outputs/error_analysis.json
-17,linear_svm,Governing Laws,Severability,3,outputs/error_analysis.json
-18,linear_svm,Amendments,Waivers,3,outputs/error_analysis.json
-19,linear_svm,General,Compliance With Laws,3,outputs/error_analysis.json
-20,linear_svm,General,Notices,3,outputs/error_analysis.json
+rank,true_label,predicted_label,count
+1,Terms,General,9
+2,General,Terminations,8
+3,General,Assignments,6
+4,General,Taxes,6
+5,General,Terms,6
+6,Amendments,Entire Agreements,5
+7,Terminations,Terms,5
+8,Notices,General,5
+9,General,Waivers,4
+10,Terminations,General,4
+11,Governing Laws,Severability,3
+12,Amendments,Waivers,3
+13,General,Compliance With Laws,3
+14,Terminations,Amendments,3
+15,Terminations,Survival,3

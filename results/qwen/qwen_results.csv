@@ -1,0 +1,2 @@
+model_family,model_name,training_type,dataset,eval_split,sample_size,accuracy,macro_f1,weighted_f1,invalid_prediction_rate,status,reason,notes
+llm_prompting,qwen_skipped,zero/few-shot prompting,LEDGAR,test,0,,,,,skipped,GPU/CUDA unavailable; Qwen/Qwen2.5-3B-Instruct was not loaded or run.,Skipped: GPU/CUDA unavailable; Qwen/Qwen2.5-3B-Instruct was not loaded or run.

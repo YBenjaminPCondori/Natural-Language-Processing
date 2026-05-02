@@ -1,0 +1,33 @@
+{
+  "dataset": "LEDGAR",
+  "top_k_labels": 20,
+  "rows_per_split": {
+    "train": 28587,
+    "validation": 4670,
+    "test": 4732
+  },
+  "number_of_classes": 20,
+  "labels": [
+    "Governing Laws",
+    "Notices",
+    "Counterparts",
+    "Entire Agreements",
+    "Severability",
+    "Amendments",
+    "Survival",
+    "Assignments",
+    "Expenses",
+    "Terms",
+    "Terminations",
+    "Insurances",
+    "Taxes",
+    "Litigations",
+    "Further Assurances",
+    "Confidentiality",
+    "General",
+    "Compliance With Laws",
+    "Indemnifications",
+    "Waivers"
+  ],
+  "leakage_audit_path": "outputs/leakage_audit.json"
+}

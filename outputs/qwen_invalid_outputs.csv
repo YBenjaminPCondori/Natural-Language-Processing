@@ -1,1 +1,1 @@
-mode,text,label,label_id,raw_output,predicted_label
+mode,text,label,label_id,raw_output,predicted_label,predicted_label_id,is_invalid

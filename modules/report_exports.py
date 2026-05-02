@@ -15,6 +15,73 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from .data_setup import ProjectPaths, normalise_whitespace, write_json
+from .evaluation import safe_name
+
+
+STANDARD_PREDICTION_COLUMNS = [
+    "text",
+    "true_label",
+    "true_label_id",
+    "predicted_label",
+    "predicted_label_id",
+    "model_name",
+    "split",
+    "confidence",
+]
+QWEN_PREDICTION_COLUMNS = [
+    "mode",
+    "text",
+    "label",
+    "label_id",
+    "raw_output",
+    "predicted_label",
+    "predicted_label_id",
+    "is_invalid",
+]
+QWEN_RESULT_COLUMNS = [
+    "model_family",
+    "model_name",
+    "training_type",
+    "dataset",
+    "eval_split",
+    "sample_size",
+    "accuracy",
+    "macro_f1",
+    "weighted_f1",
+    "invalid_prediction_rate",
+    "status",
+    "notes",
+]
+TRANSFORMER_RESULT_COLUMNS = [
+    "model_family",
+    "model_name",
+    "training_type",
+    "dataset",
+    "eval_split",
+    "sample_size",
+    "accuracy",
+    "macro_f1",
+    "weighted_f1",
+    "status",
+    "notes",
+    "classification_report_path",
+    "confusion_matrix_path",
+]
+STALE_OUTPUT_FILES = [
+    "outputs/classical_results.jsonl",
+    "outputs/classification_report_linear_svm.json",
+    "outputs/classification_report_logistic_regression.json",
+    "outputs/classification_report_transformer.json",
+    "outputs/confusion_matrix_transformer.json",
+    "outputs/predictions/random_baseline_test_predictions.jsonl",
+    "outputs/figures/best_model_confusion_matrix.png",
+    "outputs/figures/class_distribution.png",
+    "outputs/figures/confusion_matrix_linear_svm.png",
+    "outputs/figures/confusion_matrix_logistic_regression.png",
+    "outputs/figures/final_macro_f1_comparison.png",
+    "outputs/figures/final_weighted_f1_comparison.png",
+    "outputs/figures/text_length_histogram.png",
+]
 
 
 def _package_version(name: str) -> str | None:
@@ -46,6 +113,42 @@ def _artifact_for_manifest(value: Any, root: Path) -> Any:
     if isinstance(value, list):
         return [_artifact_for_manifest(inner, root) for inner in value]
     return value
+
+
+def cleanup_stale_report_outputs(paths: ProjectPaths) -> None:
+    """Remove known legacy report artifacts that conflict with the regenerated run."""
+    for relative_path in STALE_OUTPUT_FILES:
+        path = paths.project_root / relative_path
+        if path.exists() and path.is_file():
+            path.unlink()
+
+
+def _status_from_result(result: dict[str, Any]) -> str:
+    metric = result.get("macro_f1")
+    if pd.isna(metric):
+        return "skipped_or_failed"
+    return "completed"
+
+
+def _normalise_prediction_table(model_name: str, pred_df: pd.DataFrame) -> pd.DataFrame:
+    """Convert in-memory prediction tables to the stable report prediction schema."""
+    if pred_df is None or pred_df.empty:
+        return pd.DataFrame(columns=STANDARD_PREDICTION_COLUMNS)
+    output = pd.DataFrame()
+    output["text"] = pred_df.get("text", pd.Series(dtype=str)).astype(str)
+    output["true_label"] = pred_df.get("true_label", pred_df.get("label", pd.Series(dtype=str)))
+    output["true_label_id"] = pred_df.get("true_label_id", pred_df.get("label_id", pd.Series(dtype="Int64")))
+    output["predicted_label"] = pred_df.get("predicted_label", pd.Series(dtype=str))
+    output["predicted_label_id"] = pred_df.get("predicted_label_id", pd.Series(dtype="Int64"))
+    output["model_name"] = model_name
+    output["split"] = pred_df.get("split", "test")
+    output["confidence"] = pred_df.get("confidence", pd.NA)
+    return output.reindex(columns=STANDARD_PREDICTION_COLUMNS)
+
+
+def _write_empty_csv(path: Path, columns: list[str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(columns=columns).to_csv(path, index=False)
 
 
 def collect_environment(seed: int, paths: ProjectPaths) -> dict[str, Any]:
@@ -121,6 +224,8 @@ def export_data_summary(
     length_stats = _word_and_char_stats(processed_splits)
     raw_total = sum(count for count in raw_counts.values() if count is not None)
     processed_total = sum(processed_counts.values())
+    combined = pd.concat(processed_splits.values(), ignore_index=True) if processed_splits else pd.DataFrame()
+    label_counts = combined["label"].value_counts().astype(int).to_dict() if not combined.empty else {}
 
     rows = [
         {"metric": "dataset", "value": dataset_name, "notes": "Main supervised dataset."},
@@ -164,6 +269,24 @@ def export_data_summary(
         },
     ]
     pd.DataFrame(rows).to_csv(output_path, index=False)
+    write_json(
+        paths.project_root / "outputs" / "dataset_summary.json",
+        {
+            "dataset": dataset_name,
+            "rows_per_split": processed_counts,
+            "unique_labels": len(label_names),
+            "label_counts": label_counts,
+            "raw_rows_per_split": raw_counts,
+            "word_count_stats": {
+                "mean": length_stats["average_clause_length_words"],
+                "max": length_stats["maximum_clause_length_words"],
+            },
+            "character_count_stats": {
+                "mean": length_stats["average_clause_length_characters"],
+                "max": length_stats["maximum_clause_length_characters"],
+            },
+        },
+    )
     return output_path
 
 
@@ -186,6 +309,16 @@ def export_label_distribution(
         row["total_count"] = total
         rows.append(row)
     pd.DataFrame(rows).to_csv(output_path, index=False)
+    outputs_dir = paths.project_root / "outputs"
+    (outputs_dir / "label_names.txt").write_text("\n".join(label_names) + "\n", encoding="utf-8")
+    write_json(outputs_dir / "selected_labels.json", label_names)
+    write_json(
+        outputs_dir / "label_mapping.json",
+        {
+            "label_to_id": {label: int(label_id) for label, label_id in label2id.items()},
+            "id_to_label": {int(label_id): label for label, label_id in label2id.items()},
+        },
+    )
     return output_path
 
 
@@ -207,7 +340,9 @@ def export_main_results(paths: ProjectPaths, completed_results: list[dict[str, A
         "classification_report_path",
         "confusion_matrix_path",
     ]
-    pd.DataFrame(completed_results).reindex(columns=columns).to_csv(output_path, index=False)
+    results_df = pd.DataFrame(completed_results).reindex(columns=columns)
+    results_df.to_csv(output_path, index=False)
+    results_df.to_json(paths.project_root / "outputs" / "final_model_comparison.jsonl", orient="records", lines=True, force_ascii=False)
     return output_path
 
 
@@ -349,6 +484,54 @@ def export_error_tables(paths: ProjectPaths, error_outputs: dict[str, Any] | Non
     return {"confusion_pairs": confusion_path, "misclassified_examples": misclassified_path}
 
 
+def export_prediction_tables(paths: ProjectPaths, prediction_tables: dict[str, pd.DataFrame]) -> dict[str, Path]:
+    """Write current test prediction files for every completed model."""
+    predictions_dir = paths.project_root / "outputs" / "predictions"
+    predictions_dir.mkdir(parents=True, exist_ok=True)
+    artifacts: dict[str, Path] = {}
+    for model_name, pred_df in sorted((prediction_tables or {}).items()):
+        normalised = _normalise_prediction_table(model_name, pred_df)
+        output_path = predictions_dir / f"{safe_name(model_name)}_test_predictions.jsonl"
+        normalised.to_json(output_path, orient="records", lines=True, force_ascii=False)
+        artifacts[model_name] = output_path
+    return artifacts
+
+
+def export_transformer_tables(
+    paths: ProjectPaths,
+    completed_results: list[dict[str, Any]],
+    prediction_tables: dict[str, pd.DataFrame],
+    transformer_model_name: str,
+) -> dict[str, Path]:
+    """Save stable transformer result/prediction tables, including skipped runs."""
+    outputs_dir = paths.project_root / "outputs"
+    transformer_rows = [
+        {**result, "status": _status_from_result(result)}
+        for result in completed_results
+        if result.get("model_family") == "transformer"
+    ]
+    results_path = outputs_dir / "transformer_results.csv"
+    pd.DataFrame(transformer_rows).reindex(columns=TRANSFORMER_RESULT_COLUMNS).to_csv(results_path, index=False)
+
+    predictions_path = outputs_dir / "transformer_predictions.csv"
+    pred_df = prediction_tables.get(transformer_model_name, pd.DataFrame()) if prediction_tables else pd.DataFrame()
+    normalised = _normalise_prediction_table(transformer_model_name, pred_df)
+    normalised.to_csv(predictions_path, index=False)
+    return {"transformer_results": results_path, "transformer_predictions": predictions_path}
+
+
+def export_qwen_results(paths: ProjectPaths, completed_results: list[dict[str, Any]]) -> Path:
+    """Save stable Qwen result rows even when Qwen is skipped."""
+    output_path = paths.project_root / "outputs" / "qwen_results.csv"
+    rows = [
+        {**result, "status": _status_from_result(result)}
+        for result in completed_results
+        if result.get("model_family") == "llm_prompting" or "qwen" in str(result.get("model_name", "")).lower()
+    ]
+    pd.DataFrame(rows).reindex(columns=QWEN_RESULT_COLUMNS).to_csv(output_path, index=False)
+    return output_path
+
+
 def export_qwen_tables(
     paths: ProjectPaths,
     qwen_predictions_df: pd.DataFrame | None,
@@ -360,6 +543,19 @@ def export_qwen_tables(
     invalid_path = outputs_dir / "qwen_invalid_outputs.csv"
     predictions = qwen_predictions_df if qwen_predictions_df is not None else pd.DataFrame()
     invalid = qwen_invalid_outputs_df if qwen_invalid_outputs_df is not None else pd.DataFrame()
+    if predictions.empty:
+        predictions = pd.DataFrame(columns=QWEN_PREDICTION_COLUMNS)
+    else:
+        predictions = predictions.copy()
+        if "predicted_label_id" not in predictions.columns and "predicted_label" in predictions.columns:
+            predictions["predicted_label_id"] = pd.NA
+        if "is_invalid" not in predictions.columns and "predicted_label" in predictions.columns:
+            predictions["is_invalid"] = predictions["predicted_label"].eq("INVALID_PREDICTION")
+        predictions = predictions.reindex(columns=QWEN_PREDICTION_COLUMNS)
+    if invalid.empty:
+        invalid = pd.DataFrame(columns=QWEN_PREDICTION_COLUMNS)
+    else:
+        invalid = invalid.reindex(columns=QWEN_PREDICTION_COLUMNS)
     predictions.to_csv(predictions_path, index=False)
     invalid.to_csv(invalid_path, index=False)
     return {"qwen_predictions": predictions_path, "qwen_invalid_outputs": invalid_path}
@@ -509,6 +705,11 @@ def export_report_figures(paths: ProjectPaths, comparison_df: pd.DataFrame, erro
 
     best_cm = error_outputs.get("confusion_matrix_path")
     best_source = Path(best_cm) if best_cm else None
+    if (best_source is None or not best_source.exists()) and not comparison_df.empty:
+        completed = comparison_df.dropna(subset=["macro_f1"]).sort_values("macro_f1", ascending=False)
+        if not completed.empty:
+            candidate = completed.iloc[0].get("confusion_matrix_path")
+            best_source = Path(candidate) if candidate else None
     if best_source is None or not best_source.exists():
         best_source = _find_first_existing([paths.project_root / "outputs" / "figures" / "best_model_confusion_matrix.png"])
     figure_map["confusion_matrix_best_model"] = _copy_figure(best_source, report_targets("confusion_matrix_best_model.png"))
@@ -516,6 +717,10 @@ def export_report_figures(paths: ProjectPaths, comparison_df: pd.DataFrame, erro
     qwen_invalid = plot_qwen_invalid_predictions(comparison_df, root_figures / "qwen_invalid_predictions.png")
     if qwen_invalid is not None:
         _copy_figure(qwen_invalid, [output_figures / "qwen_invalid_predictions.png"])
+    else:
+        for stale_path in (root_figures / "qwen_invalid_predictions.png", output_figures / "qwen_invalid_predictions.png"):
+            if stale_path.exists() and stale_path.is_file():
+                stale_path.unlink()
     figure_map["qwen_invalid_predictions"] = qwen_invalid
 
     workflow = plot_agentic_workflow(root_figures / "agentic_review_workflow.png")
@@ -547,15 +752,17 @@ def export_report_artifacts(
     run_naive_bayes: bool | None = None,
 ) -> dict[str, Any]:
     """Export all report-facing tables, figures, and environment metadata."""
-    del prediction_tables  # Prediction tables are already reflected in error_outputs and result paths.
     outputs_dir = paths.project_root / "outputs"
     outputs_dir.mkdir(parents=True, exist_ok=True)
+    cleanup_stale_report_outputs(paths)
     label_names = [id2label[index] for index in sorted(id2label)] if id2label else []
 
     artifacts: dict[str, Any] = {}
     artifacts["data_summary"] = export_data_summary(paths, processed_splits, label_names, dataset_name=dataset_name)
     artifacts["label_distribution"] = export_label_distribution(paths, processed_splits, label2id, label_names)
     artifacts["main_results"] = export_main_results(paths, completed_results)
+    artifacts["predictions"] = export_prediction_tables(paths, prediction_tables)
+    artifacts.update(export_transformer_tables(paths, completed_results, prediction_tables, transformer_model_name))
     artifacts["hyperparameters"] = export_hyperparameters(
         paths,
         seed=seed,
@@ -570,6 +777,7 @@ def export_report_artifacts(
     )
     artifacts["per_class_results"] = export_per_class_results(paths, completed_results)
     artifacts.update(export_error_tables(paths, error_outputs))
+    artifacts["qwen_results"] = export_qwen_results(paths, completed_results)
     artifacts.update(export_qwen_tables(paths, qwen_predictions_df, qwen_invalid_outputs_df))
     artifacts["qwen_prompt_examples"] = export_qwen_prompt_examples(paths, processed_splits, label_names)
 

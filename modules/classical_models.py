@@ -64,6 +64,12 @@ def run_classical_experiments(
 
     output_dir = Path(results_dir) / "classical"
     output_dir.mkdir(parents=True, exist_ok=True)
+    project_root = Path(results_dir).parent
+    models_dir = project_root / "models" / "classical"
+    trained_models_dir = project_root / "models" / "trained" / "classical"
+    checkpoints_dir = project_root / "checkpoints" / "classical"
+    for directory in (models_dir, trained_models_dir, checkpoints_dir):
+        directory.mkdir(parents=True, exist_ok=True)
     x_train = train_df["text"].tolist()
     y_train = train_df["label_id"].astype(int).tolist()
     x_val = validation_df["text"].tolist()
@@ -128,6 +134,9 @@ def run_classical_experiments(
         result.update(best_for_model_config)
         results.append(result)
         prediction_tables[model_name] = pred_df
+        joblib.dump(best_for_model, models_dir / f"{model_name}.joblib")
+        joblib.dump(best_for_model, trained_models_dir / f"{model_name}.joblib")
+        joblib.dump(best_for_model, checkpoints_dir / f"{model_name}_best.joblib")
 
         if best_for_model_score > best_validation_macro_f1:
             best_model = best_for_model

@@ -1,21 +1,21 @@
-label,label_id,train_count,validation_count,test_count,processed_total_count,raw_total_count,evidence_file
-Governing Laws,0,3167,494,582,4243,4243,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Notices,1,2493,398,422,3313,3313,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Counterparts,2,2427,429,490,3346,3346,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Entire Agreements,3,2340,389,376,3105,3105,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Severability,4,1808,332,412,2552,2552,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Survival,5,1469,260,222,1951,1951,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Amendments,6,1467,257,224,1948,1948,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Assignments,7,1327,208,195,1730,1730,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Expenses,8,1224,170,183,1577,1577,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Terms,9,1166,169,176,1511,1511,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Terminations,10,1112,193,118,1423,1423,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Insurances,11,1104,204,133,1441,1441,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Taxes,12,1089,214,185,1488,1488,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Litigations,13,1034,166,129,1329,1329,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Confidentiality,14,1012,149,167,1328,1328,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Further Assurances,15,1009,155,152,1316,1316,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-General,16,976,150,203,1329,1329,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Compliance With Laws,17,960,167,208,1335,1335,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Indemnifications,18,936,140,152,1228,1228,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
-Waivers,19,878,155,166,1199,1199,data/processed/*.jsonl; outputs/label_counts.json; outputs/selected_labels.json
+label,label_id,train_count,validation_count,test_count,total_count
+Governing Laws,0,3136,492,568,4196
+Notices,1,2445,381,410,3236
+Counterparts,2,2376,413,458,3247
+Entire Agreements,3,2318,383,369,3070
+Severability,4,1774,323,386,2483
+Amendments,5,1460,255,219,1934
+Survival,6,1442,242,212,1896
+Assignments,7,1308,201,191,1700
+Expenses,8,1211,168,181,1560
+Terms,9,1142,161,172,1475
+Terminations,10,1103,191,113,1407
+Insurances,11,1087,196,126,1409
+Taxes,12,1072,210,179,1461
+Litigations,13,1022,162,128,1312
+Further Assurances,14,1001,153,152,1306
+Confidentiality,15,993,147,161,1301
+General,16,955,143,195,1293
+Compliance With Laws,17,953,161,205,1319
+Indemnifications,18,923,138,148,1209
+Waivers,19,866,150,159,1175

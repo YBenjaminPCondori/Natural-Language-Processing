@@ -1,29 +1,35 @@
 {
-  "created_at_utc": "2026-05-02T13:39:44.193545+00:00",
-  "generated_files": [
-    "outputs/data_summary.csv",
-    "outputs/label_distribution.csv",
-    "outputs/main_results.csv",
-    "outputs/per_class_results.csv",
-    "outputs/confusion_pairs.csv",
-    "outputs/misclassified_examples.csv",
-    "outputs/environment.json",
-    "outputs/transformer_results.csv",
-    "outputs/transformer_results.json",
-    "outputs/transformer_predictions.csv",
-    "outputs/classification_report_transformer.json",
-    "outputs/confusion_matrix_transformer.json",
-    "outputs/transformer_training_args.json",
-    "outputs/transformer_runtime.json",
-    "outputs/qwen_results.csv",
-    "outputs/qwen_predictions.csv",
-    "outputs/qwen_invalid_outputs.csv",
-    "outputs/qwen_prompt_examples.txt",
-    "outputs/qwen_run_config.json"
-  ],
-  "not_generated_as_metrics": [
-    "Transformer actual metrics/predictions/classification report/confusion matrix image: CUDA unavailable.",
-    "Qwen actual metrics/predictions/invalid-output analysis: CUDA unavailable.",
-    "Naive Bayes metrics: no existing artifact found."
-  ]
+  "created_at_utc": "2026-05-02T17:20:13.371409+00:00",
+  "artifacts": {
+    "data_summary": "outputs\\data_summary.csv",
+    "label_distribution": "outputs\\label_distribution.csv",
+    "main_results": "outputs\\main_results.csv",
+    "predictions": {
+      "linear_svm": "outputs\\predictions\\linear_svm_test_predictions.jsonl",
+      "logistic_regression": "outputs\\predictions\\logistic_regression_test_predictions.jsonl",
+      "majority_baseline": "outputs\\predictions\\majority_baseline_test_predictions.jsonl",
+      "multinomial_nb": "outputs\\predictions\\multinomial_nb_test_predictions.jsonl",
+      "random_train_distribution": "outputs\\predictions\\random_train_distribution_test_predictions.jsonl",
+      "random_uniform": "outputs\\predictions\\random_uniform_test_predictions.jsonl"
+    },
+    "transformer_results": "outputs\\transformer_results.csv",
+    "transformer_predictions": "outputs\\transformer_predictions.csv",
+    "hyperparameters": "outputs\\hyperparameters.csv",
+    "per_class_results": "outputs\\per_class_results.csv",
+    "confusion_pairs": "outputs\\confusion_pairs.csv",
+    "misclassified_examples": "outputs\\misclassified_examples.csv",
+    "qwen_results": "outputs\\qwen_results.csv",
+    "qwen_predictions": "outputs\\qwen_predictions.csv",
+    "qwen_invalid_outputs": "outputs\\qwen_invalid_outputs.csv",
+    "qwen_prompt_examples": "outputs\\qwen_prompt_examples.txt",
+    "figures": {
+      "label_distribution": "outputs\\figures\\label_distribution.png",
+      "clause_length_distribution": "outputs\\figures\\clause_length_distribution.png",
+      "model_comparison_macro_f1": "outputs\\figures\\model_comparison_macro_f1.png",
+      "confusion_matrix_best_model": "outputs\\figures\\confusion_matrix_best_model.png",
+      "qwen_invalid_predictions": null,
+      "agentic_review_workflow": "figures\\agentic_review_workflow.png"
+    },
+    "environment": "outputs\\environment.json"
+  }
 }

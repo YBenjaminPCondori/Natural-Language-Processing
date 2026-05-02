@@ -1,0 +1,4 @@
+split,rows,classes
+train,28587,20
+validation,4670,20
+test,4732,20

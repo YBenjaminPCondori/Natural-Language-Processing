@@ -1,0 +1,61 @@
+{
+  "dataset": "LEDGAR",
+  "split_priority": [
+    "train",
+    "validation",
+    "test"
+  ],
+  "raw_rows": {
+    "train": 60000,
+    "validation": 10000,
+    "test": 10000
+  },
+  "standardised_rows": {
+    "train": 59176,
+    "validation": 9973,
+    "test": 9952
+  },
+  "filtered_rows_before_cross_split_deduplication": {
+    "train": 28587,
+    "validation": 4788,
+    "test": 4868
+  },
+  "duplicate_rows_removed_by_split": {
+    "train": 0,
+    "validation": 118,
+    "test": 136
+  },
+  "filtered_rows_after_cross_split_deduplication": {
+    "train": 28587,
+    "validation": 4670,
+    "test": 4732
+  },
+  "cross_split_overlaps_before_deduplication": {
+    "train_vs_validation": {
+      "text_overlap": 118,
+      "text_label_overlap": 118
+    },
+    "train_vs_test": {
+      "text_overlap": 115,
+      "text_label_overlap": 115
+    },
+    "validation_vs_test": {
+      "text_overlap": 27,
+      "text_label_overlap": 27
+    }
+  },
+  "cross_split_overlaps_after_deduplication": {
+    "train_vs_validation": {
+      "text_overlap": 0,
+      "text_label_overlap": 0
+    },
+    "train_vs_test": {
+      "text_overlap": 0,
+      "text_label_overlap": 0
+    },
+    "validation_vs_test": {
+      "text_overlap": 0,
+      "text_label_overlap": 0
+    }
+  }
+}

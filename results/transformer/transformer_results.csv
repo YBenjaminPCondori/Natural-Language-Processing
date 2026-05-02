@@ -1,0 +1,2 @@
+model_family,model_name,training_type,dataset,eval_split,sample_size,accuracy,macro_f1,weighted_f1,status,reason,notes
+transformer,distilbert-base-uncased,fine-tuned supervised,LEDGAR,test,0,,,,skipped,GPU/CUDA unavailable.,Skipped: GPU/CUDA unavailable.

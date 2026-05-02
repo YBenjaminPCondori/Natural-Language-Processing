@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import difflib
+import platform
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +13,35 @@ import numpy as np
 import pandas as pd
 
 from .data_setup import ensure_package, normalise_whitespace
+from .data_setup import write_json
 from .evaluation import evaluate_predictions_common
+
+
+QWEN_PREDICTION_COLUMNS = [
+    "mode",
+    "text",
+    "label",
+    "label_id",
+    "raw_output",
+    "predicted_label",
+    "predicted_label_id",
+    "is_invalid",
+]
+QWEN_RESULT_COLUMNS = [
+    "model_family",
+    "model_name",
+    "training_type",
+    "dataset",
+    "eval_split",
+    "sample_size",
+    "accuracy",
+    "macro_f1",
+    "weighted_f1",
+    "invalid_prediction_rate",
+    "status",
+    "reason",
+    "notes",
+]
 
 
 def build_allowed_labels_text(label_names: list[str]) -> str:
@@ -126,6 +157,60 @@ def _evaluate_qwen_predictions(
     return result
 
 
+def _qwen_runtime_payload(torch_module: Any, output_dir: Path | str, *, reason: str | None = None) -> dict[str, Any]:
+    cuda_available = bool(torch_module.cuda.is_available())
+    payload = {
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "output_dir": str(output_dir),
+        "python_version": sys.version,
+        "platform": platform.platform(),
+        "torch_version": getattr(torch_module, "__version__", None),
+        "cuda_available": cuda_available,
+        "cuda_device_count": int(torch_module.cuda.device_count()),
+        "cuda_version": getattr(torch_module.version, "cuda", None),
+        "gpu_name": torch_module.cuda.get_device_name(0) if cuda_available else None,
+    }
+    if reason:
+        payload["runtime_note"] = reason
+    return payload
+
+
+def _qwen_run_config(
+    *,
+    model_name: str,
+    eval_sample_size: int,
+    few_shot_examples_per_class: int,
+    seed: int,
+    label_names: list[str],
+    status: str,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "status": status,
+        "reason": reason,
+        "model_name_configured": model_name,
+        "eval_sample_size_configured": eval_sample_size,
+        "few_shot_examples_per_class": few_shot_examples_per_class,
+        "decoding": {"do_sample": False, "max_new_tokens": 24},
+        "output_requirement": "Return exactly one allowed label.",
+        "fuzzy_matching_cutoff": 0.8,
+        "seed": seed,
+        "allowed_labels": label_names,
+    }
+
+
+def _write_qwen_skip_artifacts(output_dir: Path, skip_result: dict[str, Any], config: dict[str, Any], runtime: dict[str, Any], reason: str) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    write_json(output_dir / "qwen_run_config.json", config)
+    write_json(output_dir / "runtime.json", runtime)
+    pd.DataFrame([{**skip_result, "status": "skipped", "reason": reason}]).reindex(columns=QWEN_RESULT_COLUMNS).to_csv(
+        output_dir / "qwen_results.csv",
+        index=False,
+    )
+    pd.DataFrame(columns=QWEN_PREDICTION_COLUMNS).to_csv(output_dir / "qwen_predictions.csv", index=False)
+    pd.DataFrame(columns=QWEN_PREDICTION_COLUMNS).to_csv(output_dir / "qwen_invalid_outputs.csv", index=False)
+
+
 def run_qwen_baseline(
     train_df: pd.DataFrame,
     test_df: pd.DataFrame,
@@ -151,9 +236,11 @@ def run_qwen_baseline(
 
     ensure_package("torch", "torch")
     import torch
+    output_dir = Path(results_dir) / "qwen"
 
     if not torch.cuda.is_available():
         print("Qwen baseline skipped because GPU/CUDA is unavailable. Loading a 3B model on CPU is not practical for this notebook.")
+        reason = "GPU/CUDA unavailable; Qwen/Qwen2.5-3B-Instruct was not loaded or run."
         skip_result = {
             "model_family": "llm_prompting",
             "model_name": "qwen_skipped",
@@ -164,8 +251,24 @@ def run_qwen_baseline(
             "accuracy": np.nan,
             "macro_f1": np.nan,
             "weighted_f1": np.nan,
-            "notes": "Skipped: GPU/CUDA unavailable.",
+            "invalid_prediction_rate": np.nan,
+            "notes": f"Skipped: {reason}",
         }
+        _write_qwen_skip_artifacts(
+            output_dir,
+            skip_result,
+            _qwen_run_config(
+                model_name=model_name,
+                eval_sample_size=eval_sample_size,
+                few_shot_examples_per_class=few_shot_examples_per_class,
+                seed=seed,
+                label_names=label_names,
+                status="not_executed",
+                reason=reason,
+            ),
+            _qwen_runtime_payload(torch, output_dir, reason=reason),
+            reason,
+        )
         return {"results": [skip_result], "predictions": pd.DataFrame(), "invalid_outputs": pd.DataFrame(), "model": None, "tokenizer": None}
 
     try:
@@ -173,8 +276,19 @@ def run_qwen_baseline(
         ensure_package("accelerate", "accelerate")
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
-        output_dir = Path(results_dir) / "qwen"
         output_dir.mkdir(parents=True, exist_ok=True)
+        write_json(output_dir / "runtime.json", _qwen_runtime_payload(torch, output_dir))
+        write_json(
+            output_dir / "qwen_run_config.json",
+            _qwen_run_config(
+                model_name=model_name,
+                eval_sample_size=eval_sample_size,
+                few_shot_examples_per_class=few_shot_examples_per_class,
+                seed=seed,
+                label_names=label_names,
+                status="running_or_completed",
+            ),
+        )
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
@@ -207,6 +321,8 @@ def run_qwen_baseline(
                         "label_id": int(row["label_id"]),
                         "raw_output": raw_output,
                         "predicted_label": parsed_label,
+                        "predicted_label_id": int(label2id[parsed_label]) if parsed_label in label2id else pd.NA,
+                        "is_invalid": parsed_label == "INVALID_PREDICTION",
                     }
                 )
             all_rows.extend(mode_rows)
@@ -226,13 +342,14 @@ def run_qwen_baseline(
 
         predictions_df = pd.DataFrame(all_rows)
         invalid_outputs_df = predictions_df[predictions_df["predicted_label"] == "INVALID_PREDICTION"].copy()
-        predictions_df.to_csv(output_dir / "qwen_predictions.csv", index=False)
-        pd.DataFrame(results).to_csv(output_dir / "qwen_results.csv", index=False)
+        predictions_df.reindex(columns=QWEN_PREDICTION_COLUMNS).to_csv(output_dir / "qwen_predictions.csv", index=False)
+        pd.DataFrame([{**result, "status": "completed"} for result in results]).reindex(columns=QWEN_RESULT_COLUMNS).to_csv(output_dir / "qwen_results.csv", index=False)
         (output_dir / "qwen_prompt_examples.txt").write_text("\n\n".join(prompt_examples), encoding="utf-8")
-        invalid_outputs_df.to_csv(output_dir / "qwen_invalid_outputs.csv", index=False)
+        invalid_outputs_df.reindex(columns=QWEN_PREDICTION_COLUMNS).to_csv(output_dir / "qwen_invalid_outputs.csv", index=False)
         return {"results": results, "predictions": predictions_df, "invalid_outputs": invalid_outputs_df, "model": model, "tokenizer": tokenizer}
     except Exception as exc:
         print(f"Qwen baseline could not load or run: {type(exc).__name__}: {exc}")
+        reason = f"{type(exc).__name__}: {exc}"
         skip_result = {
             "model_family": "llm_prompting",
             "model_name": "qwen_skipped",
@@ -243,6 +360,22 @@ def run_qwen_baseline(
             "accuracy": np.nan,
             "macro_f1": np.nan,
             "weighted_f1": np.nan,
-            "notes": f"Skipped/failed: {type(exc).__name__}: {exc}",
+            "invalid_prediction_rate": np.nan,
+            "notes": f"Skipped/failed: {reason}",
         }
+        _write_qwen_skip_artifacts(
+            output_dir,
+            skip_result,
+            _qwen_run_config(
+                model_name=model_name,
+                eval_sample_size=eval_sample_size,
+                few_shot_examples_per_class=few_shot_examples_per_class,
+                seed=seed,
+                label_names=label_names,
+                status="failed",
+                reason=reason,
+            ),
+            _qwen_runtime_payload(torch, output_dir, reason=reason),
+            reason,
+        )
         return {"results": [skip_result], "predictions": pd.DataFrame(), "invalid_outputs": pd.DataFrame(), "model": None, "tokenizer": None}

@@ -1,2 +1,2 @@
-model_name,model_family,training_type,eval_split,sample_size,accuracy,macro_f1,weighted_f1,status,reason
-distilbert-base-uncased,transformer,fine-tuned supervised,test,0,,,,skipped_cuda_unavailable_in_current_runtime,"CUDA unavailable; no transformer predictions, metrics, classification report, or confusion matrix can be truthfully generated in this run."
+model_family,model_name,training_type,dataset,eval_split,sample_size,accuracy,macro_f1,weighted_f1,status,notes,classification_report_path,confusion_matrix_path
+transformer,distilbert-base-uncased,fine-tuned supervised,LEDGAR,test,0,,,,skipped_or_failed,Skipped: GPU/CUDA unavailable.,,
