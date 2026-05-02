@@ -98,6 +98,8 @@ def train_transformer_classifier(
     dataset_name: str = "LEDGAR",
     seed: int = 42,
     run_transformer: bool = True,
+    wandb_enabled: bool = False,
+    wandb_run_name: str | None = None,
 ) -> dict[str, Any]:
     """Fine-tune one transformer classifier, skipping gracefully when unavailable."""
     if not run_transformer:
@@ -191,10 +193,12 @@ def train_transformer_classifier(
             "metric_for_best_model": "macro_f1",
             "greater_is_better": True,
             "save_total_limit": 1,
-            "report_to": [],
+            "report_to": ["wandb"] if wandb_enabled else [],
             "fp16": torch.cuda.is_available(),
             "seed": seed,
         }
+        if wandb_enabled and wandb_run_name:
+            args_dict["run_name"] = wandb_run_name
         training_args = TrainingArguments(**_training_arguments_kwargs(TrainingArguments, args_dict))
         write_json(output_dir / "training_args.json", args_dict)
 
