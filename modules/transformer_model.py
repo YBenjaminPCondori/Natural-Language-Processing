@@ -73,6 +73,19 @@ def _training_arguments_kwargs(TrainingArguments: Any, kwargs: dict[str, Any]) -
     return {key: value for key, value in adapted.items() if key in params}
 
 
+def _trainer_kwargs(Trainer: Any, kwargs: dict[str, Any], tokenizer: Any) -> dict[str, Any]:
+    """Adapt Trainer keyword names across transformers versions."""
+    import inspect
+
+    params = inspect.signature(Trainer.__init__).parameters
+    adapted = dict(kwargs)
+    if "tokenizer" in params:
+        adapted["tokenizer"] = tokenizer
+    elif "processing_class" in params:
+        adapted["processing_class"] = tokenizer
+    return {key: value for key, value in adapted.items() if key in params}
+
+
 def train_transformer_classifier(
     train_df: pd.DataFrame,
     validation_df: pd.DataFrame,
@@ -186,13 +199,18 @@ def train_transformer_classifier(
         write_json(output_dir / "training_args.json", args_dict)
 
         trainer = Trainer(
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=val_dataset,
-            tokenizer=tokenizer,
-            compute_metrics=compute_metrics,
-            callbacks=callbacks,
+            **_trainer_kwargs(
+                Trainer,
+                {
+                    "model": model,
+                    "args": training_args,
+                    "train_dataset": train_dataset,
+                    "eval_dataset": val_dataset,
+                    "compute_metrics": compute_metrics,
+                    "callbacks": callbacks,
+                },
+                tokenizer,
+            )
         )
         trainer.train()
         write_json(output_dir / "training_log_history.json", trainer.state.log_history)
