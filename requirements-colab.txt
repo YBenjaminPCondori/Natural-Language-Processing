@@ -21,3 +21,4 @@ ipywidgets>=8.0
 transformers>=4.38
 accelerate>=0.27
 pyyaml>=6.0
+wandb>=0.16
