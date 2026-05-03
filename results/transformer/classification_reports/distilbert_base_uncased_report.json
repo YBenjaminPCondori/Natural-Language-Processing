@@ -1,8 +1,8 @@
 {
   "Governing Laws": {
-    "precision": 0.9947183098591549,
+    "precision": 0.9982332155477032,
     "recall": 0.9947183098591549,
-    "f1-score": 0.9947183098591549,
+    "f1-score": 0.9964726631393298,
     "support": 568.0
   },
   "Notices": {
@@ -42,9 +42,9 @@
     "support": 212.0
   },
   "Assignments": {
-    "precision": 0.9587628865979382,
+    "precision": 0.9637305699481865,
     "recall": 0.9738219895287958,
-    "f1-score": 0.9662337662337662,
+    "f1-score": 0.96875,
     "support": 191.0
   },
   "Expenses": {
@@ -78,9 +78,9 @@
     "support": 179.0
   },
   "Litigations": {
-    "precision": 0.984251968503937,
+    "precision": 0.9689922480620154,
     "recall": 0.9765625,
-    "f1-score": 0.9803921568627451,
+    "f1-score": 0.9727626459143969,
     "support": 128.0
   },
   "Further Assurances": {
@@ -96,9 +96,9 @@
     "support": 161.0
   },
   "General": {
-    "precision": 0.8020833333333334,
+    "precision": 0.7979274611398963,
     "recall": 0.7897435897435897,
-    "f1-score": 0.7958656330749354,
+    "f1-score": 0.7938144329896907,
     "support": 195.0
   },
   "Compliance With Laws": {
@@ -108,28 +108,28 @@
     "support": 205.0
   },
   "Indemnifications": {
-    "precision": 0.9861111111111112,
+    "precision": 0.993006993006993,
     "recall": 0.9594594594594594,
-    "f1-score": 0.9726027397260274,
+    "f1-score": 0.9759450171821306,
     "support": 148.0
   },
   "Waivers": {
-    "precision": 0.9493670886075949,
+    "precision": 0.9433962264150944,
     "recall": 0.9433962264150944,
-    "f1-score": 0.9463722397476341,
+    "f1-score": 0.9433962264150944,
     "support": 159.0
   },
   "accuracy": 0.9649196956889264,
   "macro avg": {
-    "precision": 0.9548563844326796,
+    "precision": 0.9543559852380206,
     "recall": 0.9547070244459481,
-    "f1-score": 0.9546584416644335,
+    "f1-score": 0.9544062486712523,
     "support": 4732.0
   },
   "weighted avg": {
-    "precision": 0.9648396790605829,
+    "precision": 0.9648931190624193,
     "recall": 0.9649196956889264,
-    "f1-score": 0.964788057877177,
+    "f1-score": 0.9648138361608009,
     "support": 4732.0
   }
 }

@@ -1,5 +1,5 @@
 label,predicted_label,count
-Terms,General,14
+Terms,General,13
 General,Terminations,7
 Notices,General,7
 General,Taxes,6
@@ -7,10 +7,10 @@ Terminations,Terms,6
 Terminations,General,6
 Amendments,Entire Agreements,5
 Entire Agreements,Amendments,5
-General,Assignments,4
-Waivers,Amendments,4
-Taxes,General,4
+Terms,Terminations,4
 General,Confidentiality,4
-Terms,Terminations,3
-General,Terms,3
-General,Notices,3
+Taxes,General,4
+Waivers,Amendments,4
+General,Further Assurances,3
+Terminations,Amendments,3
+Assignments,General,3

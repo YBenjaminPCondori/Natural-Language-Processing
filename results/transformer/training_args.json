@@ -11,7 +11,10 @@
   "metric_for_best_model": "macro_f1",
   "greater_is_better": true,
   "save_total_limit": 1,
-  "report_to": [],
+  "report_to": [
+    "wandb"
+  ],
   "fp16": true,
-  "seed": 42
+  "seed": 42,
+  "run_name": "ledgar-20260503-152403"
 }
