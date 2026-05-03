@@ -1,0 +1,40 @@
+{
+  "runtime": {
+    "created_at_utc": "2026-05-03T21:43:36.911491+00:00",
+    "python_version": "3.11.7",
+    "platform": "Windows-10-10.0.26100-SP0",
+    "quantization": "4bit",
+    "allow_cpu": false,
+    "torch_version": "2.5.1+cpu",
+    "cuda_available": false,
+    "cuda_device_count": 0,
+    "cuda_version": null,
+    "gpu_name": null
+  },
+  "models": [
+    {
+      "model_key": "saullm_7b",
+      "model_id": "Equall/Saul-7B-Instruct-v1",
+      "loaded_model_id": "Equall/Saul-7B-Instruct-v1",
+      "load_status": "failed",
+      "reason": "RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.",
+      "quantization": "4bit"
+    },
+    {
+      "model_key": "qwen_small",
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "loaded_model_id": "Qwen/Qwen2.5-3B-Instruct-AWQ",
+      "load_status": "failed",
+      "reason": "RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.",
+      "quantization": "4bit"
+    },
+    {
+      "model_key": "qwen_7b",
+      "model_id": "Qwen/Qwen2.5-7B-Instruct",
+      "loaded_model_id": "Qwen/Qwen2.5-7B-Instruct",
+      "load_status": "failed",
+      "reason": "RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.",
+      "quantization": "4bit"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+model_key,model_id,status,reason
+saullm_7b,Equall/Saul-7B-Instruct-v1,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.
+qwen_small,Qwen/Qwen2.5-3B-Instruct,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.
+qwen_7b,Qwen/Qwen2.5-7B-Instruct,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.

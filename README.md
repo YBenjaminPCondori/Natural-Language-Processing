@@ -98,6 +98,18 @@ Run Qwen prompting on CUDA:
 python scripts/run_qwen_prompting.py --model-name Qwen/Qwen2.5-3B-Instruct --eval-sample-size 200
 ```
 
+Run inference-only instruction-tuned LLM evaluation:
+
+```bash
+python scripts/evaluate_llm_classifiers.py --max-examples-per-split 20 --models saullm_7b qwen_small qwen_7b --quantization 4bit --wandb
+```
+
+Full LLM evaluation after validation decoding selection:
+
+```bash
+python scripts/evaluate_llm_classifiers.py --models saullm_7b qwen_small qwen_7b --tune-decoding-on-validation --evaluate-test --quantization 4bit --wandb
+```
+
 Run transformer fine-tuning from the notebook on Colab/A100 by setting:
 
 ```python
@@ -115,6 +127,25 @@ To try other encoder models, set `TRANSFORMER_MODEL_NAME` to one of:
 - `microsoft/deberta-v3-base`
 
 Only report a model as completed after metrics, predictions, logs, and checkpoint/report artifacts exist.
+
+## Instruction-Tuned LLM Evaluation
+
+This stage is prompt-based inference only; it does not fine-tune LLMs.
+
+Configured models:
+
+- SaulLM-7B-Instruct, `Equall/Saul-7B-Instruct-v1`, included as a legal-domain instruction-tuned model.
+- Qwen small, `Qwen/Qwen2.5-3B-Instruct`, included as an efficient general-purpose instruction model.
+- Qwen 7B, `Qwen/Qwen2.5-7B-Instruct`, included as a stronger general-purpose instruction model.
+
+Validation data is used for decoding selection. Test data is evaluated only after settings are fixed. Outputs are written to:
+
+- `outputs/llm_results.csv`
+- `outputs/llm_predictions.csv`
+- `outputs/llm_per_class_metrics.csv`
+- `outputs/llm_decoding_settings.json`
+- `outputs/llm_failed_models.csv`
+- `figures/llm_model_comparison.png`
 
 ## Outputs
 
