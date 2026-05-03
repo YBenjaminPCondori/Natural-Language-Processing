@@ -95,6 +95,11 @@ def train_transformer_classifier(
     *,
     model_name: str,
     max_length: int = 256,
+    learning_rate: float = 2e-5,
+    num_train_epochs: int = 3,
+    weight_decay: float = 0.01,
+    warmup_ratio: float = 0.0,
+    batch_size_override: int | None = None,
     dataset_name: str = "LEDGAR",
     seed: int = 42,
     run_transformer: bool = True,
@@ -179,16 +184,17 @@ def train_transformer_classifier(
             label2id={value: int(key) for key, value in id2label.items()},
         )
 
-        batch_size = 16 if torch.cuda.get_device_properties(0).total_memory > 12_000_000_000 else 8
+        batch_size = batch_size_override or (16 if torch.cuda.get_device_properties(0).total_memory > 12_000_000_000 else 8)
         args_dict = {
             "output_dir": str(output_dir / "checkpoints"),
             "evaluation_strategy": "epoch",
             "save_strategy": "epoch",
-            "learning_rate": 2e-5,
+            "learning_rate": learning_rate,
             "per_device_train_batch_size": batch_size,
             "per_device_eval_batch_size": batch_size,
-            "num_train_epochs": 3,
-            "weight_decay": 0.01,
+            "num_train_epochs": num_train_epochs,
+            "weight_decay": weight_decay,
+            "warmup_ratio": warmup_ratio,
             "load_best_model_at_end": True,
             "metric_for_best_model": "macro_f1",
             "greater_is_better": True,

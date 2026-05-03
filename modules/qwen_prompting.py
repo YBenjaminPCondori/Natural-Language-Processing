@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import difflib
 import platform
 import sys
 from datetime import datetime, timezone
@@ -11,6 +10,8 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 from .data_setup import ensure_package, normalise_whitespace
 from .data_setup import write_json
@@ -26,6 +27,8 @@ QWEN_PREDICTION_COLUMNS = [
     "predicted_label",
     "predicted_label_id",
     "is_invalid",
+    "retrieved_example_ids",
+    "retrieved_example_labels",
 ]
 QWEN_RESULT_COLUMNS = [
     "model_family",
@@ -49,34 +52,50 @@ def build_allowed_labels_text(label_names: list[str]) -> str:
     return "\n".join(f"- {label}" for label in label_names)
 
 
+def _normalise_label_for_match(value: str) -> str:
+    """Normalise label text for strict parser matching."""
+    return normalise_whitespace(value).strip(" `\"'").lower()
+
+
 def parse_llm_label(output: str, labels: list[str]) -> str:
-    """Parse an LLM label response into a known label or INVALID_PREDICTION."""
-    cleaned = normalise_whitespace(output).splitlines()[0].strip(" `\"'") if output else ""
-    if cleaned in labels:
-        return cleaned
-    lowered = {label.lower(): label for label in labels}
-    if cleaned.lower() in lowered:
-        return lowered[cleaned.lower()]
-    containing = [label for label in labels if label.lower() in cleaned.lower()]
-    if len(containing) == 1:
-        return containing[0]
-    matches = difflib.get_close_matches(cleaned, labels, n=2, cutoff=0.80)
-    if len(matches) == 1:
-        return matches[0]
+    """Parse one exact allowed label after whitespace/case normalisation."""
+    cleaned = normalise_whitespace(output).splitlines()[0] if output else ""
+    label_lookup = {_normalise_label_for_match(label): label for label in labels}
+    matched = label_lookup.get(_normalise_label_for_match(cleaned))
+    if matched:
+        return matched
     return "INVALID_PREDICTION"
+
+
+def _base_prompt(clause_text: str, label_names: list[str], examples: list[dict[str, Any]] | None = None) -> str:
+    """Build the shared strict classification prompt."""
+    examples_text = ""
+    if examples:
+        rendered = "\n\n".join(f"Clause: {example['text']}\nAnswer: {example['label']}" for example in examples)
+        examples_text = f"\nExamples:\n{rendered}\n"
+    return f"""You are a legal clause classification system.
+
+Classify the clause into exactly one label.
+
+Allowed labels:
+{build_allowed_labels_text(label_names)}
+{examples_text}
+Clause:
+{clause_text}
+
+Rules:
+- Choose exactly one label from the allowed labels.
+- Return only the label.
+- Do not explain.
+- Do not use punctuation.
+- Do not invent a new label.
+
+Answer:"""
 
 
 def make_zero_shot_prompt(clause_text: str, label_names: list[str]) -> str:
     """Build the zero-shot Qwen prompt."""
-    return f"""You are a legal NLP classifier. Classify the following contract clause into exactly one of the allowed labels. Return only the label name.
-
-Allowed labels:
-{build_allowed_labels_text(label_names)}
-
-Clause:
-{clause_text}
-
-Predicted label:"""
+    return _base_prompt(clause_text, label_names)
 
 
 def build_few_shot_examples(train_df: pd.DataFrame, label_names: list[str], examples_per_class: int = 1) -> list[dict[str, str]]:
@@ -91,21 +110,47 @@ def build_few_shot_examples(train_df: pd.DataFrame, label_names: list[str], exam
 
 def make_few_shot_prompt(clause_text: str, label_names: list[str], few_shot_examples: list[dict[str, str]]) -> str:
     """Build the few-shot Qwen prompt."""
-    demonstrations = "\n\n".join(
-        f"Clause: {example['text']}\nPredicted label: {example['label']}" for example in few_shot_examples
-    )
-    return f"""You are a legal NLP classifier. Classify the following contract clause into exactly one of the allowed labels. Return only the label name.
+    return _base_prompt(clause_text, label_names, few_shot_examples)
 
-Allowed labels:
-{build_allowed_labels_text(label_names)}
 
-Examples:
-{demonstrations}
+def build_retrieval_index(train_df: pd.DataFrame, *, max_features: int = 50000) -> tuple[TfidfVectorizer, Any]:
+    """Fit a TF-IDF retrieval index on training examples only."""
+    vectorizer = TfidfVectorizer(max_features=max_features, ngram_range=(1, 2), min_df=2)
+    matrix = vectorizer.fit_transform(train_df["text"].astype(str).tolist())
+    return vectorizer, matrix
 
-Clause:
-{clause_text}
 
-Predicted label:"""
+def retrieve_few_shot_examples(
+    clause_text: str,
+    train_df: pd.DataFrame,
+    vectorizer: TfidfVectorizer,
+    train_matrix: Any,
+    *,
+    k: int = 3,
+) -> list[dict[str, Any]]:
+    """Retrieve nearest training examples for one clause."""
+    if train_df.empty:
+        return []
+    query = vectorizer.transform([clause_text])
+    scores = cosine_similarity(query, train_matrix).ravel()
+    top_indices = scores.argsort()[::-1][:k]
+    examples = []
+    for idx in top_indices:
+        row = train_df.iloc[int(idx)]
+        examples.append(
+            {
+                "row_id": int(idx),
+                "text": row["text"],
+                "label": row["label"],
+                "score": float(scores[int(idx)]),
+            }
+        )
+    return examples
+
+
+def make_retrieval_few_shot_prompt(clause_text: str, label_names: list[str], retrieved_examples: list[dict[str, Any]]) -> str:
+    """Build a retrieval-augmented few-shot prompt."""
+    return _base_prompt(clause_text, label_names, retrieved_examples)
 
 
 def _qwen_generate_label(qwen_model: Any, qwen_tokenizer: Any, prompt: str, label_names: list[str]) -> tuple[str, str]:
@@ -116,7 +161,7 @@ def _qwen_generate_label(qwen_model: Any, qwen_tokenizer: Any, prompt: str, labe
     with torch.no_grad():
         output_ids = qwen_model.generate(
             **inputs,
-            max_new_tokens=24,
+            max_new_tokens=20,
             do_sample=False,
             pad_token_id=qwen_tokenizer.eos_token_id,
         )
@@ -191,9 +236,9 @@ def _qwen_run_config(
         "model_name_configured": model_name,
         "eval_sample_size_configured": eval_sample_size,
         "few_shot_examples_per_class": few_shot_examples_per_class,
-        "decoding": {"do_sample": False, "max_new_tokens": 24},
+        "decoding": {"do_sample": False, "max_new_tokens": 20},
         "output_requirement": "Return exactly one allowed label.",
-        "fuzzy_matching_cutoff": 0.8,
+        "parser_policy": "Strict exact-label match after whitespace/case normalisation.",
         "seed": seed,
         "allowed_labels": label_names,
     }
@@ -226,7 +271,7 @@ def run_qwen_baseline(
     seed: int = 42,
     run_qwen: bool = True,
 ) -> dict[str, Any]:
-    """Run Qwen zero-shot and few-shot prompting baselines."""
+    """Run Qwen zero-shot, static few-shot, and retrieval few-shot baselines."""
     if not run_qwen:
         print("Qwen baseline skipped because RUN_QWEN_BASELINE is False.")
         return {"results": [], "predictions": pd.DataFrame(), "invalid_outputs": pd.DataFrame(), "model": None, "tokenizer": None}
@@ -300,18 +345,22 @@ def run_qwen_baseline(
         sample_size = min(eval_sample_size, len(test_df))
         sample = test_df.sample(n=sample_size, random_state=seed).reset_index(drop=True)
         few_shot_examples = build_few_shot_examples(train_df, label_names, few_shot_examples_per_class)
+        retrieval_vectorizer, retrieval_matrix = build_retrieval_index(train_df)
         all_rows = []
         prompt_examples = []
         results = []
 
-        prompt_builders = {
-            "zero_shot": lambda text: make_zero_shot_prompt(text, label_names),
-            "few_shot": lambda text: make_few_shot_prompt(text, label_names, few_shot_examples),
-        }
-        for mode, prompt_builder in prompt_builders.items():
+        for mode in ("zero_shot", "static_few_shot", "retrieval_few_shot"):
             mode_rows = []
             for row in sample.to_dict(orient="records"):
-                prompt = prompt_builder(row["text"])
+                retrieved = []
+                if mode == "zero_shot":
+                    prompt = make_zero_shot_prompt(row["text"], label_names)
+                elif mode == "static_few_shot":
+                    prompt = make_few_shot_prompt(row["text"], label_names, few_shot_examples)
+                else:
+                    retrieved = retrieve_few_shot_examples(row["text"], train_df, retrieval_vectorizer, retrieval_matrix, k=3)
+                    prompt = make_retrieval_few_shot_prompt(row["text"], label_names, retrieved)
                 raw_output, parsed_label = _qwen_generate_label(model, tokenizer, prompt, label_names)
                 mode_rows.append(
                     {
@@ -323,6 +372,8 @@ def run_qwen_baseline(
                         "predicted_label": parsed_label,
                         "predicted_label_id": int(label2id[parsed_label]) if parsed_label in label2id else pd.NA,
                         "is_invalid": parsed_label == "INVALID_PREDICTION",
+                        "retrieved_example_ids": "|".join(str(example.get("row_id", "")) for example in retrieved),
+                        "retrieved_example_labels": "|".join(str(example.get("label", "")) for example in retrieved),
                     }
                 )
             all_rows.extend(mode_rows)
@@ -338,7 +389,15 @@ def run_qwen_baseline(
                 )
             )
             if not sample.empty:
-                prompt_examples.append(f"--- {mode} prompt example ---\n{prompt_builder(sample.iloc[0]['text'])}\n")
+                example_text = sample.iloc[0]["text"]
+                if mode == "zero_shot":
+                    example_prompt = make_zero_shot_prompt(example_text, label_names)
+                elif mode == "static_few_shot":
+                    example_prompt = make_few_shot_prompt(example_text, label_names, few_shot_examples)
+                else:
+                    retrieved = retrieve_few_shot_examples(example_text, train_df, retrieval_vectorizer, retrieval_matrix, k=3)
+                    example_prompt = make_retrieval_few_shot_prompt(example_text, label_names, retrieved)
+                prompt_examples.append(f"--- {mode} prompt example ---\n{example_prompt}\n")
 
         predictions_df = pd.DataFrame(all_rows)
         invalid_outputs_df = predictions_df[predictions_df["predicted_label"] == "INVALID_PREDICTION"].copy()

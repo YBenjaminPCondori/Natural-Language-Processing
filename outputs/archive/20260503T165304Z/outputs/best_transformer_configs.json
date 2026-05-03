@@ -1,0 +1,41 @@
+{
+  "distilbert-base-uncased": {
+    "source": "results/transformer/training_args.json"
+  },
+  "pending_search_space": {
+    "learning_rate": [
+      1e-05,
+      2e-05,
+      3e-05,
+      5e-05
+    ],
+    "batch_size": [
+      8,
+      16,
+      32
+    ],
+    "epochs": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "weight_decay": [
+      0.0,
+      0.01,
+      0.05
+    ],
+    "warmup_ratio": [
+      0.0,
+      0.06,
+      0.1
+    ],
+    "max_length": [
+      128,
+      256,
+      512
+    ],
+    "objective": "validation_macro_f1",
+    "test_policy": "Test split is used only after validation selection."
+  }
+}

@@ -18,9 +18,18 @@ from sklearn.svm import LinearSVC
 from .evaluation import evaluate_predictions_common
 
 
-def classical_model_configs(max_features_list: list[int], ngram_ranges: list[tuple[int, int]]) -> list[dict[str, Any]]:
+def classical_model_configs(
+    max_features_list: list[int],
+    ngram_ranges: list[tuple[int, int]],
+    min_df_list: list[int],
+) -> list[dict[str, Any]]:
     """Build the TF-IDF grid."""
-    return [{"max_features": max_features, "ngram_range": ngram_range} for max_features in max_features_list for ngram_range in ngram_ranges]
+    return [
+        {"max_features": max_features, "ngram_range": ngram_range, "min_df": min_df}
+        for max_features in max_features_list
+        for ngram_range in ngram_ranges
+        for min_df in min_df_list
+    ]
 
 
 def build_classical_pipeline(
@@ -28,17 +37,26 @@ def build_classical_pipeline(
     *,
     max_features: int,
     ngram_range: tuple[int, int],
+    min_df: int = 1,
+    c_value: float = 1.0,
+    alpha: float = 1.0,
     class_weight: str | None = None,
     seed: int = 42,
 ) -> Pipeline:
     """Build one classical sklearn pipeline."""
-    vectorizer = TfidfVectorizer(max_features=max_features, ngram_range=ngram_range, lowercase=True, stop_words=None)
+    vectorizer = TfidfVectorizer(
+        max_features=max_features,
+        ngram_range=ngram_range,
+        min_df=min_df,
+        lowercase=True,
+        stop_words=None,
+    )
     if model_name == "logistic_regression":
-        classifier = LogisticRegression(max_iter=2000, class_weight=class_weight, random_state=seed, n_jobs=-1)
+        classifier = LogisticRegression(max_iter=2000, C=c_value, class_weight=class_weight, random_state=seed, n_jobs=-1)
     elif model_name == "linear_svm":
-        classifier = LinearSVC(class_weight=class_weight, random_state=seed)
+        classifier = LinearSVC(C=c_value, class_weight=class_weight, random_state=seed)
     elif model_name == "multinomial_nb":
-        classifier = MultinomialNB()
+        classifier = MultinomialNB(alpha=alpha)
     else:
         raise ValueError(model_name)
     return Pipeline([("vectorizer", vectorizer), ("classifier", classifier)])
@@ -53,6 +71,9 @@ def run_classical_experiments(
     *,
     max_features_list: list[int],
     ngram_ranges: list[tuple[int, int]],
+    min_df_list: list[int] | None = None,
+    c_values: list[float] | None = None,
+    nb_alpha_values: list[float] | None = None,
     dataset_name: str = "LEDGAR",
     seed: int = 42,
     run_naive_bayes: bool = True,
@@ -77,6 +98,10 @@ def run_classical_experiments(
     x_test = test_df["text"].tolist()
     y_test = test_df["label_id"].astype(int).tolist()
 
+    min_df_list = min_df_list or [1, 2, 5]
+    c_values = c_values or [0.1, 1.0, 3.0, 10.0]
+    nb_alpha_values = nb_alpha_values or [0.1, 0.5, 1.0]
+
     model_names = ["logistic_regression", "linear_svm"]
     if run_naive_bayes:
         model_names.append("multinomial_nb")
@@ -96,24 +121,38 @@ def run_classical_experiments(
         best_for_model = None
         best_for_model_score = -1.0
         best_for_model_config = None
-        for config in classical_model_configs(max_features_list, ngram_ranges):
+        for config in classical_model_configs(max_features_list, ngram_ranges, min_df_list):
+            regularisation_grid = c_values if model_name in {"logistic_regression", "linear_svm"} else [None]
+            alpha_grid = nb_alpha_values if model_name == "multinomial_nb" else [None]
             for class_weight in class_weight_options:
-                pipeline = build_classical_pipeline(model_name, class_weight=class_weight, seed=seed, **config)
-                pipeline.fit(x_train, y_train)
-                val_pred = pipeline.predict(x_val).astype(int).tolist()
-                macro_f1 = f1_score(y_val, val_pred, labels=sorted(id2label), average="macro", zero_division=0)
-                row = {
-                    "model_name": model_name,
-                    "validation_macro_f1": macro_f1,
-                    "max_features": config["max_features"],
-                    "ngram_range": str(config["ngram_range"]),
-                    "class_weight": class_weight,
-                }
-                validation_rows.append(row)
-                if macro_f1 > best_for_model_score:
-                    best_for_model = pipeline
-                    best_for_model_score = macro_f1
-                    best_for_model_config = row
+                for c_value in regularisation_grid:
+                    for alpha in alpha_grid:
+                        pipeline = build_classical_pipeline(
+                            model_name,
+                            class_weight=class_weight,
+                            seed=seed,
+                            c_value=float(c_value) if c_value is not None else 1.0,
+                            alpha=float(alpha) if alpha is not None else 1.0,
+                            **config,
+                        )
+                        pipeline.fit(x_train, y_train)
+                        val_pred = pipeline.predict(x_val).astype(int).tolist()
+                        macro_f1 = f1_score(y_val, val_pred, labels=sorted(id2label), average="macro", zero_division=0)
+                        row = {
+                            "model_name": model_name,
+                            "validation_macro_f1": macro_f1,
+                            "max_features": config["max_features"],
+                            "ngram_range": str(config["ngram_range"]),
+                            "min_df": config["min_df"],
+                            "C": c_value,
+                            "alpha": alpha,
+                            "class_weight": class_weight,
+                        }
+                        validation_rows.append(row)
+                        if macro_f1 > best_for_model_score:
+                            best_for_model = pipeline
+                            best_for_model_score = macro_f1
+                            best_for_model_config = row
 
         if best_for_model is None or best_for_model_config is None:
             continue

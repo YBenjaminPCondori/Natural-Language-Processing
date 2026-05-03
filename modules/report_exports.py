@@ -323,26 +323,76 @@ def export_label_distribution(
 
 
 def export_main_results(paths: ProjectPaths, completed_results: list[dict[str, Any]]) -> Path:
-    """Save report-ready model comparison table without dropping optional fields."""
+    """Save canonical report-ready model comparison table."""
     output_path = paths.project_root / "outputs" / "main_results.csv"
     columns = [
-        "model_family",
         "model_name",
+        "model_family",
         "training_type",
-        "dataset",
-        "eval_split",
-        "sample_size",
-        "accuracy",
-        "macro_f1",
-        "weighted_f1",
+        "split_used",
+        "validation_accuracy",
+        "validation_macro_f1",
+        "test_accuracy",
+        "test_macro_f1",
+        "test_weighted_f1",
+        "test_macro_precision",
+        "test_macro_recall",
         "invalid_prediction_rate",
-        "notes",
-        "classification_report_path",
-        "confusion_matrix_path",
+        "selected_by_validation",
+        "hyperparameter_source",
+        "evidence_path",
+        "prediction_path",
+        "status",
+        "reason_if_skipped_or_failed",
     ]
-    results_df = pd.DataFrame(completed_results).reindex(columns=columns)
+    rows = []
+    for result in completed_results:
+        model_name = str(result.get("model_name", ""))
+        raw_family = str(result.get("model_family", ""))
+        family = {"transformer": "transformer_encoder"}.get(raw_family, raw_family)
+        training_type = {
+            "baseline": "dummy",
+            "classical": "classical",
+            "transformer_encoder": "fine_tuned_encoder",
+            "llm_prompting": "prompted_llm",
+        }.get(family, result.get("training_type"))
+        status = _status_from_result(result)
+        reason = "" if status == "completed" else str(result.get("notes", ""))
+        invalid_rate = result.get("invalid_prediction_rate")
+        if "qwen" in model_name.lower() and pd.notna(invalid_rate) and float(invalid_rate) >= 1.0:
+            status = "failed"
+            reason = "All prompted outputs were invalid; do not report as a meaningful completed result."
+        evidence = "; ".join(
+            str(value)
+            for value in [result.get("classification_report_path"), result.get("confusion_matrix_path")]
+            if value
+        )
+        rows.append(
+            {
+                "model_name": model_name,
+                "model_family": family,
+                "training_type": training_type,
+                "split_used": result.get("eval_split", "test"),
+                "validation_accuracy": result.get("validation_accuracy"),
+                "validation_macro_f1": result.get("validation_macro_f1"),
+                "test_accuracy": result.get("accuracy"),
+                "test_macro_f1": result.get("macro_f1"),
+                "test_weighted_f1": result.get("weighted_f1"),
+                "test_macro_precision": result.get("macro_precision"),
+                "test_macro_recall": result.get("macro_recall"),
+                "invalid_prediction_rate": invalid_rate,
+                "selected_by_validation": result.get("validation_macro_f1") is not None or family in {"classical", "transformer_encoder"},
+                "hyperparameter_source": "validation macro-F1" if family in {"classical", "transformer_encoder"} else "fixed_or_not_applicable",
+                "evidence_path": evidence,
+                "prediction_path": "",
+                "status": status,
+                "reason_if_skipped_or_failed": reason,
+            }
+        )
+    results_df = pd.DataFrame(rows).reindex(columns=columns)
     results_df.to_csv(output_path, index=False)
     results_df.to_json(paths.project_root / "outputs" / "final_model_comparison.jsonl", orient="records", lines=True, force_ascii=False)
+    results_df.to_json(paths.project_root / "outputs" / "main_results.json", orient="records", indent=2, force_ascii=False)
     return output_path
 
 

@@ -3,4 +3,7 @@
 The coursework notebook does not import or require this module.
 """
 
-from ledgar_pipeline.wandb_tracking import *  # noqa: F401,F403
+try:
+    from ledgar_pipeline.wandb_tracking import *  # noqa: F401,F403
+except ModuleNotFoundError:
+    __all__: list[str] = []
