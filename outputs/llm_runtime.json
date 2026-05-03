@@ -1,6 +1,6 @@
 {
   "runtime": {
-    "created_at_utc": "2026-05-03T21:43:36.911491+00:00",
+    "created_at_utc": "2026-05-03T22:15:38.169971+00:00",
     "python_version": "3.11.7",
     "platform": "Windows-10-10.0.26100-SP0",
     "quantization": "4bit",
@@ -23,7 +23,7 @@
     {
       "model_key": "qwen_small",
       "model_id": "Qwen/Qwen2.5-3B-Instruct",
-      "loaded_model_id": "Qwen/Qwen2.5-3B-Instruct-AWQ",
+      "loaded_model_id": "Qwen/Qwen2.5-3B-Instruct",
       "load_status": "failed",
       "reason": "RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.",
       "quantization": "4bit"

@@ -46,6 +46,8 @@ LLM_RESULTS_COLUMNS = [
     "model_key",
     "model_id",
     "split",
+    "prompt_type",
+    "decoding_type",
     "accuracy",
     "macro_f1",
     "weighted_f1",
@@ -71,6 +73,31 @@ LLM_PREDICTION_COLUMNS = [
 LLM_PER_CLASS_COLUMNS = ["model_key", "split", "label", "precision", "recall", "f1", "support"]
 
 
+LLM_DECODING_COMPARISON_COLUMNS = [
+    "model_key",
+    "text",
+    "true_label",
+    "greedy_output",
+    "beam_output",
+    "high_temp_outputs",
+    "sampling_outputs",
+    "parsed_greedy_label",
+    "parsed_beam_label",
+    "notes_if_any",
+]
+
+
+LLM_RATIONALE_COLUMNS = [
+    "model_key",
+    "text",
+    "true_label",
+    "raw_output",
+    "cue_or_rationale",
+    "parsed_label",
+    "is_correct",
+]
+
+
 LLM_FAILED_COLUMNS = ["model_key", "model_id", "status", "reason"]
 
 
@@ -82,6 +109,9 @@ class DecodingSettings:
     top_p: float = 1.0
     max_new_tokens: int = 16
     do_sample: bool = False
+    num_beams: int = 1
+    num_return_sequences: int = 1
+    decoding_type: str = "greedy"
 
 
 def utc_now() -> str:
@@ -93,9 +123,14 @@ def normalise_label(value: str) -> str:
     return normalise_whitespace(value).strip(" `\"'").lower()
 
 
-def parse_label(raw_output: str, label_names: list[str]) -> str:
+def parse_label(raw_output: str, label_names: list[str], *, prompt_type: str = "zero_shot") -> str:
     """Return an exact allowed label or an empty string for invalid output."""
     label_lookup = {normalise_label(label): label for label in label_names}
+    if prompt_type == "brief_rationale":
+        for line in str(raw_output or "").splitlines():
+            if line.lower().strip().startswith("label:"):
+                candidate = line.split(":", 1)[1]
+                return label_lookup.get(normalise_label(candidate), "")
     for line in str(raw_output or "").splitlines():
         cleaned = normalise_whitespace(line)
         if cleaned:
@@ -103,8 +138,24 @@ def parse_label(raw_output: str, label_names: list[str]) -> str:
     return ""
 
 
+def extract_cue_or_rationale(raw_output: str) -> str:
+    """Extract a short cue line from rationale-style outputs when present."""
+    for line in str(raw_output or "").splitlines():
+        if line.lower().strip().startswith("cue:"):
+            return normalise_whitespace(line.split(":", 1)[1])
+    return ""
+
+
 def label_list_text(label_names: list[str]) -> str:
     return "\n".join(f"- {label}" for label in label_names)
+
+
+def clip_clause_text(value: str, max_chars: int = 500) -> str:
+    """Keep few-shot demonstrations compact enough for generation context."""
+    text = normalise_whitespace(str(value))
+    if len(text) <= max_chars:
+        return text
+    return text[: max_chars - 3].rstrip() + "..."
 
 
 def build_classification_prompt(clause_text: str, label_names: list[str]) -> str:
@@ -117,7 +168,59 @@ Allowed labels:
 Clause:
 {clause_text}
 
-Return only the label name."""
+Return only the label name. Do not explain."""
+
+
+def build_brief_rationale_prompt(clause_text: str, label_names: list[str]) -> str:
+    """Build the validation-only brief-rationale prompt."""
+    return f"""Classify the following legal clause into exactly one allowed label.
+
+Allowed labels:
+{label_list_text(label_names)}
+
+Clause:
+{clause_text}
+
+Briefly identify the key legal cue, then give the final label.
+
+Output format:
+Cue: <short phrase>
+Label: <one allowed label>"""
+
+
+def build_few_shot_examples(
+    train_df: pd.DataFrame,
+    label_names: list[str],
+    *,
+    examples_per_label: int = 1,
+    max_chars: int = 500,
+) -> list[dict[str, str]]:
+    """Select few-shot examples from the training split only."""
+    rows: list[dict[str, str]] = []
+    for label in label_names:
+        label_rows = train_df[train_df["label"] == label].head(examples_per_label)
+        for row in label_rows.to_dict(orient="records"):
+            rows.append({"text": clip_clause_text(str(row["text"]), max_chars=max_chars), "label": str(row["label"])})
+    return rows
+
+
+def build_few_shot_prompt(clause_text: str, label_names: list[str], examples: list[dict[str, str]]) -> str:
+    """Build a few-shot classification prompt using training-only examples."""
+    rendered_examples = "\n\n".join(
+        f"Clause:\n{example['text']}\nLabel: {example['label']}" for example in examples
+    )
+    return f"""Classify the following legal clause into exactly one of the allowed categories.
+
+Allowed labels:
+{label_list_text(label_names)}
+
+Examples from the training set:
+{rendered_examples}
+
+Clause:
+{clause_text}
+
+Return only the label name. Do not explain."""
 
 
 def apply_chat_template(tokenizer: Any, prompt: str) -> str:
@@ -139,10 +242,13 @@ def generation_kwargs(settings: DecodingSettings) -> dict[str, Any]:
     kwargs = {
         "max_new_tokens": int(settings.max_new_tokens),
         "do_sample": bool(settings.do_sample),
+        "num_beams": max(int(settings.num_beams), 1),
     }
     if settings.do_sample:
         kwargs["temperature"] = max(float(settings.temperature), 1e-5)
         kwargs["top_p"] = float(settings.top_p)
+    if int(settings.num_return_sequences) > 1:
+        kwargs["num_return_sequences"] = int(settings.num_return_sequences)
     return kwargs
 
 
@@ -234,6 +340,17 @@ def load_causal_lm(model_id: str, *, quantization: str, allow_cpu: bool) -> tupl
     return model, tokenizer, metadata
 
 
+def should_try_fallback_model(error: str) -> bool:
+    """Use fallback IDs only for model availability/load issues, not environment failures."""
+    environment_markers = [
+        "CUDA/GPU is unavailable",
+        "bitsandbytes is required",
+        "CUDA out of memory",
+        "out of memory",
+    ]
+    return not any(marker.lower() in error.lower() for marker in environment_markers)
+
+
 def generate_outputs(
     model: Any,
     tokenizer: Any,
@@ -243,10 +360,23 @@ def generate_outputs(
     batch_size: int,
 ) -> tuple[list[str], float]:
     """Generate raw model outputs for prompts."""
+    grouped, elapsed = generate_output_groups(model, tokenizer, prompts, settings, batch_size=batch_size)
+    return [items[0] if items else "" for items in grouped], elapsed
+
+
+def generate_output_groups(
+    model: Any,
+    tokenizer: Any,
+    prompts: list[str],
+    settings: DecodingSettings,
+    *,
+    batch_size: int,
+) -> tuple[list[list[str]], float]:
+    """Generate raw model outputs grouped by source prompt."""
     import torch
 
     rendered = [apply_chat_template(tokenizer, prompt) for prompt in prompts]
-    outputs: list[str] = []
+    outputs: list[list[str]] = []
     start = time.perf_counter()
     for offset in range(0, len(rendered), batch_size):
         batch = rendered[offset : offset + batch_size]
@@ -263,8 +393,13 @@ def generate_outputs(
                 **generation_kwargs(settings),
             )
         prompt_width = inputs["input_ids"].shape[1]
-        for output_ids in generated:
-            outputs.append(tokenizer.decode(output_ids[prompt_width:], skip_special_tokens=True).strip())
+        decoded = [tokenizer.decode(output_ids[prompt_width:], skip_special_tokens=True).strip() for output_ids in generated]
+        return_sequences = max(int(settings.num_return_sequences), 1)
+        if return_sequences == 1:
+            outputs.extend([[item] for item in decoded])
+        else:
+            for index in range(0, len(decoded), return_sequences):
+                outputs.append(decoded[index : index + return_sequences])
     elapsed = time.perf_counter() - start
     return outputs, elapsed
 
@@ -275,6 +410,8 @@ def compute_split_metrics(
     model_key: str,
     model_id: str,
     split: str,
+    prompt_type: str,
+    decoding_type: str,
     label_names: list[str],
     label2id: dict[str, int],
     fallback_label_id: int,
@@ -289,6 +426,8 @@ def compute_split_metrics(
         "model_key": model_key,
         "model_id": model_id,
         "split": split,
+        "prompt_type": prompt_type,
+        "decoding_type": decoding_type,
         "accuracy": accuracy_score(y_true, y_pred) if y_true else np.nan,
         "macro_f1": f1_score(y_true, y_pred, labels=label_ids, average="macro", zero_division=0) if y_true else np.nan,
         "weighted_f1": f1_score(y_true, y_pred, labels=label_ids, average="weighted", zero_division=0) if y_true else np.nan,
@@ -334,13 +473,19 @@ def evaluate_loaded_model(
     fallback_label_id: int,
     settings: DecodingSettings,
     batch_size: int,
+    prompt_type: str = "zero_shot",
+    few_shot_examples: list[dict[str, str]] | None = None,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
     """Evaluate a loaded model on one split."""
-    prompts = [build_classification_prompt(text, label_names) for text in split_df["text"].astype(str).tolist()]
+    if prompt_type == "few_shot":
+        examples = few_shot_examples or []
+        prompts = [build_few_shot_prompt(text, label_names, examples) for text in split_df["text"].astype(str).tolist()]
+    else:
+        prompts = [build_classification_prompt(text, label_names) for text in split_df["text"].astype(str).tolist()]
     raw_outputs, elapsed = generate_outputs(model, tokenizer, prompts, settings, batch_size=batch_size)
     rows = []
     for row, raw_output in zip(split_df.to_dict(orient="records"), raw_outputs, strict=False):
-        parsed_label = parse_label(raw_output, label_names)
+        parsed_label = parse_label(raw_output, label_names, prompt_type=prompt_type)
         is_valid = bool(parsed_label)
         true_label = str(row["label"])
         rows.append(
@@ -362,6 +507,8 @@ def evaluate_loaded_model(
         model_key=model_key,
         model_id=model_id,
         split=split,
+        prompt_type=prompt_type,
+        decoding_type=settings.decoding_type,
         label_names=label_names,
         label2id=label2id,
         fallback_label_id=fallback_label_id,
@@ -371,11 +518,12 @@ def evaluate_loaded_model(
 
 
 def decoding_grid() -> list[DecodingSettings]:
-    """Validation-only decoding grid."""
+    """Validation-only decoding/error-analysis settings."""
     return [
-        DecodingSettings(temperature=temperature, max_new_tokens=max_new_tokens, top_p=1.0, do_sample=False)
-        for temperature in (0.0, 0.2)
-        for max_new_tokens in (8, 16)
+        DecodingSettings(decoding_type="greedy", temperature=0.0, do_sample=False, top_p=1.0, num_beams=1, max_new_tokens=16),
+        DecodingSettings(decoding_type="high_temperature", temperature=0.7, do_sample=True, top_p=1.0, num_beams=1, max_new_tokens=16),
+        DecodingSettings(decoding_type="heavy_sampling", temperature=0.8, do_sample=True, top_p=0.9, num_beams=1, num_return_sequences=3, max_new_tokens=16),
+        DecodingSettings(decoding_type="light_beam", temperature=0.0, do_sample=False, top_p=1.0, num_beams=3, max_new_tokens=16),
     ]
 
 
@@ -389,13 +537,16 @@ def select_decoding_settings(
     label_names: list[str],
     label2id: dict[str, int],
     fallback_label_id: int,
+    few_shot_examples: list[dict[str, str]],
     batch_size: int,
-) -> tuple[DecodingSettings, list[dict[str, Any]]]:
-    """Select decoding settings using validation macro-F1 only."""
+) -> tuple[DecodingSettings, str, list[dict[str, Any]]]:
+    """Select final prompt setup using validation macro-F1 only."""
     rows = []
     best_settings = DecodingSettings()
+    best_prompt_type = "zero_shot"
     best_score = -1.0
-    for settings in decoding_grid():
+    for prompt_type, examples in (("zero_shot", None), ("few_shot", few_shot_examples)):
+        settings = DecodingSettings()
         result, _, _ = evaluate_loaded_model(
             model,
             tokenizer,
@@ -407,6 +558,8 @@ def select_decoding_settings(
             label2id=label2id,
             fallback_label_id=fallback_label_id,
             settings=settings,
+            prompt_type=prompt_type,
+            few_shot_examples=examples,
             batch_size=batch_size,
         )
         row = {**asdict(settings), **result}
@@ -415,13 +568,18 @@ def select_decoding_settings(
         if score > best_score:
             best_score = score
             best_settings = settings
-    return best_settings, rows
+            best_prompt_type = prompt_type
+    return best_settings, best_prompt_type, rows
 
 
-def load_existing_decoding_settings(path: Path, model_key: str) -> DecodingSettings | None:
+def load_existing_decoding_settings(path: Path, model_key: str) -> tuple[DecodingSettings, str] | None:
     payload = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
     selected = payload.get("selected_by_model", {}).get(model_key)
-    return DecodingSettings(**selected) if selected else None
+    if not selected:
+        return None
+    prompt_type = selected.get("prompt_type", "zero_shot")
+    settings_payload = {key: value for key, value in selected.items() if key in DecodingSettings.__dataclass_fields__}
+    return DecodingSettings(**settings_payload), prompt_type
 
 
 def decoding_settings_complete(path: Path, model_keys: list[str]) -> bool:
@@ -435,18 +593,146 @@ def decoding_settings_complete(path: Path, model_keys: list[str]) -> bool:
     return all(model_key in selected for model_key in model_keys)
 
 
+def build_decoding_payload(
+    selected_settings: dict[str, dict[str, Any]],
+    validation_grid_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Build the decoding-settings audit payload."""
+    return {
+        "created_at_utc": utc_now(),
+        "selection_policy": "validation_macro_f1",
+        "test_policy": "Test split is evaluated only with selected/fixed decoding settings.",
+        "default_settings": asdict(DecodingSettings()),
+        "selected_by_model": selected_settings,
+        "validation_grid": validation_grid_rows,
+    }
+
+
+def run_validation_error_analysis(
+    model: Any,
+    tokenizer: Any,
+    validation_df: pd.DataFrame,
+    *,
+    model_key: str,
+    label_names: list[str],
+    batch_size: int,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Run validation-only decoding and rationale probes."""
+    comparison_rows: list[dict[str, Any]] = []
+    rationale_rows: list[dict[str, Any]] = []
+    if validation_df.empty:
+        return (
+            pd.DataFrame(columns=LLM_DECODING_COMPARISON_COLUMNS),
+            pd.DataFrame(columns=LLM_RATIONALE_COLUMNS),
+        )
+
+    prompts = [build_classification_prompt(text, label_names) for text in validation_df["text"].astype(str).tolist()]
+    greedy_outputs, _ = generate_outputs(model, tokenizer, prompts, DecodingSettings(), batch_size=batch_size)
+    beam_outputs, _ = generate_outputs(
+        model,
+        tokenizer,
+        prompts,
+        DecodingSettings(decoding_type="light_beam", num_beams=3, do_sample=False, max_new_tokens=16),
+        batch_size=batch_size,
+    )
+    high_outputs, _ = generate_outputs(
+        model,
+        tokenizer,
+        prompts,
+        DecodingSettings(decoding_type="high_temperature", temperature=0.7, do_sample=True, top_p=1.0, max_new_tokens=16),
+        batch_size=batch_size,
+    )
+    sampling_groups, _ = generate_output_groups(
+        model,
+        tokenizer,
+        prompts,
+        DecodingSettings(
+            decoding_type="heavy_sampling",
+            temperature=0.8,
+            do_sample=True,
+            top_p=0.9,
+            num_return_sequences=3,
+            max_new_tokens=16,
+        ),
+        batch_size=batch_size,
+    )
+
+    rationale_prompts = [build_brief_rationale_prompt(text, label_names) for text in validation_df["text"].astype(str).tolist()]
+    rationale_outputs, _ = generate_outputs(
+        model,
+        tokenizer,
+        rationale_prompts,
+        DecodingSettings(decoding_type="brief_rationale", max_new_tokens=64),
+        batch_size=batch_size,
+    )
+
+    for idx, row in enumerate(validation_df.to_dict(orient="records")):
+        greedy_output = greedy_outputs[idx] if idx < len(greedy_outputs) else ""
+        beam_output = beam_outputs[idx] if idx < len(beam_outputs) else ""
+        high_output = high_outputs[idx] if idx < len(high_outputs) else ""
+        sampling_outputs = sampling_groups[idx] if idx < len(sampling_groups) else []
+        parsed_greedy = parse_label(greedy_output, label_names)
+        parsed_beam = parse_label(beam_output, label_names)
+        notes = []
+        if not parsed_greedy:
+            notes.append("greedy_invalid")
+        if not parsed_beam:
+            notes.append("beam_invalid")
+        if parsed_greedy and parsed_beam and parsed_greedy != parsed_beam:
+            notes.append("greedy_beam_disagree")
+        comparison_rows.append(
+            {
+                "model_key": model_key,
+                "text": row["text"],
+                "true_label": row["label"],
+                "greedy_output": greedy_output,
+                "beam_output": beam_output,
+                "high_temp_outputs": high_output,
+                "sampling_outputs": " ||| ".join(sampling_outputs),
+                "parsed_greedy_label": parsed_greedy,
+                "parsed_beam_label": parsed_beam,
+                "notes_if_any": "; ".join(notes),
+            }
+        )
+
+        raw_rationale = rationale_outputs[idx] if idx < len(rationale_outputs) else ""
+        parsed_rationale = parse_label(raw_rationale, label_names, prompt_type="brief_rationale")
+        rationale_rows.append(
+            {
+                "model_key": model_key,
+                "text": row["text"],
+                "true_label": row["label"],
+                "raw_output": raw_rationale,
+                "cue_or_rationale": extract_cue_or_rationale(raw_rationale),
+                "parsed_label": parsed_rationale,
+                "is_correct": bool(parsed_rationale and parsed_rationale == row["label"]),
+            }
+        )
+
+    return (
+        pd.DataFrame(comparison_rows).reindex(columns=LLM_DECODING_COMPARISON_COLUMNS),
+        pd.DataFrame(rationale_rows).reindex(columns=LLM_RATIONALE_COLUMNS),
+    )
+
+
 def write_output_frames(
     output_dir: Path,
     *,
     results: list[dict[str, Any]],
     predictions: list[pd.DataFrame],
     per_class: list[pd.DataFrame],
+    decoding_comparisons: list[pd.DataFrame],
+    rationales: list[pd.DataFrame],
     failures: list[dict[str, Any]],
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(results).reindex(columns=LLM_RESULTS_COLUMNS).to_csv(output_dir / "llm_results.csv", index=False)
-    pd.concat(predictions, ignore_index=True).reindex(columns=LLM_PREDICTION_COLUMNS).to_csv(output_dir / "llm_predictions.csv", index=False) if predictions else pd.DataFrame(columns=LLM_PREDICTION_COLUMNS).to_csv(output_dir / "llm_predictions.csv", index=False)
+    final_predictions = pd.concat(predictions, ignore_index=True).reindex(columns=LLM_PREDICTION_COLUMNS) if predictions else pd.DataFrame(columns=LLM_PREDICTION_COLUMNS)
+    final_predictions.to_csv(output_dir / "llm_final_predictions.csv", index=False)
+    final_predictions.to_csv(output_dir / "llm_predictions.csv", index=False)
     pd.concat(per_class, ignore_index=True).reindex(columns=LLM_PER_CLASS_COLUMNS).to_csv(output_dir / "llm_per_class_metrics.csv", index=False) if per_class else pd.DataFrame(columns=LLM_PER_CLASS_COLUMNS).to_csv(output_dir / "llm_per_class_metrics.csv", index=False)
+    pd.concat(decoding_comparisons, ignore_index=True).reindex(columns=LLM_DECODING_COMPARISON_COLUMNS).to_csv(output_dir / "llm_error_analysis_decoding_comparison.csv", index=False) if decoding_comparisons else pd.DataFrame(columns=LLM_DECODING_COMPARISON_COLUMNS).to_csv(output_dir / "llm_error_analysis_decoding_comparison.csv", index=False)
+    pd.concat(rationales, ignore_index=True).reindex(columns=LLM_RATIONALE_COLUMNS).to_csv(output_dir / "llm_cot_rationale_examples.csv", index=False) if rationales else pd.DataFrame(columns=LLM_RATIONALE_COLUMNS).to_csv(output_dir / "llm_cot_rationale_examples.csv", index=False)
     pd.DataFrame(failures).reindex(columns=LLM_FAILED_COLUMNS).to_csv(output_dir / "llm_failed_models.csv", index=False)
 
 
@@ -469,6 +755,10 @@ def append_failed_trials(output_dir: Path, failures: list[dict[str, Any]]) -> No
     if path.exists() and path.stat().st_size > 0:
         old_df = pd.read_csv(path)
         new_df = pd.concat([old_df, new_df], ignore_index=True)
+        new_df = new_df.drop_duplicates(
+            subset=["stage", "model_key", "status", "reason"],
+            keep="last",
+        )
     new_df.to_csv(path, index=False)
 
 
@@ -507,8 +797,11 @@ def log_llm_wandb(
     model_id: str,
     model_config: dict[str, Any],
     decoding_settings: DecodingSettings,
+    prompt_type: str,
     result_rows: list[dict[str, Any]],
     artifact_paths: list[Path],
+    status: str = "completed",
+    failure_reason: str = "",
 ) -> None:
     run = start_wandb_run(
         enabled=enabled,
@@ -521,14 +814,21 @@ def log_llm_wandb(
             "model_key": model_key,
             "model_id": model_id,
             "role": model_config.get("role"),
+            "prompt_type": prompt_type,
             "decoding_settings": asdict(decoding_settings),
             "training_type": "inference_only_prompt_classification",
+            "status": status,
+            "failure_reason": failure_reason,
         },
         mode=mode,
     )
     if run is None:
         return
     try:
+        run.summary["status"] = status
+        if failure_reason:
+            run.summary["failure_reason"] = failure_reason
+        run.log({"model_load_completed": 1 if status == "completed" else 0})
         for result in result_rows:
             prefix = f"{result['split']}/{model_key}"
             run.log(
@@ -569,6 +869,7 @@ def evaluate_instruction_tuned_llms(
     batch_size: int = 1,
     quantization: str = "none",
     seed: int = 42,
+    error_analysis_examples: int = 50,
     allow_cpu: bool = False,
     wandb_enabled: bool = False,
     wandb_project: str = "ledgar-clause-classification",
@@ -581,6 +882,9 @@ def evaluate_instruction_tuned_llms(
     fallback_label_id = int(train_df["label_id"].mode().iloc[0]) if "label_id" in train_df and not train_df.empty else 0
     validation_sample = sample_split(validation_df, max_examples_per_split, seed)
     test_sample = sample_split(test_df, max_examples_per_split, seed)
+    analysis_limit = max_examples_per_split if max_examples_per_split else error_analysis_examples
+    validation_analysis_sample = sample_split(validation_df, analysis_limit, seed)
+    few_shot_examples = build_few_shot_examples(train_df, label_names, examples_per_label=1)
     settings_path = output_dir / "llm_decoding_settings.json"
 
     if evaluate_test and not tune_decoding_on_validation and not decoding_settings_complete(settings_path, model_keys):
@@ -592,6 +896,8 @@ def evaluate_instruction_tuned_llms(
     results: list[dict[str, Any]] = []
     predictions: list[pd.DataFrame] = []
     per_class_frames: list[pd.DataFrame] = []
+    decoding_comparisons: list[pd.DataFrame] = []
+    rationales: list[pd.DataFrame] = []
     failures: list[dict[str, Any]] = []
     selected_settings: dict[str, dict[str, Any]] = {}
     validation_grid_rows: list[dict[str, Any]] = []
@@ -608,9 +914,9 @@ def evaluate_instruction_tuned_llms(
         load_metadata: dict[str, Any] = {}
         load_error = ""
         for model_id in candidate_model_ids:
+            loaded_id = model_id
             try:
                 model, tokenizer, load_metadata = load_causal_lm(model_id, quantization=quantization, allow_cpu=allow_cpu)
-                loaded_id = model_id
                 break
             except Exception as exc:
                 load_error = f"{type(exc).__name__}: {exc}"
@@ -620,14 +926,44 @@ def evaluate_instruction_tuned_llms(
                     "reason": load_error,
                     "quantization": quantization,
                 }
+                if not should_try_fallback_model(load_error):
+                    break
         if model is None or tokenizer is None:
             failures.append({"model_key": model_key, "model_id": loaded_id, "status": "failed", "reason": load_error})
             runtime_rows.append({"model_key": model_key, "model_id": loaded_id, **load_metadata})
+            write_output_frames(
+                output_dir,
+                results=results,
+                predictions=predictions,
+                per_class=per_class_frames,
+                decoding_comparisons=decoding_comparisons,
+                rationales=rationales,
+                failures=failures,
+            )
+            write_json(settings_path, build_decoding_payload(selected_settings, validation_grid_rows))
+            log_llm_wandb(
+                enabled=wandb_enabled,
+                project=wandb_project,
+                entity=wandb_entity,
+                mode=wandb_mode,
+                model_key=model_key,
+                model_id=loaded_id,
+                model_config=config,
+                decoding_settings=DecodingSettings(),
+                prompt_type="not_run",
+                result_rows=[],
+                artifact_paths=[
+                    output_dir / "llm_decoding_settings.json",
+                    output_dir / "llm_failed_models.csv",
+                ],
+                status="failed",
+                failure_reason=load_error,
+            )
             continue
 
         try:
             if tune_decoding_on_validation:
-                settings, grid_rows = select_decoding_settings(
+                settings, prompt_type, grid_rows = select_decoding_settings(
                     model,
                     tokenizer,
                     validation_sample,
@@ -636,13 +972,18 @@ def evaluate_instruction_tuned_llms(
                     label_names=label_names,
                     label2id=label2id,
                     fallback_label_id=fallback_label_id,
+                    few_shot_examples=few_shot_examples,
                     batch_size=batch_size,
                 )
                 validation_grid_rows.extend(grid_rows)
             else:
-                settings = load_existing_decoding_settings(settings_path, model_key) or DecodingSettings()
+                existing_settings = load_existing_decoding_settings(settings_path, model_key)
+                if existing_settings is None:
+                    settings, prompt_type = DecodingSettings(), "zero_shot"
+                else:
+                    settings, prompt_type = existing_settings
 
-            selected_settings[model_key] = asdict(settings)
+            selected_settings[model_key] = {**asdict(settings), "prompt_type": prompt_type}
             validation_result, validation_predictions, validation_per_class = evaluate_loaded_model(
                 model,
                 tokenizer,
@@ -655,11 +996,24 @@ def evaluate_instruction_tuned_llms(
                 fallback_label_id=fallback_label_id,
                 settings=settings,
                 batch_size=batch_size,
+                prompt_type=prompt_type,
+                few_shot_examples=few_shot_examples,
             )
             results.append(validation_result)
             predictions.append(validation_predictions)
             per_class_frames.append(validation_per_class)
             model_result_rows = [validation_result]
+
+            comparison_df, rationale_df = run_validation_error_analysis(
+                model,
+                tokenizer,
+                validation_analysis_sample,
+                model_key=model_key,
+                label_names=label_names,
+                batch_size=batch_size,
+            )
+            decoding_comparisons.append(comparison_df)
+            rationales.append(rationale_df)
 
             if evaluate_test:
                 test_result, test_predictions, test_per_class = evaluate_loaded_model(
@@ -674,6 +1028,8 @@ def evaluate_instruction_tuned_llms(
                     fallback_label_id=fallback_label_id,
                     settings=settings,
                     batch_size=batch_size,
+                    prompt_type=prompt_type,
+                    few_shot_examples=few_shot_examples,
                 )
                 results.append(test_result)
                 predictions.append(test_predictions)
@@ -681,7 +1037,16 @@ def evaluate_instruction_tuned_llms(
                 model_result_rows.append(test_result)
 
             runtime_rows.append({"model_key": model_key, "model_id": loaded_id, **load_metadata, "load_status": "completed"})
-            write_output_frames(output_dir, results=results, predictions=predictions, per_class=per_class_frames, failures=failures)
+            write_output_frames(
+                output_dir,
+                results=results,
+                predictions=predictions,
+                per_class=per_class_frames,
+                decoding_comparisons=decoding_comparisons,
+                rationales=rationales,
+                failures=failures,
+            )
+            write_json(settings_path, build_decoding_payload(selected_settings, validation_grid_rows))
             log_llm_wandb(
                 enabled=wandb_enabled,
                 project=wandb_project,
@@ -691,6 +1056,7 @@ def evaluate_instruction_tuned_llms(
                 model_id=loaded_id,
                 model_config=config,
                 decoding_settings=settings,
+                prompt_type=prompt_type,
                 result_rows=model_result_rows,
                 artifact_paths=[
                     output_dir / "llm_results.csv",
@@ -700,8 +1066,37 @@ def evaluate_instruction_tuned_llms(
                 ],
             )
         except Exception as exc:
-            failures.append({"model_key": model_key, "model_id": loaded_id, "status": "failed", "reason": f"{type(exc).__name__}: {exc}"})
+            failure_reason = f"{type(exc).__name__}: {exc}"
+            failures.append({"model_key": model_key, "model_id": loaded_id, "status": "failed", "reason": failure_reason})
             runtime_rows.append({"model_key": model_key, "model_id": loaded_id, **load_metadata, "load_status": "failed"})
+            write_output_frames(
+                output_dir,
+                results=results,
+                predictions=predictions,
+                per_class=per_class_frames,
+                decoding_comparisons=decoding_comparisons,
+                rationales=rationales,
+                failures=failures,
+            )
+            write_json(settings_path, build_decoding_payload(selected_settings, validation_grid_rows))
+            log_llm_wandb(
+                enabled=wandb_enabled,
+                project=wandb_project,
+                entity=wandb_entity,
+                mode=wandb_mode,
+                model_key=model_key,
+                model_id=loaded_id,
+                model_config=config,
+                decoding_settings=DecodingSettings(),
+                prompt_type="failed_after_load",
+                result_rows=[],
+                artifact_paths=[
+                    output_dir / "llm_decoding_settings.json",
+                    output_dir / "llm_failed_models.csv",
+                ],
+                status="failed",
+                failure_reason=failure_reason,
+            )
         finally:
             try:
                 del model
@@ -709,17 +1104,18 @@ def evaluate_instruction_tuned_llms(
             except Exception:
                 pass
 
-    decoding_payload = {
-        "created_at_utc": utc_now(),
-        "selection_policy": "validation_macro_f1",
-        "test_policy": "Test split is evaluated only with selected/fixed decoding settings.",
-        "default_settings": asdict(DecodingSettings()),
-        "selected_by_model": selected_settings,
-        "validation_grid": validation_grid_rows,
-    }
+    decoding_payload = build_decoding_payload(selected_settings, validation_grid_rows)
     write_json(settings_path, decoding_payload)
     write_json(output_dir / "llm_runtime.json", {"runtime": runtime_payload(quantization=quantization, allow_cpu=allow_cpu), "models": runtime_rows})
-    write_output_frames(output_dir, results=results, predictions=predictions, per_class=per_class_frames, failures=failures)
+    write_output_frames(
+        output_dir,
+        results=results,
+        predictions=predictions,
+        per_class=per_class_frames,
+        decoding_comparisons=decoding_comparisons,
+        rationales=rationales,
+        failures=failures,
+    )
     append_failed_trials(output_dir, failures)
     plot_llm_comparison(output_dir, figures_dir, results)
 

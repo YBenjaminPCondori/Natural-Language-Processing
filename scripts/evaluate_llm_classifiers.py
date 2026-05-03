@@ -37,6 +37,7 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--quantization", choices=["none", "8bit", "4bit"], default="none")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--error-analysis-examples", type=int, default=50)
     parser.add_argument("--allow-cpu", action="store_true")
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--wandb-project", default=os.environ.get("WANDB_PROJECT", "ledgar-clause-classification"))
@@ -70,6 +71,7 @@ def main() -> None:
         batch_size=args.batch_size,
         quantization=args.quantization,
         seed=args.seed,
+        error_analysis_examples=args.error_analysis_examples,
         allow_cpu=args.allow_cpu,
         wandb_enabled=args.wandb,
         wandb_project=args.wandb_project,
@@ -83,8 +85,11 @@ def main() -> None:
                 "failure_rows": len(summary["failures"]),
                 "outputs": [
                     "outputs/llm_results.csv",
+                    "outputs/llm_final_predictions.csv",
                     "outputs/llm_predictions.csv",
                     "outputs/llm_per_class_metrics.csv",
+                    "outputs/llm_error_analysis_decoding_comparison.csv",
+                    "outputs/llm_cot_rationale_examples.csv",
                     "outputs/llm_decoding_settings.json",
                     "outputs/llm_failed_models.csv",
                     "figures/llm_model_comparison.png",

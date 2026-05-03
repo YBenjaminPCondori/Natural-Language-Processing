@@ -1,4 +1,4 @@
 stage,model_key,model_id,status,reason,created_at_utc
-instruction_tuned_llm_evaluation,saullm_7b,Equall/Saul-7B-Instruct-v1,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.,2026-05-03T21:43:36.933877+00:00
-instruction_tuned_llm_evaluation,qwen_small,Qwen/Qwen2.5-3B-Instruct,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.,2026-05-03T21:43:36.933877+00:00
-instruction_tuned_llm_evaluation,qwen_7b,Qwen/Qwen2.5-7B-Instruct,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.,2026-05-03T21:43:36.933877+00:00
+instruction_tuned_llm_evaluation,saullm_7b,Equall/Saul-7B-Instruct-v1,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.,2026-05-03T22:15:38.194342+00:00
+instruction_tuned_llm_evaluation,qwen_small,Qwen/Qwen2.5-3B-Instruct,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.,2026-05-03T22:15:38.194342+00:00
+instruction_tuned_llm_evaluation,qwen_7b,Qwen/Qwen2.5-7B-Instruct,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.,2026-05-03T22:15:38.194342+00:00

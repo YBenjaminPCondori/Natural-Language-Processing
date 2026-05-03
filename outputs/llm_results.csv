@@ -1,1 +1,1 @@
-model_key,model_id,split,accuracy,macro_f1,weighted_f1,invalid_output_rate,avg_seconds_per_example,num_examples
+model_key,model_id,split,prompt_type,decoding_type,accuracy,macro_f1,weighted_f1,invalid_output_rate,avg_seconds_per_example,num_examples

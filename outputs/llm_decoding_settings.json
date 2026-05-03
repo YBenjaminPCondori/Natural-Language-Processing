@@ -1,12 +1,15 @@
 {
-  "created_at_utc": "2026-05-03T21:43:36.910461+00:00",
+  "created_at_utc": "2026-05-03T22:15:38.168972+00:00",
   "selection_policy": "validation_macro_f1",
   "test_policy": "Test split is evaluated only with selected/fixed decoding settings.",
   "default_settings": {
     "temperature": 0.0,
     "top_p": 1.0,
     "max_new_tokens": 16,
-    "do_sample": false
+    "do_sample": false,
+    "num_beams": 1,
+    "num_return_sequences": 1,
+    "decoding_type": "greedy"
   },
   "selected_by_model": {},
   "validation_grid": []

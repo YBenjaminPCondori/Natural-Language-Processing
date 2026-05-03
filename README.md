@@ -110,6 +110,8 @@ Full LLM evaluation after validation decoding selection:
 python scripts/evaluate_llm_classifiers.py --models saullm_7b qwen_small qwen_7b --tune-decoding-on-validation --evaluate-test --quantization 4bit --wandb
 ```
 
+The dry run writes headers and failed/skipped records if models cannot load. Full evaluation should be run on Colab/A100 or equivalent GPU.
+
 Run transformer fine-tuning from the notebook on Colab/A100 by setting:
 
 ```python
@@ -138,11 +140,14 @@ Configured models:
 - Qwen small, `Qwen/Qwen2.5-3B-Instruct`, included as an efficient general-purpose instruction model.
 - Qwen 7B, `Qwen/Qwen2.5-7B-Instruct`, included as a stronger general-purpose instruction model.
 
-Validation data is used for decoding selection. Test data is evaluated only after settings are fixed. Outputs are written to:
+Validation data is used for decoding selection and qualitative error-analysis probes. The probes include greedy decoding, light beam search, high-temperature decoding, heavy sampling, brief-rationale prompting, and optional few-shot prompting with training-only examples. Test data is evaluated only after settings are fixed. Outputs are written to:
 
 - `outputs/llm_results.csv`
+- `outputs/llm_final_predictions.csv`
 - `outputs/llm_predictions.csv`
 - `outputs/llm_per_class_metrics.csv`
+- `outputs/llm_error_analysis_decoding_comparison.csv`
+- `outputs/llm_cot_rationale_examples.csv`
 - `outputs/llm_decoding_settings.json`
 - `outputs/llm_failed_models.csv`
 - `figures/llm_model_comparison.png`
