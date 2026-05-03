@@ -391,6 +391,52 @@ def generate_tuning_artifacts(project_root: Path, archive_dir: Path) -> None:
             best_configs[model_name] = group.sort_values("validation_macro_f1", ascending=False).iloc[0].replace({np.nan: None}).to_dict()
     write_json(project_root / "outputs" / "best_classical_configs.json", best_configs, archive_dir)
 
+    hpt_candidates = sorted(
+        (project_root / "results" / "transformer_hpt").glob("*/hyperparameter_search_results.csv"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    if hpt_candidates:
+        transformer_df = pd.read_csv(hpt_candidates[0])
+        write_csv(project_root / "outputs" / "hyperparameter_search_results.csv", transformer_df, archive_dir)
+        best_config_path = hpt_candidates[0].parent / "best_transformer_configs.json"
+        if best_config_path.exists():
+            try:
+                write_json(project_root / "outputs" / "best_transformer_configs.json", json.loads(best_config_path.read_text(encoding="utf-8")), archive_dir)
+            except Exception:
+                write_json(project_root / "outputs" / "best_transformer_configs.json", {"source": str(best_config_path)}, archive_dir)
+        completed = transformer_df[(transformer_df.get("status") == "completed") & transformer_df.get("validation_macro_f1").notna()].copy()
+        fig, ax = plt.subplots(figsize=(10, 5))
+        if completed.empty:
+            ax.text(0.5, 0.5, "No completed transformer HPT trials yet", ha="center", va="center")
+            ax.set_axis_off()
+        else:
+            completed["trial_label"] = completed["stage"].astype(str).str.replace("_trial", "", regex=False) + "-" + completed["trial_number"].astype(str)
+            ax.plot(range(len(completed)), completed["validation_macro_f1"], marker="o", linewidth=1)
+            ax.set_xticks(range(len(completed)))
+            ax.set_xticklabels(completed["trial_label"], rotation=45, ha="right", fontsize=8)
+            for stage, group in completed.groupby("stage"):
+                ax.axhline(group["validation_macro_f1"].max(), linestyle="--", linewidth=1, label=f"{stage} best")
+            ax.set_ylabel("Validation macro-F1")
+            ax.set_title("Transformer HPT Validation Macro-F1 by Trial")
+            ax.legend(fontsize=8)
+        fig.tight_layout()
+        for rel in ["figures/hpt_validation_macro_f1.png", "outputs/figures/hpt_validation_macro_f1.png"]:
+            path = project_root / rel
+            backup_existing(path, archive_dir)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(path, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        write_text(
+            project_root / "outputs" / "transformer_training_summary.md",
+            "# Transformer Training Summary\n\n"
+            f"Latest HPT source: `{hpt_candidates[0].relative_to(project_root).as_posix()}`\n\n"
+            + markdown_table(transformer_df, max_rows=50)
+            + "\n",
+            archive_dir,
+        )
+        return
+
     transformer_rows = []
     completed = project_root / "results" / "transformer" / "transformer_results.csv"
     if completed.exists():

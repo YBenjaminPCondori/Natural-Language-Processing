@@ -105,6 +105,11 @@ def train_transformer_classifier(
     run_transformer: bool = True,
     wandb_enabled: bool = False,
     wandb_run_name: str | None = None,
+    output_subdir: str = "transformer",
+    evaluate_test: bool = True,
+    early_stopping_patience: int | None = 1,
+    save_total_limit: int = 1,
+    trial_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Fine-tune one transformer classifier, skipping gracefully when unavailable."""
     if not run_transformer:
@@ -116,7 +121,7 @@ def train_transformer_classifier(
 
     ensure_package("torch", "torch")
     import torch
-    output_dir = Path(results_dir) / "transformer"
+    output_dir = Path(results_dir) / output_subdir
 
     if not torch.cuda.is_available():
         print("Transformer training skipped because GPU/CUDA is unavailable in this runtime.")
@@ -142,11 +147,14 @@ def train_transformer_classifier(
         from datasets import Dataset
         from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments
 
-        try:
-            from transformers import EarlyStoppingCallback
+        if early_stopping_patience is not None and early_stopping_patience > 0:
+            try:
+                from transformers import EarlyStoppingCallback
 
-            callbacks = [EarlyStoppingCallback(early_stopping_patience=1)]
-        except Exception:
+                callbacks = [EarlyStoppingCallback(early_stopping_patience=early_stopping_patience)]
+            except Exception:
+                callbacks = []
+        else:
             callbacks = []
 
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -175,7 +183,7 @@ def train_transformer_classifier(
 
         train_dataset = to_hf_dataset(train_df)
         val_dataset = to_hf_dataset(validation_df)
-        test_dataset = to_hf_dataset(test_df)
+        test_dataset = to_hf_dataset(test_df) if evaluate_test else None
 
         model = AutoModelForSequenceClassification.from_pretrained(
             model_name,
@@ -198,15 +206,25 @@ def train_transformer_classifier(
             "load_best_model_at_end": True,
             "metric_for_best_model": "macro_f1",
             "greater_is_better": True,
-            "save_total_limit": 1,
+            "save_total_limit": save_total_limit,
             "report_to": ["wandb"] if wandb_enabled else [],
             "fp16": torch.cuda.is_available(),
             "seed": seed,
+            "logging_strategy": "epoch",
         }
         if wandb_enabled and wandb_run_name:
             args_dict["run_name"] = wandb_run_name
         training_args = TrainingArguments(**_training_arguments_kwargs(TrainingArguments, args_dict))
-        write_json(output_dir / "training_args.json", args_dict)
+        write_json(
+            output_dir / "training_args.json",
+            {
+                **args_dict,
+                "early_stopping_patience": early_stopping_patience,
+                "trial_metadata": trial_metadata or {},
+                "selection_metric": "validation_macro_f1",
+                "test_evaluation_enabled": bool(evaluate_test),
+            },
+        )
 
         trainer = Trainer(
             **_trainer_kwargs(
@@ -225,6 +243,37 @@ def train_transformer_classifier(
         trainer.train()
         write_json(output_dir / "training_log_history.json", trainer.state.log_history)
         pd.DataFrame(trainer.state.log_history).to_csv(output_dir / "training_log_history.csv", index=False)
+
+        validation_metrics = trainer.evaluate(eval_dataset=val_dataset)
+        validation_payload = {
+            key.replace("eval_", "validation_"): float(value)
+            for key, value in validation_metrics.items()
+            if isinstance(value, (int, float, np.integer, np.floating))
+        }
+        validation_payload.update(
+            {
+                "model_name": model_name,
+                "selection_metric": "validation_macro_f1",
+                "best_checkpoint": trainer.state.best_model_checkpoint,
+                "best_metric": trainer.state.best_metric,
+                "trial_metadata": trial_metadata or {},
+            }
+        )
+        write_json(output_dir / "validation_metrics.json", validation_payload)
+        pd.DataFrame([validation_payload]).to_csv(output_dir / "validation_metrics.csv", index=False)
+
+        if not evaluate_test:
+            tokenizer.save_pretrained(output_dir / "model")
+            trainer.save_model(output_dir / "model")
+            return {
+                "result": None,
+                "predictions": pd.DataFrame(),
+                "trainer": trainer,
+                "skip_result": None,
+                "validation_metrics": validation_payload,
+                "output_dir": output_dir,
+            }
+
         output = trainer.predict(test_dataset)
         y_pred = np.argmax(output.predictions, axis=-1).astype(int).tolist()
         y_true = test_df["label_id"].astype(int).tolist()
@@ -244,7 +293,14 @@ def train_transformer_classifier(
         pred_df.to_csv(output_dir / "transformer_predictions.csv", index=False)
         trainer.save_model(output_dir / "model")
         tokenizer.save_pretrained(output_dir / "model")
-        return {"result": result, "predictions": pred_df, "trainer": trainer, "skip_result": None}
+        return {
+            "result": result,
+            "predictions": pred_df,
+            "trainer": trainer,
+            "skip_result": None,
+            "validation_metrics": validation_payload,
+            "output_dir": output_dir,
+        }
     except Exception as exc:
         print(f"Transformer training failed or was skipped: {type(exc).__name__}: {exc}")
         reason = f"{type(exc).__name__}: {exc}"

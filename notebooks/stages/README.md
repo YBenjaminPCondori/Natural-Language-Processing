@@ -24,4 +24,5 @@ Notes:
 - Stage notebooks have outputs cleared.
 - Model stages include setup and LEDGAR preprocessing cells so they can run on their own.
 - Expensive stages still obey the same flags as the master notebook.
+- The transformer stage includes optional two-stage HPT via `RUN_TRANSFORMER_HPT`.
 - `08_results_error_exports.ipynb` rebuilds report-facing artifacts from saved outputs; it does not retrain models.

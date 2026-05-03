@@ -86,6 +86,12 @@ Run one transformer encoder from the command line:
 python scripts/run_transformer_model.py --model-name distilbert-base-uncased
 ```
 
+Run two-stage HPT for the main transformer on CUDA:
+
+```bash
+python scripts/run_transformer_hpt.py --model-name distilbert-base-uncased --random-trials 8 --bayes-trials 8 --wandb
+```
+
 Run Qwen prompting on CUDA:
 
 ```bash
@@ -96,6 +102,7 @@ Run transformer fine-tuning from the notebook on Colab/A100 by setting:
 
 ```python
 RUN_TRANSFORMER = True
+RUN_TRANSFORMER_HPT = False
 TRANSFORMER_MODEL_NAME = "distilbert-base-uncased"
 ```
 

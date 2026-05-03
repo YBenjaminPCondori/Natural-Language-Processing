@@ -22,3 +22,4 @@ accelerate>=0.27
 # Optional config-file support for later scripts
 pyyaml>=6.0
 wandb>=0.16
+optuna>=3.6
