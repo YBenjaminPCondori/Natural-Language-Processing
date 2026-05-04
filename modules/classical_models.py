@@ -16,6 +16,13 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 
 from .evaluation import evaluate_predictions_common
+from .preprocessing import legal_safe_tokenise, negation_aware_tokenise
+
+
+TOKENIZERS = {
+    "legal_safe": legal_safe_tokenise,
+    "negation_aware": negation_aware_tokenise,
+}
 
 
 def classical_model_configs(
@@ -42,14 +49,19 @@ def build_classical_pipeline(
     alpha: float = 1.0,
     class_weight: str | None = None,
     seed: int = 42,
+    tokenizer_name: str = "negation_aware",
 ) -> Pipeline:
     """Build one classical sklearn pipeline."""
+    if tokenizer_name not in TOKENIZERS:
+        raise ValueError(f"Unsupported tokenizer_name: {tokenizer_name}")
     vectorizer = TfidfVectorizer(
         max_features=max_features,
         ngram_range=ngram_range,
         min_df=min_df,
-        lowercase=True,
+        lowercase=False,
         stop_words=None,
+        tokenizer=TOKENIZERS[tokenizer_name],
+        token_pattern=None,
     )
     if model_name == "logistic_regression":
         classifier = LogisticRegression(max_iter=2000, C=c_value, class_weight=class_weight, random_state=seed, n_jobs=-1)
@@ -77,6 +89,7 @@ def run_classical_experiments(
     dataset_name: str = "LEDGAR",
     seed: int = 42,
     run_naive_bayes: bool = True,
+    tokenizer_name: str = "negation_aware",
 ) -> dict[str, Any]:
     """Run validation-selected classical model experiments."""
     if train_df.empty:
@@ -133,6 +146,7 @@ def run_classical_experiments(
                             seed=seed,
                             c_value=float(c_value) if c_value is not None else 1.0,
                             alpha=float(alpha) if alpha is not None else 1.0,
+                            tokenizer_name=tokenizer_name,
                             **config,
                         )
                         pipeline.fit(x_train, y_train)
@@ -147,6 +161,7 @@ def run_classical_experiments(
                             "C": c_value,
                             "alpha": alpha,
                             "class_weight": class_weight,
+                            "tokenizer": tokenizer_name,
                         }
                         validation_rows.append(row)
                         if macro_f1 > best_for_model_score:

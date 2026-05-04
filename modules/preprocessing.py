@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import html
+import re
+from collections import Counter, defaultdict
 from numbers import Integral
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -13,6 +17,147 @@ from .data_setup import ProjectPaths, normalise_whitespace, save_jsonl, write_js
 
 REQUIRED_SCHEMA = ["text", "label", "label_id", "split", "source_dataset"]
 SPLIT_ORDER = ("train", "validation", "test")
+WORD_BOUNDARY_PATTERN = re.compile(r"\b\w+\b")
+NEGATION_TOKENS = {"no", "not", "never"}
+
+
+def clean_html_entities(text: Any) -> str:
+    """Remove simple HTML markup, unescape entities, and normalise whitespace."""
+    if text is None:
+        return ""
+    without_tags = re.sub(r"<[^>]+>", " ", str(text))
+    return normalise_whitespace(html.unescape(without_tags))
+
+
+def regex_tokenise(text: Any) -> list[str]:
+    """Tokenise with the Week 2 lab word-boundary regex."""
+    return WORD_BOUNDARY_PATTERN.findall(clean_html_entities(text))
+
+
+def legal_safe_tokenise(text: Any) -> list[str]:
+    """Lowercase word-boundary tokenisation without removing legal stopwords."""
+    return [token.lower() for token in regex_tokenise(text)]
+
+
+def _expand_negation_contractions(text: str) -> str:
+    """Expand common contractions needed by the Week 2 negation tokenizer."""
+    value = re.sub(r"n't\b", " not", text, flags=re.IGNORECASE)
+    value = re.sub(r"'m\b", " am", value, flags=re.IGNORECASE)
+    value = re.sub(r"'s\b", " is", value, flags=re.IGNORECASE)
+    value = re.sub(r"'re\b", " are", value, flags=re.IGNORECASE)
+    value = re.sub(r"'ve\b", " have", value, flags=re.IGNORECASE)
+    value = re.sub(r"'ll\b", " will", value, flags=re.IGNORECASE)
+    return value
+
+
+def negation_aware_tokenise(text: Any) -> list[str]:
+    """Attach NOT_ to the token immediately following a negation cue."""
+    expanded = _expand_negation_contractions(clean_html_entities(text).lower())
+    tokens = WORD_BOUNDARY_PATTERN.findall(expanded)
+    result: list[str] = []
+    negate_next = False
+    for token in tokens:
+        result.append(f"NOT_{token}" if negate_next else token)
+        negate_next = token in NEGATION_TOKENS
+    return result
+
+
+def corpus_word_frequencies(texts: list[str] | pd.Series, *, max_words: int | None = None) -> dict[str, int]:
+    """Build token frequency counts for BPE training from clause text."""
+    counts: Counter[str] = Counter()
+    for text in texts:
+        counts.update(legal_safe_tokenise(text))
+    items = counts.most_common(max_words)
+    return dict(items if max_words is not None else counts.items())
+
+
+def compute_bpe_pair_frequencies(vocab: dict[str, int]) -> dict[tuple[str, str], int]:
+    """Count adjacent symbol pairs in a BPE vocabulary."""
+    pairs: defaultdict[tuple[str, str], int] = defaultdict(int)
+    for word, freq in vocab.items():
+        symbols = word.split()
+        for left, right in zip(symbols, symbols[1:], strict=False):
+            pairs[(left, right)] += freq
+    return dict(pairs)
+
+
+def merge_bpe_pair(pair: tuple[str, str], vocab: dict[str, int]) -> dict[str, int]:
+    """Merge one BPE pair across the vocabulary."""
+    pattern = re.compile(r"(?<!\S)" + re.escape(" ".join(pair)) + r"(?!\S)")
+    return {pattern.sub("".join(pair), word): freq for word, freq in vocab.items()}
+
+
+def train_bpe_tokeniser(word_frequencies: dict[str, int], *, num_merges: int = 50) -> tuple[dict[tuple[str, str], int], dict[str, int]]:
+    """Learn simple BPE merge rules from word frequencies."""
+    vocab = {" ".join(tuple(word) + ("</w>",)): freq for word, freq in word_frequencies.items() if word}
+    merges: dict[tuple[str, str], int] = {}
+    for merge_index in range(num_merges):
+        pair_counts = compute_bpe_pair_frequencies(vocab)
+        if not pair_counts:
+            break
+        best_pair = max(pair_counts, key=pair_counts.get)
+        merges[best_pair] = merge_index
+        vocab = merge_bpe_pair(best_pair, vocab)
+    return merges, vocab
+
+
+def bpe_encode_word(word: str, merges: dict[tuple[str, str], int]) -> list[str]:
+    """Encode one word with learned BPE merges, falling back to characters."""
+    symbols = list(word.lower()) + ["</w>"]
+    if not symbols:
+        return []
+    ranked_merges = sorted(merges, key=merges.get)
+    for merge_pair in ranked_merges:
+        idx = 0
+        while idx < len(symbols) - 1:
+            if (symbols[idx], symbols[idx + 1]) == merge_pair:
+                symbols = symbols[:idx] + ["".join(merge_pair)] + symbols[idx + 2 :]
+            else:
+                idx += 1
+    return [symbol for symbol in symbols if symbol != "</w>"]
+
+
+def bpe_encode_text(text: Any, merges: dict[tuple[str, str], int]) -> list[str]:
+    """Encode all regex tokens in a clause with learned BPE merges."""
+    encoded: list[str] = []
+    for token in legal_safe_tokenise(text):
+        encoded.extend(bpe_encode_word(token, merges))
+    return encoded
+
+
+def preprocessing_technique_rundown() -> str:
+    """Return a readable summary of lecture/lab-grounded preprocessing choices."""
+    return "\n".join(
+        [
+            "# Preprocessing and Feature Extraction Rundown",
+            "",
+            "## Preprocessing used",
+            "- HTML/entity cleanup: Week 4 lab cleanup pattern, used before tokenisation.",
+            "- Whitespace normalisation: keeps clauses readable while removing layout noise.",
+            "- Regex tokenisation: Week 2 lab `\\b\\w+\\b` word-boundary tokenisation.",
+            "- Legal-safe lowercasing: used inside tokenisers/vectorisers, without overwriting the stored clause text.",
+            "- Negation-aware tokenisation: Week 2 lab idea, using `NOT_` on the token after `no`, `not`, or `never`.",
+            "- BPE training/encoding: Weeks 2-3 lab implementation for subword/OOV inspection.",
+            "",
+            "## Feature extraction used",
+            "- Bag-of-words inspection: Week 2/3 lab idea for understanding sparse features.",
+            "- TF-IDF: Week 2 lecture and Week 3 lab term weighting.",
+            "- Unigrams and bigrams: Week 2/3 lecture/lab n-gram feature extraction.",
+            "",
+            "## Deliberately not default preprocessing",
+            "- Stopword removal: skipped because legal words such as `not`, `shall`, `may`, `unless`, and `except` carry meaning.",
+            "- Logistic Regression, Linear SVM, and Naive Bayes: modelling stage, not preprocessing.",
+            "- Co-occurrence vectors, LSA, and embeddings: representation/model-analysis material, not the default clause preprocessing path.",
+        ]
+    )
+
+
+def write_preprocessing_rundown(output_path: Path | str) -> Path:
+    """Write the readable preprocessing rundown artifact."""
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(preprocessing_technique_rundown() + "\n", encoding="utf-8")
+    return path
 
 
 def load_ledgar_label_names(paths: ProjectPaths) -> list[str] | None:
@@ -48,7 +193,7 @@ def standardise_ledgar_split(df: pd.DataFrame, split: str, label_names: list[str
     records = []
 
     for row in df.to_dict(orient="records"):
-        text = normalise_whitespace(row.get(text_column))
+        text = clean_html_entities(row.get(text_column))
         raw_label = row.get(label_column)
         if isinstance(raw_label, Integral):
             if label_names is None:
