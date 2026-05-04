@@ -15,7 +15,8 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 
-from .evaluation import evaluate_predictions_common
+from .data_setup import write_json
+from .evaluation import evaluate_predictions_common, sample_debug_frame, utc_now_iso, write_stage_status
 from .preprocessing import legal_safe_tokenise, negation_aware_tokenise
 
 
@@ -90,14 +91,91 @@ def run_classical_experiments(
     seed: int = 42,
     run_naive_bayes: bool = True,
     tokenizer_name: str = "negation_aware",
+    max_train_samples: int | None = None,
+    max_validation_samples: int | None = None,
+    max_eval_samples: int | None = None,
+    smoke_test: bool = False,
 ) -> dict[str, Any]:
     """Run validation-selected classical model experiments."""
-    if train_df.empty:
-        print("Classical models skipped because LEDGAR data is unavailable.")
-        return {"results": [], "prediction_tables": {}, "best_model": None, "best_model_name": None, "validation_grid": pd.DataFrame()}
-
     output_dir = Path(results_dir) / "classical"
     output_dir.mkdir(parents=True, exist_ok=True)
+    stage_started = utc_now_iso()
+    min_df_list = min_df_list or [1, 2, 5]
+    c_values = c_values or [0.1, 1.0, 3.0, 10.0]
+    nb_alpha_values = nb_alpha_values or [0.1, 0.5, 1.0]
+    if smoke_test:
+        max_train_samples = max_train_samples or 500
+        max_validation_samples = max_validation_samples or 200
+        max_eval_samples = max_eval_samples or 200
+        max_features_list = [min(max_features_list[0], 2000)]
+        ngram_ranges = [ngram_ranges[0]]
+        min_df_list = [1]
+        c_values = [1.0]
+        nb_alpha_values = [1.0]
+    config_payload = {
+        "dataset_name": dataset_name,
+        "seed": seed,
+        "tokenizer_name": tokenizer_name,
+        "max_features_list": max_features_list,
+        "ngram_ranges": [list(value) for value in ngram_ranges],
+        "min_df_list": min_df_list,
+        "c_values": c_values,
+        "nb_alpha_values": nb_alpha_values,
+        "run_naive_bayes": run_naive_bayes,
+        "max_train_samples": max_train_samples,
+        "max_validation_samples": max_validation_samples,
+        "max_eval_samples": max_eval_samples,
+        "smoke_test": smoke_test,
+        "train_rows_available": int(len(train_df)),
+        "validation_rows_available": int(len(validation_df)),
+        "test_rows_available": int(len(test_df)),
+        "cuad_policy": "Classical models train and tune only on LEDGAR train/validation.",
+    }
+    write_json(output_dir / "classical_run_config.json", config_payload)
+    for split_name, split_df in (("train", train_df), ("validation", validation_df)):
+        if "source_dataset" in split_df.columns and split_df["source_dataset"].astype(str).eq("CUAD").any():
+            reason = f"CUAD rows found in {split_name}; CUAD must remain external."
+            write_stage_status(
+                output_dir / "classical_stage_status.json",
+                stage="classical_models",
+                status="failed",
+                error_type="ProtocolViolation",
+                error_message=reason,
+                config=config_payload,
+                started_at_utc=stage_started,
+            )
+            raise ValueError(reason)
+    if train_df.empty or validation_df.empty or test_df.empty:
+        reason = "Classical models skipped because a required LEDGAR split is unavailable or empty."
+        print(reason)
+        pd.DataFrame().to_csv(output_dir / "classical_results.csv", index=False)
+        pd.DataFrame().to_csv(output_dir / "classical_validation_grid.csv", index=False)
+        write_stage_status(
+            output_dir / "classical_stage_status.json",
+            stage="classical_models",
+            status="skipped",
+            error_type="DataUnavailable",
+            error_message=reason,
+            config=config_payload,
+            outputs={
+                "results": str(output_dir / "classical_results.csv"),
+                "validation_grid": str(output_dir / "classical_validation_grid.csv"),
+            },
+            started_at_utc=stage_started,
+        )
+        return {"results": [], "prediction_tables": {}, "best_model": None, "best_model_name": None, "validation_grid": pd.DataFrame()}
+
+    train_df = sample_debug_frame(train_df, max_train_samples, seed=seed)
+    validation_df = sample_debug_frame(validation_df, max_validation_samples, seed=seed)
+    test_df = sample_debug_frame(test_df, max_eval_samples, seed=seed)
+    config_payload.update(
+        {
+            "train_rows_used": int(len(train_df)),
+            "validation_rows_used": int(len(validation_df)),
+            "test_rows_used": int(len(test_df)),
+        }
+    )
+    write_json(output_dir / "classical_run_config.json", config_payload)
     project_root = Path(results_dir).parent
     models_dir = project_root / "models" / "classical"
     trained_models_dir = project_root / "models" / "trained" / "classical"
@@ -110,10 +188,6 @@ def run_classical_experiments(
     y_val = validation_df["label_id"].astype(int).tolist()
     x_test = test_df["text"].tolist()
     y_test = test_df["label_id"].astype(int).tolist()
-
-    min_df_list = min_df_list or [1, 2, 5]
-    c_values = c_values or [0.1, 1.0, 3.0, 10.0]
-    nb_alpha_values = nb_alpha_values or [0.1, 0.5, 1.0]
 
     model_names = ["logistic_regression", "linear_svm"]
     if run_naive_bayes:
@@ -201,6 +275,23 @@ def run_classical_experiments(
     validation_grid_df = pd.DataFrame(validation_rows)
     results_df.to_csv(output_dir / "classical_results.csv", index=False)
     validation_grid_df.to_csv(output_dir / "classical_validation_grid.csv", index=False)
+    stage_status = "completed" if not results_df.empty else "failed"
+    stage_error_type = "" if not results_df.empty else "NoCompletedModel"
+    stage_error_message = "" if not results_df.empty else "No classical model produced test predictions."
+    write_stage_status(
+        output_dir / "classical_stage_status.json",
+        stage="classical_models",
+        status=stage_status,
+        error_type=stage_error_type,
+        error_message=stage_error_message,
+        config=config_payload,
+        outputs={
+            "results": str(output_dir / "classical_results.csv"),
+            "validation_grid": str(output_dir / "classical_validation_grid.csv"),
+        },
+        notes="Hyperparameters selected on LEDGAR validation; final metrics use LEDGAR test only.",
+        started_at_utc=stage_started,
+    )
     if best_model is not None:
         joblib.dump(best_model, output_dir / "best_classical_model.pkl")
         joblib.dump(best_model.named_steps["vectorizer"], output_dir / "vectorizer.pkl")

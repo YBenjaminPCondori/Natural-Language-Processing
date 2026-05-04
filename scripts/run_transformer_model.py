@@ -37,6 +37,11 @@ def main() -> None:
     parser.add_argument("--warmup-ratio", type=float, default=0.0)
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--max-train-samples", type=int, default=None)
+    parser.add_argument("--max-validation-samples", type=int, default=None)
+    parser.add_argument("--max-eval-samples", type=int, default=None)
+    parser.add_argument("--smoke-test", action="store_true", help="Run a tiny one-epoch debug job if CUDA is available.")
+    parser.add_argument("--no-test-eval", action="store_true", help="Train/evaluate validation only; do not touch LEDGAR test.")
     args = parser.parse_args()
 
     project_root = find_project_root()
@@ -68,6 +73,11 @@ def main() -> None:
         dataset_name="LEDGAR",
         seed=args.seed,
         run_transformer=True,
+        evaluate_test=not args.no_test_eval,
+        max_train_samples=args.max_train_samples,
+        max_validation_samples=args.max_validation_samples,
+        max_eval_samples=args.max_eval_samples,
+        smoke_test=args.smoke_test,
     )
     print(json.dumps({"status": "completed" if output.get("result") else "not_completed", "result": output.get("result"), "skip_result": output.get("skip_result")}, indent=2, default=str))
 

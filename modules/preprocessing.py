@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from .data_setup import ProjectPaths, normalise_whitespace, save_jsonl, write_json
+from .evaluation import utc_now_iso, write_stage_status
 
 
 REQUIRED_SCHEMA = ["text", "label", "label_id", "split", "source_dataset"]
@@ -262,55 +263,115 @@ def preprocess_ledgar(
     dataset_name: str = "LEDGAR",
 ) -> tuple[dict[str, pd.DataFrame], dict[str, int], dict[int, str]]:
     """Preprocess LEDGAR and save processed JSONL/metadata files."""
+    stage_started = utc_now_iso()
+    status_path = paths.project_root / "outputs" / "logs" / "ledgar_preprocessing_status.json"
+    stage_config = {
+        "dataset_name": dataset_name,
+        "top_k_labels": top_k_labels,
+        "top_k_selected_from_split": "train",
+        "expected_splits": list(SPLIT_ORDER),
+        "raw_split_rows": {split: int(len(df)) for split, df in raw_splits.items()} if raw_splits else {},
+        "cuad_policy": "CUAD is external only and is not accepted in LEDGAR preprocessing outputs.",
+    }
     if raw_splits is None:
-        print("LEDGAR preprocessing skipped because the raw dataset is unavailable.")
+        reason = "LEDGAR preprocessing skipped because the raw dataset is unavailable."
+        print(reason)
+        write_stage_status(
+            status_path,
+            stage="ledgar_preprocessing",
+            status="skipped",
+            error_type="DatasetUnavailable",
+            error_message=reason,
+            config=stage_config,
+            started_at_utc=stage_started,
+        )
         return {}, {}, {}
 
-    label_names = load_ledgar_label_names(paths)
-    standardised = {split: standardise_ledgar_split(df, split, label_names) for split, df in raw_splits.items()}
-    train_counts = standardised["train"]["label"].value_counts()
-    selected_labels = train_counts.head(top_k_labels).index.tolist()
-    label2id = {label: idx for idx, label in enumerate(selected_labels)}
-    id2label = {idx: label for label, idx in label2id.items()}
+    try:
+        missing_splits = [split for split in SPLIT_ORDER if split not in raw_splits]
+        if missing_splits:
+            raise ValueError(f"Missing LEDGAR raw split(s): {missing_splits}")
+        if top_k_labels <= 0:
+            raise ValueError("top_k_labels must be positive.")
 
-    filtered_before_dedup = {}
-    for split, df in standardised.items():
-        filtered = df[df["label"].isin(selected_labels)].copy().reset_index(drop=True)
-        filtered["label_id"] = filtered["label"].map(label2id).astype(int)
-        filtered_before_dedup[split] = filtered[REQUIRED_SCHEMA]
+        label_names = load_ledgar_label_names(paths)
+        standardised = {split: standardise_ledgar_split(raw_splits[split], split, label_names) for split in SPLIT_ORDER}
+        train_counts = standardised["train"]["label"].value_counts()
+        selected_labels = train_counts.head(top_k_labels).index.tolist()
+        if not selected_labels:
+            raise ValueError("No labels were selected from the LEDGAR training split.")
+        label2id = {label: idx for idx, label in enumerate(selected_labels)}
+        id2label = {idx: label for label, idx in label2id.items()}
 
-    processed, duplicate_rows_removed = _remove_cross_split_duplicates(filtered_before_dedup)
-    for split in processed:
-        save_jsonl(processed[split], paths.processed_data_dir / f"ledgar_{split}.jsonl")
+        filtered_before_dedup = {}
+        for split, df in standardised.items():
+            filtered = df[df["label"].isin(selected_labels)].copy().reset_index(drop=True)
+            filtered["label_id"] = filtered["label"].map(label2id).astype(int)
+            filtered_before_dedup[split] = filtered[REQUIRED_SCHEMA]
 
-    (paths.processed_data_dir / "label_names.txt").write_text("\n".join(selected_labels) + "\n", encoding="utf-8")
-    write_json(paths.processed_data_dir / "label_counts.json", train_counts.loc[selected_labels].astype(int).to_dict())
-    leakage_audit = {
-        "dataset": dataset_name,
-        "split_priority": list(SPLIT_ORDER),
-        "raw_rows": {split: int(len(df)) for split, df in raw_splits.items()},
-        "standardised_rows": {split: int(len(df)) for split, df in standardised.items()},
-        "filtered_rows_before_cross_split_deduplication": {
-            split: int(len(df)) for split, df in filtered_before_dedup.items()
-        },
-        "duplicate_rows_removed_by_split": duplicate_rows_removed,
-        "filtered_rows_after_cross_split_deduplication": {split: int(len(df)) for split, df in processed.items()},
-        "cross_split_overlaps_before_deduplication": _split_overlap_counts(filtered_before_dedup),
-        "cross_split_overlaps_after_deduplication": _split_overlap_counts(processed),
-    }
-    write_json(paths.project_root / "outputs" / "leakage_audit.json", leakage_audit)
-    write_json(
-        paths.processed_data_dir / "dataset_summary.json",
-        {
+        processed, duplicate_rows_removed = _remove_cross_split_duplicates(filtered_before_dedup)
+        cuad_rows_by_split = {
+            split: int(df["source_dataset"].astype(str).eq("CUAD").sum())
+            for split, df in processed.items()
+        }
+        if any(cuad_rows_by_split.values()):
+            raise ValueError(f"CUAD rows found in LEDGAR processed splits: {cuad_rows_by_split}")
+
+        output_paths = {}
+        for split in processed:
+            output_paths[f"processed_{split}"] = str(save_jsonl(processed[split], paths.processed_data_dir / f"ledgar_{split}.jsonl"))
+
+        label_names_path = paths.processed_data_dir / "label_names.txt"
+        label_names_path.write_text("\n".join(selected_labels) + "\n", encoding="utf-8")
+        output_paths["label_names"] = str(label_names_path)
+        output_paths["label_counts"] = str(write_json(paths.processed_data_dir / "label_counts.json", train_counts.loc[selected_labels].astype(int).to_dict()))
+        leakage_audit = {
             "dataset": dataset_name,
+            "top_k_selected_from_split": "train",
+            "split_priority": list(SPLIT_ORDER),
+            "raw_rows": {split: int(len(df)) for split, df in raw_splits.items()},
+            "standardised_rows": {split: int(len(df)) for split, df in standardised.items()},
+            "filtered_rows_before_cross_split_deduplication": {
+                split: int(len(df)) for split, df in filtered_before_dedup.items()
+            },
+            "duplicate_rows_removed_by_split": duplicate_rows_removed,
+            "filtered_rows_after_cross_split_deduplication": {split: int(len(df)) for split, df in processed.items()},
+            "cuad_rows_found_after_preprocessing": cuad_rows_by_split,
+            "cross_split_overlaps_before_deduplication": _split_overlap_counts(filtered_before_dedup),
+            "cross_split_overlaps_after_deduplication": _split_overlap_counts(processed),
+        }
+        output_paths["leakage_audit"] = str(write_json(paths.project_root / "outputs" / "leakage_audit.json", leakage_audit))
+        dataset_summary = {
+            "dataset": dataset_name,
+            "top_k_selected_from_split": "train",
             "top_k_labels": top_k_labels,
             "rows_per_split": {split: int(len(df)) for split, df in processed.items()},
             "number_of_classes": len(selected_labels),
             "labels": selected_labels,
             "leakage_audit_path": "outputs/leakage_audit.json",
-        },
-    )
-    return processed, label2id, id2label
+        }
+        output_paths["dataset_summary"] = str(write_json(paths.processed_data_dir / "dataset_summary.json", dataset_summary))
+        write_stage_status(
+            status_path,
+            stage="ledgar_preprocessing",
+            status="completed",
+            config={**stage_config, "selected_labels": selected_labels},
+            outputs=output_paths,
+            notes="LEDGAR split separation preserved; top-k labels selected from training split only.",
+            started_at_utc=stage_started,
+        )
+        return processed, label2id, id2label
+    except Exception as exc:
+        write_stage_status(
+            status_path,
+            stage="ledgar_preprocessing",
+            status="failed",
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+            config=stage_config,
+            started_at_utc=stage_started,
+        )
+        raise
 
 
 def create_ledgar_eda(processed: dict[str, pd.DataFrame], results_dir: Path) -> pd.DataFrame:

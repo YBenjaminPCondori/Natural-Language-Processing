@@ -13,10 +13,20 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
 
 from .data_setup import ensure_package, write_json
-from .evaluation import evaluate_predictions_common
+from .evaluation import evaluate_predictions_common, sample_debug_frame, utc_now_iso, write_stage_status
 
 
-TRANSFORMER_PREDICTION_COLUMNS = ["text", "label", "label_id", "predicted_label", "predicted_label_id", "model_name", "split"]
+TRANSFORMER_PREDICTION_COLUMNS = [
+    "text",
+    "label",
+    "label_id",
+    "predicted_label",
+    "predicted_label_id",
+    "is_correct",
+    "model_name",
+    "dataset_name",
+    "split",
+]
 TRANSFORMER_RESULT_COLUMNS = [
     "model_family",
     "model_name",
@@ -29,37 +39,65 @@ TRANSFORMER_RESULT_COLUMNS = [
     "weighted_f1",
     "status",
     "reason",
+    "error_type",
+    "error_message",
     "notes",
+    "prediction_path",
 ]
 
 
-def _runtime_payload(torch_module: Any, paths_note: Path | str) -> dict[str, Any]:
+def _runtime_payload(torch_module: Any | None, paths_note: Path | str) -> dict[str, Any]:
     """Collect transformer runtime details."""
-    cuda_available = bool(torch_module.cuda.is_available())
+    cuda_available = bool(torch_module is not None and torch_module.cuda.is_available())
     return {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "output_dir": str(paths_note),
         "python_version": sys.version,
         "platform": platform.platform(),
-        "torch_version": getattr(torch_module, "__version__", None),
+        "torch_version": getattr(torch_module, "__version__", None) if torch_module is not None else None,
         "cuda_available": cuda_available,
-        "cuda_device_count": int(torch_module.cuda.device_count()),
-        "cuda_version": getattr(torch_module.version, "cuda", None),
+        "cuda_device_count": int(torch_module.cuda.device_count()) if torch_module is not None else 0,
+        "cuda_version": getattr(torch_module.version, "cuda", None) if torch_module is not None else None,
         "gpu_name": torch_module.cuda.get_device_name(0) if cuda_available else None,
     }
 
 
-def _write_transformer_skip_artifacts(output_dir: Path, skip_result: dict[str, Any], torch_module: Any, reason: str) -> None:
+def _write_transformer_skip_artifacts(
+    output_dir: Path,
+    skip_result: dict[str, Any],
+    torch_module: Any | None,
+    reason: str,
+    *,
+    status: str = "skipped",
+    error_type: str = "",
+    config: dict[str, Any] | None = None,
+    started_at_utc: str | None = None,
+) -> None:
     """Write explicit skip artifacts with valid schemas."""
     output_dir.mkdir(parents=True, exist_ok=True)
     write_json(output_dir / "runtime.json", {**_runtime_payload(torch_module, output_dir), "runtime_note": reason})
-    write_json(output_dir / "training_args.json", {"status": "not_executed", "reason": reason})
-    pd.DataFrame([{**skip_result, "status": "skipped", "reason": reason}]).reindex(columns=TRANSFORMER_RESULT_COLUMNS).to_csv(
+    write_json(output_dir / "training_args.json", {"status": "not_executed", "reason": reason, "config": config or {}})
+    pd.DataFrame([{**skip_result, "status": status, "reason": reason, "error_type": error_type, "error_message": reason}]).reindex(columns=TRANSFORMER_RESULT_COLUMNS).to_csv(
         output_dir / "transformer_results.csv",
         index=False,
     )
     pd.DataFrame(columns=TRANSFORMER_PREDICTION_COLUMNS).to_csv(output_dir / "transformer_predictions.csv", index=False)
     write_json(output_dir / "training_log_history.json", [])
+    write_stage_status(
+        output_dir / "transformer_stage_status.json",
+        stage="transformer_model",
+        status=status,
+        error_type=error_type,
+        error_message=reason,
+        config=config or {},
+        outputs={
+            "results": str(output_dir / "transformer_results.csv"),
+            "predictions": str(output_dir / "transformer_predictions.csv"),
+            "training_args": str(output_dir / "training_args.json"),
+            "runtime": str(output_dir / "runtime.json"),
+        },
+        started_at_utc=started_at_utc,
+    )
 
 
 def _training_arguments_kwargs(TrainingArguments: Any, kwargs: dict[str, Any]) -> dict[str, Any]:
@@ -110,18 +148,120 @@ def train_transformer_classifier(
     early_stopping_patience: int | None = 1,
     save_total_limit: int = 1,
     trial_metadata: dict[str, Any] | None = None,
+    max_train_samples: int | None = None,
+    max_validation_samples: int | None = None,
+    max_eval_samples: int | None = None,
+    smoke_test: bool = False,
 ) -> dict[str, Any]:
     """Fine-tune one transformer classifier, skipping gracefully when unavailable."""
+    output_dir = Path(results_dir) / output_subdir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    stage_started = utc_now_iso()
+    if smoke_test:
+        max_train_samples = max_train_samples or 64
+        max_validation_samples = max_validation_samples or 32
+        max_eval_samples = max_eval_samples or 32
+        num_train_epochs = 1
+        save_total_limit = 1
+    config_payload = {
+        "model_name": model_name,
+        "dataset_name": dataset_name,
+        "max_length": max_length,
+        "learning_rate": learning_rate,
+        "num_train_epochs": num_train_epochs,
+        "weight_decay": weight_decay,
+        "warmup_ratio": warmup_ratio,
+        "batch_size_override": batch_size_override,
+        "seed": seed,
+        "run_transformer": run_transformer,
+        "evaluate_test": evaluate_test,
+        "early_stopping_patience": early_stopping_patience,
+        "save_total_limit": save_total_limit,
+        "trial_metadata": trial_metadata or {},
+        "max_train_samples": max_train_samples,
+        "max_validation_samples": max_validation_samples,
+        "max_eval_samples": max_eval_samples,
+        "smoke_test": smoke_test,
+        "train_rows_available": int(len(train_df)),
+        "validation_rows_available": int(len(validation_df)),
+        "test_rows_available": int(len(test_df)),
+        "cuad_policy": "Transformer training/tuning uses LEDGAR train/validation only; CUAD is external.",
+    }
+    write_json(output_dir / "transformer_run_config.json", config_payload)
     if not run_transformer:
         print("Transformer section skipped because RUN_TRANSFORMER is False.")
-        return {"result": None, "predictions": pd.DataFrame(), "trainer": None, "skip_result": None}
-    if train_df.empty:
-        print("Transformer section skipped because LEDGAR data is unavailable.")
-        return {"result": None, "predictions": pd.DataFrame(), "trainer": None, "skip_result": None}
+        reason = "Transformer section skipped because run_transformer is False."
+        skip_result = {
+            "model_family": "transformer",
+            "model_name": model_name,
+            "training_type": "fine-tuned supervised",
+            "dataset": dataset_name,
+            "eval_split": "test",
+            "sample_size": 0,
+            "accuracy": np.nan,
+            "macro_f1": np.nan,
+            "weighted_f1": np.nan,
+            "notes": f"Skipped: {reason}",
+        }
+        _write_transformer_skip_artifacts(output_dir, skip_result, None, reason, error_type="DisabledByConfig", config=config_payload, started_at_utc=stage_started)
+        return {"result": None, "predictions": pd.DataFrame(), "trainer": None, "skip_result": skip_result}
+    if train_df.empty or validation_df.empty or (evaluate_test and test_df.empty):
+        reason = "Transformer section skipped because a required LEDGAR split is unavailable or empty."
+        print(reason)
+        skip_result = {
+            "model_family": "transformer",
+            "model_name": model_name,
+            "training_type": "fine-tuned supervised",
+            "dataset": dataset_name,
+            "eval_split": "test",
+            "sample_size": 0,
+            "accuracy": np.nan,
+            "macro_f1": np.nan,
+            "weighted_f1": np.nan,
+            "notes": f"Skipped: {reason}",
+        }
+        _write_transformer_skip_artifacts(output_dir, skip_result, None, reason, error_type="DataUnavailable", config=config_payload, started_at_utc=stage_started)
+        return {"result": None, "predictions": pd.DataFrame(), "trainer": None, "skip_result": skip_result}
+    for split_name, split_df in (("train", train_df), ("validation", validation_df)):
+        if "source_dataset" in split_df.columns and split_df["source_dataset"].astype(str).eq("CUAD").any():
+            reason = f"CUAD rows found in {split_name}; CUAD must remain external."
+            skip_result = {
+                "model_family": "transformer",
+                "model_name": model_name,
+                "training_type": "fine-tuned supervised",
+                "dataset": dataset_name,
+                "eval_split": "test",
+                "sample_size": 0,
+                "accuracy": np.nan,
+                "macro_f1": np.nan,
+                "weighted_f1": np.nan,
+                "notes": f"Failed: {reason}",
+            }
+            _write_transformer_skip_artifacts(
+                output_dir,
+                skip_result,
+                None,
+                reason,
+                status="failed",
+                error_type="ProtocolViolation",
+                config=config_payload,
+                started_at_utc=stage_started,
+            )
+            raise ValueError(reason)
+    train_df = sample_debug_frame(train_df, max_train_samples, seed=seed)
+    validation_df = sample_debug_frame(validation_df, max_validation_samples, seed=seed)
+    test_df = sample_debug_frame(test_df, max_eval_samples, seed=seed)
+    config_payload.update(
+        {
+            "train_rows_used": int(len(train_df)),
+            "validation_rows_used": int(len(validation_df)),
+            "test_rows_used": int(len(test_df)),
+        }
+    )
+    write_json(output_dir / "transformer_run_config.json", config_payload)
 
     ensure_package("torch", "torch")
     import torch
-    output_dir = Path(results_dir) / output_subdir
 
     if not torch.cuda.is_available():
         print("Transformer training skipped because GPU/CUDA is unavailable in this runtime.")
@@ -138,7 +278,7 @@ def train_transformer_classifier(
             "weighted_f1": np.nan,
             "notes": f"Skipped: {reason}",
         }
-        _write_transformer_skip_artifacts(output_dir, skip_result, torch, reason)
+        _write_transformer_skip_artifacts(output_dir, skip_result, torch, reason, error_type="CudaUnavailable", config=config_payload, started_at_utc=stage_started)
         return {"result": None, "predictions": pd.DataFrame(), "trainer": None, "skip_result": skip_result}
 
     try:
@@ -157,7 +297,6 @@ def train_transformer_classifier(
         else:
             callbacks = []
 
-        output_dir.mkdir(parents=True, exist_ok=True)
         write_json(output_dir / "runtime.json", _runtime_payload(torch, output_dir))
         tokenizer = AutoTokenizer.from_pretrained(model_name)
 
@@ -223,6 +362,10 @@ def train_transformer_classifier(
                 "trial_metadata": trial_metadata or {},
                 "selection_metric": "validation_macro_f1",
                 "test_evaluation_enabled": bool(evaluate_test),
+                "smoke_test": bool(smoke_test),
+                "max_train_samples": max_train_samples,
+                "max_validation_samples": max_validation_samples,
+                "max_eval_samples": max_eval_samples,
             },
         )
 
@@ -265,6 +408,20 @@ def train_transformer_classifier(
         if not evaluate_test:
             tokenizer.save_pretrained(output_dir / "model")
             trainer.save_model(output_dir / "model")
+            write_stage_status(
+                output_dir / "transformer_stage_status.json",
+                stage="transformer_model",
+                status="completed",
+                config=config_payload,
+                outputs={
+                    "validation_metrics": str(output_dir / "validation_metrics.json"),
+                    "training_args": str(output_dir / "training_args.json"),
+                    "training_log": str(output_dir / "training_log_history.json"),
+                    "model": str(output_dir / "model"),
+                },
+                notes="Validation-only transformer run for HPT; test split was not evaluated.",
+                started_at_utc=stage_started,
+            )
             return {
                 "result": None,
                 "predictions": pd.DataFrame(),
@@ -293,6 +450,23 @@ def train_transformer_classifier(
         pred_df.to_csv(output_dir / "transformer_predictions.csv", index=False)
         trainer.save_model(output_dir / "model")
         tokenizer.save_pretrained(output_dir / "model")
+        write_stage_status(
+            output_dir / "transformer_stage_status.json",
+            stage="transformer_model",
+            status="completed",
+            config=config_payload,
+            outputs={
+                "results": str(output_dir / "transformer_results.csv"),
+                "predictions": str(output_dir / "transformer_predictions.csv"),
+                "prediction_export": result.get("prediction_path"),
+                "validation_metrics": str(output_dir / "validation_metrics.json"),
+                "training_args": str(output_dir / "training_args.json"),
+                "training_log": str(output_dir / "training_log_history.json"),
+                "model": str(output_dir / "model"),
+            },
+            notes="Final transformer test evaluation completed after validation-based selection.",
+            started_at_utc=stage_started,
+        )
         return {
             "result": result,
             "predictions": pred_df,
@@ -316,5 +490,5 @@ def train_transformer_classifier(
             "weighted_f1": np.nan,
             "notes": f"Skipped/failed: {reason}",
         }
-        _write_transformer_skip_artifacts(output_dir, skip_result, torch, reason)
+        _write_transformer_skip_artifacts(output_dir, skip_result, torch, reason, status="failed", error_type=type(exc).__name__, config=config_payload, started_at_utc=stage_started)
         return {"result": None, "predictions": pd.DataFrame(), "trainer": None, "skip_result": skip_result}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,45 @@ from .data_setup import write_json
 def safe_name(value: str) -> str:
     """Create a filesystem-safe name."""
     return re.sub(r"[^a-zA-Z0-9]+", "_", value.lower()).strip("_") or "item"
+
+
+def utc_now_iso() -> str:
+    """Return an ISO UTC timestamp for reproducible run artifacts."""
+    return datetime.now(timezone.utc).isoformat()
+
+
+def write_stage_status(
+    path: Path | str,
+    *,
+    stage: str,
+    status: str,
+    error_type: str = "",
+    error_message: str = "",
+    config: dict[str, Any] | None = None,
+    outputs: dict[str, Any] | None = None,
+    notes: str = "",
+    started_at_utc: str | None = None,
+) -> Path:
+    """Write a consistent stage status record."""
+    payload = {
+        "created_at_utc": utc_now_iso(),
+        "started_at_utc": started_at_utc,
+        "stage": stage,
+        "status": status,
+        "error_type": error_type,
+        "error_message": error_message,
+        "notes": notes,
+        "config": config or {},
+        "outputs": outputs or {},
+    }
+    return write_json(path, payload)
+
+
+def sample_debug_frame(df: pd.DataFrame, max_samples: int | None, *, seed: int = 42) -> pd.DataFrame:
+    """Return a deterministic debug subset without changing split ownership."""
+    if max_samples is None or max_samples <= 0 or len(df) <= max_samples:
+        return df.copy().reset_index(drop=True)
+    return df.sample(n=int(max_samples), random_state=seed).reset_index(drop=True)
 
 
 def plot_confusion_matrix(cm: np.ndarray, labels: list[str], output_path: Path | str, title: str) -> Path:
@@ -69,18 +109,30 @@ def evaluate_predictions_common(
     pred_df = df[["text", "label", "label_id"]].copy()
     pred_df["predicted_label_id"] = [int(pred) for pred in y_pred]
     pred_df["predicted_label"] = [id2label.get(int(pred), "INVALID_PREDICTION") for pred in y_pred]
+    pred_df["is_correct"] = pred_df["label_id"].astype(int) == pred_df["predicted_label_id"].astype(int)
+    pred_df["model_name"] = model_name
+    pred_df["dataset_name"] = dataset_name
+    pred_df["split"] = eval_split
+    predictions_path = output_dir / "predictions" / f"{safe_name(model_name)}_{safe_name(eval_split)}_predictions.csv"
+    predictions_path.parent.mkdir(parents=True, exist_ok=True)
+    pred_df.to_csv(predictions_path, index=False)
 
     result = {
         "model_family": model_family,
         "model_name": model_name,
         "training_type": training_type,
         "dataset": dataset_name,
+        "dataset_name": dataset_name,
         "eval_split": eval_split,
         "sample_size": len(y_true),
         "accuracy": accuracy_score(y_true, y_pred),
         "macro_f1": f1_score(y_true, y_pred, labels=labels, average="macro", zero_division=0),
         "weighted_f1": f1_score(y_true, y_pred, labels=labels, average="weighted", zero_division=0),
+        "status": "completed",
+        "error_type": "",
+        "error_message": "",
         "notes": notes,
+        "prediction_path": str(predictions_path),
         "classification_report_path": str(report_path),
         "confusion_matrix_path": str(cm_path),
     }
@@ -101,7 +153,11 @@ def save_final_comparison(completed_results: list[dict[str, Any]], results_dir: 
         "macro_f1",
         "weighted_f1",
         "invalid_prediction_rate",
+        "status",
+        "error_type",
+        "error_message",
         "notes",
+        "prediction_path",
         "classification_report_path",
         "confusion_matrix_path",
     ]

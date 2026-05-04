@@ -16,6 +16,14 @@ modules/
 `-- agentic_review.py      # small human-in-the-loop triage prototype
 ```
 
+Pipeline safeguards:
+
+- LEDGAR label filtering selects top-k labels from the training split only.
+- LEDGAR train, validation, and test outputs stay separate; CUAD is external only.
+- Model stages write config, prediction, metric, and status/failure artifacts.
+- Debug runs can use sample caps such as `max_train_samples`, `max_eval_samples`, and `--smoke-test` without changing the default training protocol.
+- CUAD is span-annotated raw data and is converted/mapped only for external evaluation and error analysis, never for training or validation.
+
 Legacy files such as `preprocess.py`, `evaluate.py`, `train_classical.py`, and
 `train_transformer.py` remain as compatibility wrappers, but the actual
 coursework code now lives in the files above.

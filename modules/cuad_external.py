@@ -26,6 +26,7 @@ from .data_setup import (
     write_json,
 )
 from .evaluation import safe_name
+from .evaluation import write_stage_status
 
 
 CUAD_EXTERNAL_DATASET_NAME = "CUAD_external"
@@ -451,6 +452,7 @@ def write_model_status(
     status: str,
     reason: str,
     num_samples: int = 0,
+    error_type: str | None = None,
 ) -> Path:
     """Write a non-silent skipped/failed CUAD metric record."""
     ensure_cuad_output_dirs(paths)
@@ -467,6 +469,8 @@ def write_model_status(
         "num_labels": 0,
         "notes": reason,
         "reason": reason,
+        "error_type": error_type or ("Skipped" if status == "skipped" else "Failed" if status == "failed" else ""),
+        "error_message": reason,
     }
     write_json(metrics_path, payload)
     return metrics_path
@@ -834,9 +838,12 @@ def run_cuad_external_evaluation(
     transformer_model_name: str = "distilbert-base-uncased",
     transformer_max_length: int = 256,
     transformer_batch_size: int = 16,
+    prepare_only: bool = False,
+    max_eval_samples: int | None = None,
 ) -> dict[str, Any]:
     """Run the full CUAD external conversion, evaluation, and summary pipeline."""
     ensure_cuad_output_dirs(paths)
+    stage_started = _utc_now()
     if raw_cuad_json is None:
         cuad_json_path, master_clauses_path = download_cuad_if_missing(paths, download_if_missing=download_if_missing)
         raw_cuad_json, _ = load_cuad_raw_files(cuad_json_path, master_clauses_path)
@@ -848,12 +855,18 @@ def run_cuad_external_evaluation(
         min_span_words=min_span_words,
     )
     cuad_eval_df: pd.DataFrame = data_outputs["eval_df"]
+    if max_eval_samples is not None and max_eval_samples > 0 and len(cuad_eval_df) > max_eval_samples:
+        cuad_eval_df = cuad_eval_df.sample(n=max_eval_samples, random_state=42).reset_index(drop=True)
+        cuad_eval_df.to_csv(data_outputs["paths"]["eval"], index=False)
     label2id: dict[str, int] = data_outputs["label2id"]
     id2label: dict[int, str] = data_outputs["id2label"]
     safeguards = validate_cuad_protocol_safeguards(paths, cuad_eval_df, label2id)
 
     evaluated_results: list[dict[str, Any]] = []
-    if cuad_eval_df.empty:
+    skipped_steps: list[dict[str, str]] = []
+    if prepare_only:
+        skipped_steps.append({"stage": "cuad_external_model_evaluation", "reason": "prepare_only=True; conversion/mapping prepared without evaluating models."})
+    elif cuad_eval_df.empty:
         reason = "CUAD external evaluation data is empty after conversion/mapping/label validation."
         for model_name in ("logistic_regression", "linear_svm", "multinomial_nb", transformer_model_name):
             write_model_status(paths, model_name=model_name, status="failed", reason=reason, num_samples=0)
@@ -877,12 +890,16 @@ def run_cuad_external_evaluation(
     run_summary = {
         "created_at_utc": _utc_now(),
         "dataset_name": CUAD_EXTERNAL_DATASET_NAME,
+        "status": "completed" if not cuad_eval_df.empty else "failed",
+        "prepare_only": bool(prepare_only),
+        "max_eval_samples": max_eval_samples,
         "cuad_samples_extracted": int(data_outputs["preprocessing_report"].get("rows_after_deduplication", 0)),
         "cuad_samples_retained_after_mapping": int(data_outputs["mapping_report"].get("number_of_samples_retained_after_mapping", 0)),
         "cuad_samples_ready_for_external_eval": int(len(cuad_eval_df)),
         "cuad_labels_mapped": data_outputs["mapping_report"].get("mapped_labels", []),
         "cuad_labels_unmapped": data_outputs["mapping_report"].get("unmapped_labels", []),
         "models_evaluated_on_cuad": [result["model_name"] for result in evaluated_results if result.get("status") == "completed"],
+        "skipped_steps": skipped_steps,
         "safeguards": safeguards,
         "outputs": {
             "raw": str(data_outputs["paths"]["raw"]),
@@ -893,4 +910,26 @@ def run_cuad_external_evaluation(
         },
     }
     write_json(paths.project_root / "outputs" / "metrics" / "cuad_external_evaluation_summary.json", run_summary)
+    write_stage_status(
+        paths.project_root / "outputs" / "logs" / "cuad_external_stage_status.json",
+        stage="cuad_external",
+        status=run_summary["status"],
+        error_type="" if run_summary["status"] == "completed" else "CuadPreparationFailed",
+        error_message="" if run_summary["status"] == "completed" else "CUAD external eval data is empty after conversion/mapping/validation.",
+        config={
+            "download_if_missing": download_if_missing,
+            "min_span_chars": min_span_chars,
+            "min_span_words": min_span_words,
+            "run_transformer": run_transformer,
+            "transformer_model_name": transformer_model_name,
+            "transformer_max_length": transformer_max_length,
+            "transformer_batch_size": transformer_batch_size,
+            "prepare_only": prepare_only,
+            "max_eval_samples": max_eval_samples,
+            "cuad_policy": "CUAD is external only and is not used for LEDGAR train/validation.",
+        },
+        outputs=run_summary["outputs"],
+        notes="CUAD spans are converted and mapped to LEDGAR labels for external evaluation only.",
+        started_at_utc=stage_started,
+    )
     return run_summary

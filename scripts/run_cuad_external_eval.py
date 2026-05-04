@@ -22,6 +22,8 @@ def main() -> None:
     parser.add_argument("--min-span-chars", type=int, default=20)
     parser.add_argument("--min-span-words", type=int, default=4)
     parser.add_argument("--skip-transformer", action="store_true", help="Write an explicit skipped status instead of loading the saved transformer.")
+    parser.add_argument("--prepare-only", action="store_true", help="Convert/map CUAD and run safeguards without evaluating any models.")
+    parser.add_argument("--max-eval-samples", type=int, default=None, help="Optional debug cap for CUAD external rows.")
     parser.add_argument("--transformer-model-name", default="distilbert-base-uncased")
     parser.add_argument("--transformer-max-length", type=int, default=256)
     parser.add_argument("--transformer-batch-size", type=int, default=16)
@@ -44,6 +46,8 @@ def main() -> None:
         transformer_model_name=args.transformer_model_name,
         transformer_max_length=args.transformer_max_length,
         transformer_batch_size=args.transformer_batch_size,
+        prepare_only=args.prepare_only,
+        max_eval_samples=args.max_eval_samples,
     )
     print(json.dumps(summary, indent=2, default=str))
 

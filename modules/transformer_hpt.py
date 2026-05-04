@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from .data_setup import ensure_package, write_json
+from .evaluation import write_stage_status
 from .transformer_model import train_transformer_classifier
 from .wandb_reporting import finish_wandb_run, start_wandb_run
 
@@ -37,6 +38,8 @@ HPT_RESULT_COLUMNS = [
     "output_dir",
     "best_checkpoint",
     "reason",
+    "error_type",
+    "error_message",
     "started_at_utc",
     "finished_at_utc",
     "selected_for_bayes",
@@ -67,6 +70,10 @@ class TransformerHPTConfig:
     final_retrain: bool = True
     search_space: dict[str, list[Any]] = field(default_factory=lambda: dict(DEFAULT_SEARCH_SPACE))
     secondary_transformer_policy: str = "reuse_best_config_or_light_random_search_only"
+    max_train_samples: int | None = None
+    max_validation_samples: int | None = None
+    max_eval_samples: int | None = None
+    smoke_test: bool = False
 
 
 def utc_stamp() -> str:
@@ -148,6 +155,8 @@ def _trial_row(
         "output_dir": str(output_dir),
         "best_checkpoint": validation_metrics.get("best_checkpoint", ""),
         "reason": reason,
+        "error_type": reason.split(":", 1)[0] if status in {"failed", "skipped"} and ":" in reason else (status.capitalize() if status in {"failed", "skipped"} else ""),
+        "error_message": reason if status in {"failed", "skipped"} else "",
         "started_at_utc": started_at_utc,
         "finished_at_utc": finished_at_utc or datetime.now(timezone.utc).isoformat(),
         "selected_for_bayes": False,
@@ -235,6 +244,7 @@ def _run_single_trial(
         config=trial_payload,
     )
     _log_trial_distribution(run, label_distribution)
+    trial_epochs = 1 if config.smoke_test else int(trial_config["epochs"])
     try:
         output = train_transformer_classifier(
             train_df,
@@ -245,7 +255,7 @@ def _run_single_trial(
             model_name=config.model_name,
             max_length=int(trial_config["max_length"]),
             learning_rate=float(trial_config["learning_rate"]),
-            num_train_epochs=int(trial_config["epochs"]),
+            num_train_epochs=trial_epochs,
             weight_decay=float(trial_config["weight_decay"]),
             warmup_ratio=float(trial_config["warmup_ratio"]),
             batch_size_override=int(trial_config["batch_size"]),
@@ -259,6 +269,10 @@ def _run_single_trial(
             early_stopping_patience=config.early_stopping_patience,
             save_total_limit=config.save_total_limit,
             trial_metadata=trial_payload,
+            max_train_samples=config.max_train_samples,
+            max_validation_samples=config.max_validation_samples,
+            max_eval_samples=config.max_eval_samples,
+            smoke_test=config.smoke_test,
         )
         validation_metrics = output.get("validation_metrics") or {}
         if output.get("skip_result") is not None:
@@ -493,6 +507,46 @@ def _write_hpt_artifacts(
     }
     write_json(run_root / "best_transformer_configs.json", summary)
     write_json(project_outputs / "best_transformer_configs.json", summary)
+    if not results.empty and results["status"].eq("completed").any():
+        stage_status = "completed"
+        error_type = ""
+        error_message = ""
+    elif not results.empty and results["status"].eq("skipped").all():
+        stage_status = "skipped"
+        error_type = "Skipped"
+        error_message = "; ".join(results["reason"].dropna().astype(str).unique().tolist())
+    else:
+        stage_status = "failed"
+        error_type = "NoCompletedTrial"
+        error_message = "; ".join(results["reason"].dropna().astype(str).unique().tolist())
+    write_stage_status(
+        run_root / "transformer_hpt_stage_status.json",
+        stage="transformer_hpt",
+        status=stage_status,
+        error_type=error_type,
+        error_message=error_message,
+        config=asdict(config),
+        outputs={
+            "hyperparameter_search_results": str(run_root / "hyperparameter_search_results.csv"),
+            "best_transformer_configs": str(run_root / "best_transformer_configs.json"),
+            "project_hpt_results": str(project_outputs / "hyperparameter_search_results.csv"),
+        },
+        notes="HPT trials evaluate validation only; final retrain/test runs only after validation selection.",
+    )
+    write_stage_status(
+        project_outputs / "transformer_hpt_stage_status.json",
+        stage="transformer_hpt",
+        status=stage_status,
+        error_type=error_type,
+        error_message=error_message,
+        config=asdict(config),
+        outputs={
+            "run_root": str(run_root),
+            "hyperparameter_search_results": str(project_outputs / "hyperparameter_search_results.csv"),
+            "best_transformer_configs": str(project_outputs / "best_transformer_configs.json"),
+        },
+        notes="HPT trials evaluate validation only; final retrain/test runs only after validation selection.",
+    )
 
     lines = [
         "# Transformer HPT Summary",
@@ -529,6 +583,10 @@ def run_two_stage_transformer_hpt(
 ) -> dict[str, Any]:
     """Run random search, Bayesian search, then validation-selected final retraining."""
     config = config or TransformerHPTConfig()
+    if config.smoke_test:
+        config.random_trials = min(config.random_trials, 1)
+        config.bayes_trials = 0
+        config.final_retrain = False
     results_dir = Path(results_dir)
     project_root = results_dir.parent
     run_root = results_dir / "transformer_hpt" / f"{utc_stamp()}_{safe_name(config.model_name)}"
@@ -674,6 +732,10 @@ def run_two_stage_transformer_hpt(
                     "best_hpt_config": best_config,
                     "source_hpt_run": str(run_root),
                 },
+                max_train_samples=config.max_train_samples,
+                max_validation_samples=config.max_validation_samples,
+                max_eval_samples=config.max_eval_samples,
+                smoke_test=config.smoke_test,
             )
             if run is not None and final_output and final_output.get("result"):
                 result = final_output["result"]

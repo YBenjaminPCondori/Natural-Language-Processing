@@ -36,6 +36,10 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--early-stopping-patience", type=int, default=1)
     parser.add_argument("--no-final-retrain", action="store_true")
+    parser.add_argument("--max-train-samples", type=int, default=None)
+    parser.add_argument("--max-validation-samples", type=int, default=None)
+    parser.add_argument("--max-eval-samples", type=int, default=None)
+    parser.add_argument("--smoke-test", action="store_true", help="Run one tiny random-search trial with one epoch and no final retrain.")
     parser.add_argument("--wandb", action="store_true", help="Enable W&B runs when credentials are available.")
     parser.add_argument("--wandb-project", default=os.environ.get("WANDB_PROJECT", "ledgar-clause-classification"))
     parser.add_argument("--wandb-entity", default=os.environ.get("WANDB_ENTITY", "").strip() or None)
@@ -62,6 +66,10 @@ def main() -> None:
         seed=args.seed,
         early_stopping_patience=args.early_stopping_patience,
         final_retrain=not args.no_final_retrain,
+        max_train_samples=args.max_train_samples,
+        max_validation_samples=args.max_validation_samples,
+        max_eval_samples=args.max_eval_samples,
+        smoke_test=args.smoke_test,
     )
     output = run_two_stage_transformer_hpt(
         train_df,

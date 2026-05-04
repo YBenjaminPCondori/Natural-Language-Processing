@@ -31,7 +31,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-name", default="Qwen/Qwen2.5-3B-Instruct")
     parser.add_argument("--eval-sample-size", type=int, default=200)
+    parser.add_argument("--max-eval-samples", type=int, default=None)
     parser.add_argument("--few-shot-examples-per-class", type=int, default=1)
+    parser.add_argument("--smoke-test", action="store_true", help="Run only a tiny prompt sample if CUDA is available.")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -61,6 +63,8 @@ def main() -> None:
         dataset_name="LEDGAR",
         seed=args.seed,
         run_qwen=True,
+        max_eval_samples=args.max_eval_samples,
+        smoke_test=args.smoke_test,
     )
     print(json.dumps({"results": output.get("results", [])}, indent=2, default=str))
 
