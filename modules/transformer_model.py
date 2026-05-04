@@ -26,6 +26,7 @@ TRANSFORMER_PREDICTION_COLUMNS = [
     "model_name",
     "dataset_name",
     "split",
+    "confidence",
 ]
 TRANSFORMER_RESULT_COLUMNS = [
     "model_family",
@@ -432,7 +433,11 @@ def train_transformer_classifier(
             }
 
         output = trainer.predict(test_dataset)
-        y_pred = np.argmax(output.predictions, axis=-1).astype(int).tolist()
+        logits = output.predictions[0] if isinstance(output.predictions, tuple) else output.predictions
+        y_pred = np.argmax(logits, axis=-1).astype(int).tolist()
+        shifted_logits = logits - np.max(logits, axis=-1, keepdims=True)
+        probabilities = np.exp(shifted_logits) / np.sum(np.exp(shifted_logits), axis=-1, keepdims=True)
+        confidence_scores = np.max(probabilities, axis=-1).astype(float).tolist()
         y_true = test_df["label_id"].astype(int).tolist()
         result, pred_df = evaluate_predictions_common(
             model_family="transformer",
@@ -445,6 +450,7 @@ def train_transformer_classifier(
             dataset_name=dataset_name,
             output_dir=output_dir,
             notes="Fine-tuned Hugging Face sequence classifier.",
+            confidence_scores=confidence_scores,
         )
         pd.DataFrame([result]).to_csv(output_dir / "transformer_results.csv", index=False)
         pred_df.to_csv(output_dir / "transformer_predictions.csv", index=False)

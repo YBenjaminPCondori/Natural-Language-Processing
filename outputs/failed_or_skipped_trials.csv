@@ -1,4 +1,14 @@
-stage,model_key,model_id,status,reason,created_at_utc
-instruction_tuned_llm_evaluation,saullm_7b,Equall/Saul-7B-Instruct-v1,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.,2026-05-03T22:15:38.194342+00:00
-instruction_tuned_llm_evaluation,qwen_small,Qwen/Qwen2.5-3B-Instruct,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.,2026-05-03T22:15:38.194342+00:00
-instruction_tuned_llm_evaluation,qwen_7b,Qwen/Qwen2.5-7B-Instruct,failed,RuntimeError: CUDA/GPU is unavailable. Use a Colab/A100 runtime or pass --allow-cpu for experimental CPU loading.,2026-05-03T22:15:38.194342+00:00
+model_name,model_family,training_type,split_used,validation_accuracy,validation_macro_f1,test_accuracy,test_macro_f1,test_weighted_f1,test_macro_precision,test_macro_recall,invalid_prediction_rate,selected_by_validation,hyperparameter_source,evidence_path,prediction_path,status,reason_if_skipped_or_failed,config_path,reason
+qwen_few_shot,llm_prompting,prompted_llm,test,,,0.11,0.0099099099099099,0.0218018018018018,0.0055,0.05,1.0,False,results/qwen/qwen_run_config.json,results/qwen/classification_reports/qwen_few_shot_report.json; results/qwen/confusion_matrices/qwen_few_shot_confusion_matrix.png,outputs/qwen_predictions.csv,failed,All Qwen few-shot outputs were invalid; do not treat as a meaningful completed result.,,
+bilstm,neural_sequence,neural_sequence,test,,,,,,,,,False,outputs/bilstm_results.json,,,pending,Configured in modules/sequence_model.py; run required.,,
+bert-base-uncased,transformer_encoder,fine_tuned_encoder,test,,,,,,,,,False,outputs/hyperparameter_search_results.csv,,,pending,Runnable configuration pending; no completed evidence found.,,
+nlpaueb/legal-bert-base-uncased,transformer_encoder,fine_tuned_encoder,test,,,,,,,,,False,outputs/hyperparameter_search_results.csv,,,pending,Runnable configuration pending; no completed evidence found.,,
+nlpaueb/bert-base-uncased-contracts,transformer_encoder,fine_tuned_encoder,test,,,,,,,,,False,outputs/hyperparameter_search_results.csv,,,pending,Runnable configuration pending; no completed evidence found.,,
+roberta-base,transformer_encoder,fine_tuned_encoder,test,,,,,,,,,False,outputs/hyperparameter_search_results.csv,,,pending,Runnable configuration pending; no completed evidence found.,,
+microsoft/deberta-v3-base,transformer_encoder,fine_tuned_encoder,test,,,,,,,,,False,outputs/hyperparameter_search_results.csv,,,pending,Runnable configuration pending; no completed evidence found.,,
+qwen_retrieval_few_shot,llm_prompting,retrieval_few_shot,test,,,,,,,,,False,outputs/qwen_retrieval_few_shot_predictions.csv,,,pending,Configured in modules/qwen_prompting.py; rerun Qwen required.,,
+bert-base-uncased,,,,,,,,,,,,,,,,pending,,outputs/best_transformer_configs.json,Configured search space only; no completed checkpoint/result found.
+nlpaueb/legal-bert-base-uncased,,,,,,,,,,,,,,,,pending,,outputs/best_transformer_configs.json,Configured search space only; no completed checkpoint/result found.
+nlpaueb/bert-base-uncased-contracts,,,,,,,,,,,,,,,,pending,,outputs/best_transformer_configs.json,Configured search space only; no completed checkpoint/result found.
+roberta-base,,,,,,,,,,,,,,,,pending,,outputs/best_transformer_configs.json,Configured search space only; no completed checkpoint/result found.
+microsoft/deberta-v3-base,,,,,,,,,,,,,,,,pending,,outputs/best_transformer_configs.json,Configured search space only; no completed checkpoint/result found.

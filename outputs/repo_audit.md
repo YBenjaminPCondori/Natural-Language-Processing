@@ -1,47 +1,47 @@
 # Repository Audit
 
-Created: 2026-05-03T16:53:11.010679+00:00
+Created: 2026-05-04T20:46:48.293671+00:00
 
 ## Inventory
-- Total files inspected: 464
+- Total files inspected: 629
 - Notebooks: 1
-- Python modules: 22
-- Output files: 265
+- Python modules: 26
+- Output files: 384
 - Result files: 85
 
 ## Latest Files
 | path | size_bytes | modified_utc |
 | --- | --- | --- |
-| outputs\error_analysis_summary.md | 511 | 2026-05-03T16:53:09.125990+00:00 |
-| outputs\error_analysis_examples.csv | 12145 | 2026-05-03T16:53:09.121989+00:00 |
-| figures\per_label_f1_best_model.png | 75517 | 2026-05-03T16:53:09.104980+00:00 |
-| outputs\per_label_f1_best_model.csv | 5623 | 2026-05-03T16:53:08.838932+00:00 |
-| outputs\per_label_f1_all_models.csv | 44298 | 2026-05-03T16:53:08.832927+00:00 |
-| figures\validation_vs_test_macro_f1.png | 40346 | 2026-05-03T16:53:08.815414+00:00 |
-| outputs\figures\model_comparison_accuracy.png | 83176 | 2026-05-03T16:53:08.632904+00:00 |
-| figures\model_comparison_accuracy.png | 83176 | 2026-05-03T16:53:08.471121+00:00 |
-| outputs\figures\model_comparison_macro_f1.png | 82147 | 2026-05-03T16:53:08.272085+00:00 |
-| figures\model_comparison_macro_f1.png | 82147 | 2026-05-03T16:53:08.124056+00:00 |
-| outputs\qwen_prompt_audit.md | 454 | 2026-05-03T16:53:07.922434+00:00 |
-| outputs\llm_prompt_results.csv | 577 | 2026-05-03T16:53:07.917431+00:00 |
-| outputs\qwen_retrieval_few_shot_predictions.csv | 83 | 2026-05-03T16:53:07.909424+00:00 |
-| outputs\qwen_static_few_shot_predictions.csv | 158985 | 2026-05-03T16:53:07.904421+00:00 |
-| outputs\qwen_zero_shot_predictions.csv | 141367 | 2026-05-03T16:53:07.887421+00:00 |
-| outputs\transformer_training_summary.md | 1066 | 2026-05-03T16:53:07.855421+00:00 |
-| outputs\best_transformer_configs.json | 659 | 2026-05-03T16:53:07.849421+00:00 |
-| outputs\hyperparameter_search_results.csv | 895 | 2026-05-03T16:53:07.843424+00:00 |
-| outputs\best_classical_configs.json | 606 | 2026-05-03T16:53:07.831422+00:00 |
-| outputs\classical_hyperparameter_results.csv | 1158 | 2026-05-03T16:53:07.825405+00:00 |
-| outputs\model_evidence_table.md | 3112 | 2026-05-03T16:53:07.817405+00:00 |
-| outputs\main_results_latex.tex | 6034 | 2026-05-03T16:53:07.811397+00:00 |
-| outputs\main_results.json | 13257 | 2026-05-03T16:53:07.654881+00:00 |
-| outputs\main_results.csv | 5320 | 2026-05-03T16:53:07.639880+00:00 |
-| outputs\dataset_verification.md | 535 | 2026-05-03T16:53:07.569357+00:00 |
-| figures\clause_length_distribution.png | 37464 | 2026-05-03T16:53:07.551357+00:00 |
-| figures\text_length_distribution.png | 37464 | 2026-05-03T16:53:07.404619+00:00 |
-| figures\label_distribution.png | 89676 | 2026-05-03T16:53:07.214599+00:00 |
-| figures\label_distribution_top20.png | 89676 | 2026-05-03T16:53:07.000879+00:00 |
-| outputs\text_length_statistics.csv | 263 | 2026-05-03T16:53:06.352872+00:00 |
+| outputs\report_tex_values.json | 2423 | 2026-05-04T20:46:47.688674+00:00 |
+| outputs\report_tables\hyperparameter_report_rows.tex | 154 | 2026-05-04T20:46:47.647673+00:00 |
+| outputs\report_tables\misclassification_rows.tex | 429 | 2026-05-04T20:46:47.640675+00:00 |
+| outputs\report_tables\per_class_rows.tex | 226 | 2026-05-04T20:46:47.625247+00:00 |
+| outputs\report_tables\main_results_rows.tex | 445 | 2026-05-04T20:46:47.619246+00:00 |
+| outputs\report_tables\hpt_summary_rows.tex | 309 | 2026-05-04T20:46:47.616247+00:00 |
+| outputs\report_tables\audit_checklist_rows.tex | 495 | 2026-05-04T20:46:47.611239+00:00 |
+| outputs\metrics\final_model_comparison_summary.csv | 3937 | 2026-05-04T20:46:47.601239+00:00 |
+| outputs\failed_or_skipped_trials.csv | 2858 | 2026-05-04T20:46:47.593241+00:00 |
+| outputs\final_test_metrics.json | 1214 | 2026-05-04T20:46:47.587241+00:00 |
+| outputs\final_test_predictions.csv | 3268323 | 2026-05-04T20:46:47.582237+00:00 |
+| figures\qwen_invalid_predictions.png | 31734 | 2026-05-04T20:46:47.351772+00:00 |
+| outputs\figures\qwen_invalid_predictions.png | 31734 | 2026-05-04T20:46:47.351772+00:00 |
+| figures\agentic_review_workflow.png | 21251 | 2026-05-04T20:46:47.190366+00:00 |
+| outputs\figures\agentic_review_workflow.png | 21251 | 2026-05-04T20:46:47.190366+00:00 |
+| figures\pipeline_overview.png | 53046 | 2026-05-04T20:46:47.073843+00:00 |
+| outputs\figures\pipeline_overview.png | 53046 | 2026-05-04T20:46:47.073843+00:00 |
+| outputs\error_analysis_summary.md | 511 | 2026-05-04T20:46:45.803160+00:00 |
+| outputs\error_analysis_examples.csv | 12145 | 2026-05-04T20:46:45.799057+00:00 |
+| figures\per_label_f1_best_model.png | 75517 | 2026-05-04T20:46:45.791986+00:00 |
+| outputs\per_label_f1_best_model.csv | 5623 | 2026-05-04T20:46:45.508962+00:00 |
+| outputs\per_label_f1_all_models.csv | 44298 | 2026-05-04T20:46:45.504958+00:00 |
+| figures\validation_vs_test_macro_f1.png | 40346 | 2026-05-04T20:46:45.488922+00:00 |
+| outputs\figures\model_comparison_accuracy.png | 83176 | 2026-05-04T20:46:45.278594+00:00 |
+| figures\model_comparison_accuracy.png | 83176 | 2026-05-04T20:46:45.103487+00:00 |
+| outputs\archive\20260504T204641Z\figures\model_comparison_macro_f1.png | 82147 | 2026-05-04T20:46:44.871177+00:00 |
+| figures\model_comparison_macro_f1.png | 82147 | 2026-05-04T20:46:44.731866+00:00 |
+| outputs\figures\model_comparison_macro_f1.png | 82147 | 2026-05-04T20:46:44.731866+00:00 |
+| outputs\qwen_prompt_audit.md | 454 | 2026-05-04T20:46:44.529049+00:00 |
+| outputs\llm_prompt_results.csv | 577 | 2026-05-04T20:46:44.526048+00:00 |
 
 _Showing 30 of 80 rows._
 
@@ -54,19 +54,23 @@ _Showing 30 of 80 rows._
 | modules.classical_models | importable |  |
 | modules.config | importable |  |
 | modules.coursework_artifacts | importable |  |
+| modules.cuad_external | importable |  |
 | modules.data_setup | importable |  |
 | modules.error_analysis | importable |  |
 | modules.evaluate | importable |  |
 | modules.evaluation | importable |  |
 | modules.inference | importable |  |
+| modules.llm_evaluation | importable |  |
 | modules.preprocess | importable |  |
 | modules.preprocessing | importable |  |
 | modules.qwen_prompting | importable |  |
+| modules.report_artifact_audit | importable |  |
 | modules.report_exports | importable |  |
 | modules.sequence_model | importable |  |
 | modules.train | importable |  |
 | modules.train_classical | importable |  |
 | modules.train_transformer | importable |  |
+| modules.transformer_hpt | importable |  |
 | modules.transformer_model | importable |  |
 | modules.wandb_reporting | importable |  |
 | modules.wandb_tracking | importable |  |
@@ -75,16 +79,20 @@ _Showing 30 of 80 rows._
 | path | patterns |
 | --- | --- |
 | modules\agentic_review.py | sample_size, .sample( |
-| modules\baselines.py | dummy |
+| modules\baselines.py | sample_size, dummy |
 | modules\coursework_artifacts.py | debug=True, sample_size, head(, .sample(, max_steps, TODO, placeholder, dummy, hardcoded, try:, except |
+| modules\cuad_external.py | sample_size, head(, .sample(, try:, except |
 | modules\data_setup.py | .sample(, try:, except |
 | modules\error_analysis.py | head( |
-| modules\evaluation.py | sample_size |
+| modules\evaluation.py | sample_size, .sample( |
 | modules\inference.py | try:, except |
-| modules\preprocessing.py | head( |
+| modules\llm_evaluation.py | head(, .sample(, try:, except |
+| modules\preprocessing.py | head(, try:, except |
 | modules\qwen_prompting.py | sample_size, head(, .sample(, try:, except |
+| modules\report_artifact_audit.py | sample_size, head(, .sample(, max_steps, TODO, placeholder, dummy, hardcoded, try:, except |
 | modules\report_exports.py | sample_size, dummy, try:, except |
 | modules\sequence_model.py | sample_size |
+| modules\transformer_hpt.py | try:, except |
 | modules\transformer_model.py | sample_size, try:, except |
 | modules\wandb_reporting.py | head(, try:, except |
 | modules\wandb_tracking.py | try:, except |

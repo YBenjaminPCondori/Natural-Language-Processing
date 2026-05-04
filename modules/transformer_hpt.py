@@ -47,14 +47,26 @@ HPT_RESULT_COLUMNS = [
 ]
 
 
-DEFAULT_SEARCH_SPACE = {
-    "learning_rate": [1e-5, 2e-5, 3e-5, 5e-5],
+DEFAULT_STAGE5A_SEARCH_SPACE = {
+    "learning_rate": [1e-6, 3e-6, 1e-5, 3e-5, 1e-4],
     "batch_size": [8, 16, 32],
-    "epochs": [2, 3, 4, 5],
-    "weight_decay": [0.0, 0.01, 0.05],
-    "warmup_ratio": [0.0, 0.06, 0.1],
+    "epochs": [2],
+    "weight_decay": [0.0, 0.01, 0.05, 0.1, 0.2],
+    "warmup_ratio": [0.0, 0.06, 0.1, 0.2],
     "max_length": [128, 256, 512],
 }
+
+DEFAULT_STAGE5B_SEARCH_SPACE = {
+    "learning_rate": [1e-5, 2e-5, 3e-5, 5e-5],
+    "batch_size": [16, 32],
+    "epochs": [3],
+    "weight_decay": [0.01, 0.05, 0.1],
+    "warmup_ratio": [0.05, 0.1, 0.15],
+    "max_length": [256, 512],
+}
+
+# Backwards-compatible alias used by older notebooks.
+DEFAULT_SEARCH_SPACE = DEFAULT_STAGE5A_SEARCH_SPACE
 
 
 @dataclass
@@ -68,7 +80,10 @@ class TransformerHPTConfig:
     early_stopping_patience: int = 1
     save_total_limit: int = 1
     final_retrain: bool = True
-    search_space: dict[str, list[Any]] = field(default_factory=lambda: dict(DEFAULT_SEARCH_SPACE))
+    final_retrain_epochs: int = 4
+    search_space: dict[str, list[Any]] = field(default_factory=lambda: dict(DEFAULT_STAGE5A_SEARCH_SPACE))
+    stage5a_search_space: dict[str, list[Any]] | None = None
+    stage5b_search_space: dict[str, list[Any]] = field(default_factory=lambda: dict(DEFAULT_STAGE5B_SEARCH_SPACE))
     secondary_transformer_policy: str = "reuse_best_config_or_light_random_search_only"
     max_train_samples: int | None = None
     max_validation_samples: int | None = None
@@ -108,7 +123,8 @@ def _dedupe_random_configs(configs: list[dict[str, Any]]) -> list[dict[str, Any]
 
 def _random_configs(config: TransformerHPTConfig) -> list[dict[str, Any]]:
     rng = random.Random(config.seed)
-    candidates = [_choice_config(rng, config.search_space) for _ in range(max(config.random_trials * 4, config.random_trials))]
+    search_space = config.stage5a_search_space or config.search_space
+    candidates = [_choice_config(rng, search_space) for _ in range(max(config.random_trials * 4, config.random_trials))]
     return _dedupe_random_configs(candidates)[: config.random_trials]
 
 
@@ -231,6 +247,8 @@ def _run_single_trial(
         "search_config": trial_config,
         "early_stopping_patience": config.early_stopping_patience,
         "save_total_limit": config.save_total_limit,
+        "stage5a_policy": "random search, 2 epochs per trial, validation macro-F1 objective",
+        "stage5b_policy": "narrowed Bayesian search, 3 epochs per trial, validation macro-F1 objective",
         "test_used": False,
     }
     run = _start_trial_run(
@@ -370,7 +388,7 @@ def _run_bayes_search(
                 run_name="stage5b_bayes_trial_skipped",
                 model_name=config.model_name,
                 status="skipped",
-                trial_config={key: None for key in DEFAULT_SEARCH_SPACE},
+                trial_config={key: None for key in DEFAULT_STAGE5B_SEARCH_SPACE},
                 output_dir=run_root / "stage5b_bayes_trial_skipped",
                 reason=f"Optuna unavailable: {type(exc).__name__}: {exc}",
                 started_at_utc=datetime.now(timezone.utc).isoformat(),
@@ -385,13 +403,14 @@ def _run_bayes_search(
         study.enqueue_trial(_row_to_config(best_random))
 
     def objective(trial: Any) -> float:
+        bayes_space = config.stage5b_search_space
         trial_config = {
-            "learning_rate": trial.suggest_categorical("learning_rate", config.search_space["learning_rate"]),
-            "batch_size": trial.suggest_categorical("batch_size", config.search_space["batch_size"]),
-            "epochs": trial.suggest_categorical("epochs", config.search_space["epochs"]),
-            "weight_decay": trial.suggest_categorical("weight_decay", config.search_space["weight_decay"]),
-            "warmup_ratio": trial.suggest_categorical("warmup_ratio", config.search_space["warmup_ratio"]),
-            "max_length": trial.suggest_categorical("max_length", config.search_space["max_length"]),
+            "learning_rate": trial.suggest_categorical("learning_rate", bayes_space["learning_rate"]),
+            "batch_size": trial.suggest_categorical("batch_size", bayes_space["batch_size"]),
+            "epochs": trial.suggest_categorical("epochs", bayes_space["epochs"]),
+            "weight_decay": trial.suggest_categorical("weight_decay", bayes_space["weight_decay"]),
+            "warmup_ratio": trial.suggest_categorical("warmup_ratio", bayes_space["warmup_ratio"]),
+            "max_length": trial.suggest_categorical("max_length", bayes_space["max_length"]),
         }
         row = _run_single_trial(
             train_df=train_df,
@@ -500,6 +519,9 @@ def _write_hpt_artifacts(
         "early_stopping_patience": config.early_stopping_patience,
         "save_total_limit": config.save_total_limit,
         "test_policy": "Test split is not evaluated during HPT trials; final retrain evaluates test only after validation selection.",
+        "stage5a_policy": "Random search with 2 epochs per trial.",
+        "stage5b_policy": "Narrowed Bayesian search with 3 epochs per trial.",
+        "final_retrain_epochs": config.final_retrain_epochs,
         "class_imbalance_policy": "Label distribution is logged and macro F1 is the main metric; class weights are not added by this HPT runner.",
         "secondary_transformer_policy": config.secondary_transformer_policy,
         "best_config": best_config,
@@ -613,7 +635,7 @@ def run_two_stage_transformer_hpt(
                     run_name="stage5a_random_trial_skipped",
                     model_name=config.model_name,
                     status="skipped",
-                    trial_config={key: None for key in DEFAULT_SEARCH_SPACE},
+                    trial_config={key: None for key in (config.stage5a_search_space or config.search_space)},
                     output_dir=run_root / "stage5a_random_trial_skipped",
                     reason=reason,
                     started_at_utc=datetime.now(timezone.utc).isoformat(),
@@ -630,7 +652,7 @@ def run_two_stage_transformer_hpt(
                 run_name="stage5a_random_trial_failed",
                 model_name=config.model_name,
                 status="failed",
-                trial_config={key: None for key in DEFAULT_SEARCH_SPACE},
+                trial_config={key: None for key in (config.stage5a_search_space or config.search_space)},
                 output_dir=run_root / "stage5a_random_trial_failed",
                 reason=reason,
                 started_at_utc=datetime.now(timezone.utc).isoformat(),
@@ -713,7 +735,7 @@ def run_two_stage_transformer_hpt(
                 model_name=config.model_name,
                 max_length=int(best_config["max_length"]),
                 learning_rate=float(best_config["learning_rate"]),
-                num_train_epochs=int(best_config["epochs"]),
+                num_train_epochs=1 if config.smoke_test else int(config.final_retrain_epochs),
                 weight_decay=float(best_config["weight_decay"]),
                 warmup_ratio=float(best_config["warmup_ratio"]),
                 batch_size_override=int(best_config["batch_size"]),

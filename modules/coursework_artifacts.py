@@ -69,8 +69,33 @@ def write_text(path: Path, text: str, archive_dir: Path | None = None) -> Path:
     return path
 
 
+def make_json_safe(value: Any) -> Any:
+    """Convert pandas/numpy missing values to strict JSON-safe values."""
+    if isinstance(value, dict):
+        return {str(key): make_json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [make_json_safe(item) for item in value]
+    if isinstance(value, np.ndarray):
+        return [make_json_safe(item) for item in value.tolist()]
+    if isinstance(value, np.generic):
+        return make_json_safe(value.item())
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, datetime):
+        return value.isoformat()
+    try:
+        if pd.isna(value):
+            return None
+    except (TypeError, ValueError):
+        pass
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return None
+    return value
+
+
 def write_json(path: Path, payload: Any, archive_dir: Path | None = None) -> Path:
-    return write_text(path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n", archive_dir)
+    safe_payload = make_json_safe(payload)
+    return write_text(path, json.dumps(safe_payload, indent=2, ensure_ascii=False, allow_nan=False) + "\n", archive_dir)
 
 
 def write_csv(path: Path, df: pd.DataFrame, archive_dir: Path | None = None) -> Path:
@@ -114,6 +139,7 @@ def file_exists(project_root: Path, value: Any) -> bool:
 def prediction_path_for_model(project_root: Path, model_name: str) -> str:
     safe = re.sub(r"[^a-zA-Z0-9]+", "_", model_name.lower()).strip("_")
     candidates = [
+        project_root / "outputs" / "predictions" / f"{safe}_test_predictions.csv",
         project_root / "outputs" / "predictions" / f"{safe}_test_predictions.jsonl",
         project_root / "outputs" / f"{safe}_predictions.csv",
         project_root / "results" / "qwen" / "qwen_predictions.csv",
@@ -539,6 +565,374 @@ def generate_comparison_figures(project_root: Path, main_results: pd.DataFrame, 
         plt.close(fig)
 
 
+def latex_escape(value: Any) -> str:
+    """Escape small table-cell values for LaTeX snippets."""
+    text = "" if value is None or (isinstance(value, float) and math.isnan(value)) else str(value)
+    replacements = {
+        "\\": r"\textbackslash{}",
+        "&": r"\&",
+        "%": r"\%",
+        "$": r"\$",
+        "#": r"\#",
+        "_": r"\_",
+        "{": r"\{",
+        "}": r"\}",
+        "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+    }
+    for original, replacement in replacements.items():
+        text = text.replace(original, replacement)
+    return text
+
+
+def format_metric(value: Any, digits: int = 4) -> str:
+    try:
+        if pd.isna(value):
+            return "--"
+        return f"{float(value):.{digits}f}"
+    except Exception:
+        return "--"
+
+
+def copy_existing(source: Path, target: Path, archive_dir: Path | None = None) -> Path | None:
+    """Copy a non-empty artifact to a report-facing filename."""
+    if not source.exists() or not source.is_file() or source.stat().st_size == 0:
+        return None
+    if source.resolve() == target.resolve():
+        return target
+    if archive_dir:
+        backup_existing(target, archive_dir)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, target)
+    return target
+
+
+def first_existing(project_root: Path, relative_paths: list[str]) -> Path | None:
+    for relative_path in relative_paths:
+        candidate = project_root / relative_path
+        if candidate.exists() and candidate.is_file() and candidate.stat().st_size > 0:
+            return candidate
+    return None
+
+
+def best_completed_model(main_results: pd.DataFrame) -> pd.Series | None:
+    if main_results.empty:
+        return None
+    completed = main_results[
+        main_results.get("status", pd.Series(dtype=str)).astype(str).eq("completed")
+        & pd.to_numeric(main_results.get("test_macro_f1", pd.Series(dtype=float)), errors="coerce").notna()
+    ].copy()
+    if completed.empty:
+        return None
+    completed["test_macro_f1"] = pd.to_numeric(completed["test_macro_f1"], errors="coerce")
+    return completed.sort_values("test_macro_f1", ascending=False).iloc[0]
+
+
+def prediction_path_from_main_row(project_root: Path, row: pd.Series | None) -> Path | None:
+    if row is None:
+        return None
+    rel = resolve_evidence_path(project_root, row.get("prediction_path"))
+    path = project_root / rel if rel else None
+    if path is not None and path.exists() and path.stat().st_size > 0:
+        return path
+    model_name = str(row.get("model_name", ""))
+    return first_existing(
+        project_root,
+        [
+            f"outputs/predictions/{re.sub(r'[^a-zA-Z0-9]+', '_', model_name.lower()).strip('_')}_test_predictions.csv",
+            f"outputs/predictions/{re.sub(r'[^a-zA-Z0-9]+', '_', model_name.lower()).strip('_')}_test_predictions.jsonl",
+            "results/transformer/transformer_predictions.csv",
+            "outputs/transformer_predictions.csv",
+        ],
+    )
+
+
+def confusion_matrix_from_main_row(project_root: Path, row: pd.Series | None) -> Path | None:
+    if row is not None:
+        evidence = str(row.get("evidence_path", ""))
+        for part in [item.strip() for item in evidence.split(";") if item.strip()]:
+            rel = resolve_evidence_path(project_root, part)
+            if rel.endswith(".png") and (project_root / rel).exists():
+                return project_root / rel
+    return first_existing(
+        project_root,
+        [
+            "results/transformer/confusion_matrices/distilbert_base_uncased_confusion_matrix.png",
+            "results/classical/confusion_matrices/linear_svm_confusion_matrix.png",
+            "figures/confusion_matrix_best_model.png",
+        ],
+    )
+
+
+def write_report_table_snippets(project_root: Path, main_results: pd.DataFrame, archive_dir: Path) -> dict[str, str]:
+    """Write small LaTeX snippets that correspond to report.tex TODO tables."""
+    table_dir = project_root / "outputs" / "report_tables"
+    table_dir.mkdir(parents=True, exist_ok=True)
+    written: dict[str, str] = {}
+
+    def write_snippet(filename: str, lines: list[str]) -> None:
+        path = table_dir / filename
+        write_text(path, "\n".join(lines) + "\n", archive_dir)
+        written[filename] = path.relative_to(project_root).as_posix()
+
+    dataset_verification = read_json_or_empty(project_root / "outputs" / "dataset_verification.json")
+    safeguards = read_json_or_empty(project_root / "outputs" / "metrics" / "cuad_external_safeguards.json")
+    audit_rows = [
+        ("Dataset files found", bool(dataset_verification.get("raw_rows"))),
+        ("Train/validation/test splits non-empty", all(value > 0 for value in dataset_verification.get("processed_rows", {}).values())),
+        ("Top-20 labels selected from train only", dataset_verification.get("top20_selected_from_training_only")),
+        ("Duplicate text-label pairs checked", "text_label_cross_split_overlaps" in dataset_verification),
+        ("Cross-split duplicate text checked", "text_label_cross_split_overlaps" in dataset_verification),
+        ("Label distribution exported", (project_root / "figures" / "label_distribution.png").exists()),
+        ("Prediction files exported", any((project_root / "outputs" / "predictions").glob("*predictions.*"))),
+        ("Failed/skipped trials logged", (project_root / "outputs" / "failed_or_skipped_trials.csv").exists()),
+        ("CUAD external evaluation non-empty", safeguards.get("cuad_external_eval_not_empty")),
+        ("CUAD mapped labels valid in LEDGAR label space", safeguards.get("mapped_labels_are_valid")),
+        ("CUAD absent from LEDGAR train/validation", safeguards.get("no_cuad_in_ledgar_train_or_validation")),
+    ]
+    write_snippet(
+        "audit_checklist_rows.tex",
+        [f"{latex_escape(check)} & {'Pass' if passed else 'Missing'} \\\\" for check, passed in audit_rows],
+    )
+
+    hpt = read_csv(project_root / "outputs" / "hpt_summary.csv")
+    hpt_lines = []
+    if not hpt.empty:
+        for _, row in hpt.iterrows():
+            stage = latex_escape(row.get("stage", ""))
+            method = latex_escape(row.get("search_method", ""))
+            trials = latex_escape(row.get("trials", ""))
+            score = format_metric(row.get("best_validation_macro_f1"))
+            hpt_lines.append(f"{stage} & {method} & {trials} & {score} \\\\")
+    write_snippet("hpt_summary_rows.tex", hpt_lines or [r"Stage 5A/5B & Not yet run & -- & -- \\"])
+
+    completed = main_results[main_results.get("status", pd.Series(dtype=str)).astype(str).eq("completed")].copy()
+    result_lines = []
+    if not completed.empty:
+        for _, row in completed.iterrows():
+            result_lines.append(
+                f"{latex_escape(row.get('model_name'))} & {format_metric(row.get('test_accuracy'))} & "
+                f"{format_metric(row.get('test_macro_f1'))} & {format_metric(row.get('test_weighted_f1'))} & "
+                f"{format_metric(row.get('invalid_prediction_rate')) if pd.notna(row.get('invalid_prediction_rate')) else '--'} \\\\"
+            )
+    write_snippet("main_results_rows.tex", result_lines or [r"No completed model evidence & -- & -- & -- & -- \\"])
+
+    per_class = read_csv(project_root / "outputs" / "per_label_f1_best_model.csv")
+    if per_class.empty:
+        per_class = read_csv(project_root / "outputs" / "per_class_results.csv")
+        best = best_completed_model(main_results)
+        if best is not None and "model_name" in per_class:
+            per_class = per_class[per_class["model_name"].astype(str) == str(best.get("model_name"))]
+    per_lines = []
+    if not per_class.empty and {"label", "precision", "recall"}.issubset(per_class.columns):
+        f1_col = "f1_score" if "f1_score" in per_class else "f1"
+        for _, row in per_class.sort_values(f1_col, ascending=False).head(5).iterrows():
+            per_lines.append(
+                f"{latex_escape(row.get('label'))} & {format_metric(row.get('precision'))} & "
+                f"{format_metric(row.get('recall'))} & {format_metric(row.get(f1_col))} \\\\"
+            )
+    write_snippet("per_class_rows.tex", per_lines or [r"Per-class metrics unavailable & -- & -- & -- \\"])
+
+    errors = read_csv(project_root / "outputs" / "error_analysis_examples.csv")
+    error_lines = []
+    if not errors.empty:
+        for _, row in errors.head(3).iterrows():
+            text = normalise_for_table(row.get("text", row.get("clause", "")), max_chars=90)
+            true_label = row.get("true_label", row.get("label", row.get("gold_label", "")))
+            predicted = row.get("predicted_label", row.get("prediction", ""))
+            reason = row.get("likely_reason", row.get("error_type", "manual review"))
+            error_lines.append(
+                f"{latex_escape(text)} & {latex_escape(true_label)} & {latex_escape(predicted)} & {latex_escape(reason)} \\\\"
+            )
+    write_snippet("misclassification_rows.tex", error_lines or [r"Misclassification examples unavailable & -- & -- & -- \\"])
+
+    hyper = read_csv(project_root / "outputs" / "hyperparameters.csv")
+    hyper_lines = []
+    wanted = {
+        ("tfidf", "max_features_grid"),
+        ("logistic_regression", "class_weight_grid"),
+        ("multinomial_nb", "enabled"),
+        ("qwen", "decoding"),
+    }
+    if not hyper.empty:
+        for _, row in hyper.iterrows():
+            key = (str(row.get("component", "")), str(row.get("parameter", "")))
+            if key in wanted:
+                hyper_lines.append(f"{latex_escape(row.get('component'))} & {latex_escape(row.get('parameter'))} & {latex_escape(row.get('value'))} \\\\")
+    write_snippet("hyperparameter_report_rows.tex", hyper_lines)
+    return written
+
+
+def read_json_or_empty(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return payload if isinstance(payload, dict) else {}
+    except Exception:
+        return {}
+
+
+def read_csv(path: Path) -> pd.DataFrame:
+    if not path.exists() or path.stat().st_size == 0:
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return pd.DataFrame()
+
+
+def normalise_for_table(value: Any, max_chars: int = 90) -> str:
+    text = re.sub(r"\s+", " ", "" if value is None else str(value)).strip()
+    if len(text) <= max_chars:
+        return text
+    return text[: max_chars - 3].rstrip() + "..."
+
+
+def generate_report_tex_support_artifacts(project_root: Path, main_results: pd.DataFrame, archive_dir: Path) -> None:
+    """Generate exact report.tex support filenames from current evidence."""
+    from .report_exports import plot_agentic_workflow, plot_pipeline_overview, plot_qwen_invalid_predictions
+
+    figures_dir = project_root / "figures"
+    output_figures = project_root / "outputs" / "figures"
+    metrics_dir = project_root / "outputs" / "metrics"
+    metrics_dir.mkdir(parents=True, exist_ok=True)
+
+    pipeline = plot_pipeline_overview(figures_dir / "pipeline_overview.png")
+    copy_existing(pipeline, output_figures / "pipeline_overview.png", archive_dir)
+
+    workflow = plot_agentic_workflow(figures_dir / "agentic_review_workflow.png")
+    copy_existing(workflow, output_figures / "agentic_review_workflow.png", archive_dir)
+
+    qwen_fig = plot_qwen_invalid_predictions(
+        main_results.rename(
+            columns={
+                "test_macro_f1": "macro_f1",
+                "test_accuracy": "accuracy",
+                "test_weighted_f1": "weighted_f1",
+            }
+        ),
+        figures_dir / "qwen_invalid_predictions.png",
+    )
+    if qwen_fig is not None:
+        copy_existing(qwen_fig, output_figures / "qwen_invalid_predictions.png", archive_dir)
+
+    for source_rel, target_rel in [
+        ("figures/label_distribution.png", "outputs/figures/label_distribution.png"),
+        ("figures/clause_length_distribution.png", "outputs/figures/clause_length_distribution.png"),
+        ("figures/model_comparison_macro_f1.png", "outputs/figures/model_comparison_macro_f1.png"),
+        ("figures/hpt_validation_macro_f1.png", "outputs/figures/hpt_validation_macro_f1.png"),
+    ]:
+        copy_existing(project_root / source_rel, project_root / target_rel, archive_dir)
+
+    best = best_completed_model(main_results)
+    best_cm = confusion_matrix_from_main_row(project_root, best)
+    if best_cm is not None:
+        copy_existing(best_cm, figures_dir / "confusion_matrix_best_model.png", archive_dir)
+        copy_existing(best_cm, output_figures / "confusion_matrix_best_model.png", archive_dir)
+
+    baseline_source = first_existing(project_root, ["results/baselines/baseline_results.csv"])
+    if baseline_source is not None:
+        copy_existing(baseline_source, project_root / "outputs" / "baseline_results.csv", archive_dir)
+
+    per_class_source = first_existing(project_root, ["outputs/per_class_results.csv", "outputs/per_label_f1_all_models.csv"])
+    if per_class_source is not None:
+        copy_existing(per_class_source, project_root / "outputs" / "per_class_metrics.csv", archive_dir)
+
+    best_pred = prediction_path_from_main_row(project_root, best)
+    if best_pred is not None:
+        final_predictions_path = project_root / "outputs" / "final_test_predictions.csv"
+        if best_pred.suffix.lower() == ".jsonl":
+            write_csv(final_predictions_path, read_jsonl(best_pred), archive_dir)
+        else:
+            copy_existing(best_pred, final_predictions_path, archive_dir)
+
+    completed_rows = main_results[main_results.get("status", pd.Series(dtype=str)).astype(str).eq("completed")].copy()
+    best_payload = best.to_dict() if best is not None else {}
+    write_json(
+        project_root / "outputs" / "final_test_metrics.json",
+        {
+            "created_at_utc": datetime.now(timezone.utc).isoformat(),
+            "status": "completed" if best_payload else "unavailable",
+            "selection_policy": "highest completed LEDGAR test macro-F1 in outputs/main_results.csv",
+            "best_model": best_payload,
+            "completed_model_count": int(len(completed_rows)),
+        },
+        archive_dir,
+    )
+
+    failed_rows = []
+    if not main_results.empty and "status" in main_results:
+        failed_rows.append(main_results[main_results["status"].astype(str).isin(["failed", "skipped", "pending"])])
+    hpt = read_csv(project_root / "outputs" / "sweep_results.csv")
+    if not hpt.empty and "status" in hpt:
+        failed_rows.append(hpt[hpt["status"].astype(str).isin(["failed", "skipped", "pending"])])
+    failed = pd.concat(failed_rows, ignore_index=True, sort=False) if failed_rows else pd.DataFrame()
+    write_csv(project_root / "outputs" / "failed_or_skipped_trials.csv", failed, archive_dir)
+
+    summary_rows = []
+    if not main_results.empty:
+        for _, row in main_results.iterrows():
+            if str(row.get("status", "")) != "completed":
+                continue
+            summary_rows.append(
+                {
+                    "model_name": row.get("model_name"),
+                    "dataset_name": "LEDGAR_test",
+                    "accuracy": row.get("test_accuracy"),
+                    "macro_f1": row.get("test_macro_f1"),
+                    "weighted_f1": row.get("test_weighted_f1"),
+                    "num_samples": pd.NA,
+                    "num_labels": pd.NA,
+                    "notes": row.get("evidence_path"),
+                }
+            )
+    for metric_path in sorted(metrics_dir.glob("cuad_external_*_metrics.json")):
+        payload = read_json_or_empty(metric_path)
+        if not payload:
+            continue
+        summary_rows.append(
+            {
+                "model_name": payload.get("model_name"),
+                "dataset_name": "CUAD_external",
+                "accuracy": payload.get("accuracy"),
+                "macro_f1": payload.get("macro_f1"),
+                "weighted_f1": payload.get("weighted_f1"),
+                "num_samples": payload.get("num_samples"),
+                "num_labels": payload.get("num_labels"),
+                "notes": payload.get("notes") or payload.get("reason") or payload.get("status"),
+            }
+        )
+    write_csv(
+        metrics_dir / "final_model_comparison_summary.csv",
+        pd.DataFrame(summary_rows).reindex(columns=["model_name", "dataset_name", "accuracy", "macro_f1", "weighted_f1", "num_samples", "num_labels", "notes"]),
+        archive_dir,
+    )
+
+    table_snippets = write_report_table_snippets(project_root, main_results, archive_dir)
+    selected_labels = []
+    label_file = project_root / "data" / "processed" / "label_names.txt"
+    if label_file.exists():
+        selected_labels = [line.strip() for line in label_file.read_text(encoding="utf-8").splitlines() if line.strip()]
+    example_text = ""
+    examples = read_jsonl(project_root / "data" / "processed" / "ledgar_test.jsonl")
+    if not examples.empty and "text" in examples:
+        example_text = normalise_for_table(examples.iloc[0]["text"], max_chars=180)
+    write_json(
+        project_root / "outputs" / "report_tex_values.json",
+        {
+            "created_at_utc": datetime.now(timezone.utc).isoformat(),
+            "final_transformer_model": "distilbert-base-uncased",
+            "allowed_labels": selected_labels,
+            "example_clause": example_text,
+            "best_completed_model": best_payload,
+            "report_table_snippets": table_snippets,
+            "notes": "Values are generated from existing pipeline evidence only; missing fields are left unavailable rather than invented.",
+        },
+        archive_dir,
+    )
+
+
 def generate_error_artifacts(project_root: Path, main_results: pd.DataFrame, archive_dir: Path) -> None:
     per_class = pd.read_csv(project_root / "outputs" / "per_class_results.csv") if (project_root / "outputs" / "per_class_results.csv").exists() else pd.DataFrame()
     if not per_class.empty:
@@ -713,6 +1107,7 @@ def build_all_coursework_artifacts(project_root: Path) -> dict[str, Any]:
     generate_llm_prompt_artifacts(project_root, archive_dir)
     generate_comparison_figures(project_root, main, archive_dir)
     generate_error_artifacts(project_root, main, archive_dir)
+    generate_report_tex_support_artifacts(project_root, main, archive_dir)
     generate_repo_audit(project_root, main, archive_dir)
     generate_reproducibility_and_final_audit(project_root, main, archive_dir)
     return {"project_root": str(project_root), "archive_dir": str(archive_dir), "main_results_rows": len(main), "dataset": dataset}

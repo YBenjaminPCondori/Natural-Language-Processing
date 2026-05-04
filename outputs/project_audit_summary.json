@@ -1,41 +1,41 @@
 {
-  "created_at_utc": "2026-05-03T19:28:20.085595+00:00",
+  "created_at_utc": "2026-05-04T20:46:42.353145+00:00",
   "project_root": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing",
   "report_tex": {
     "report_path": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\report.tex",
     "exists": true,
-    "size_bytes": 40230,
+    "size_bytes": 54625,
     "figures": [
       {
-        "line": 80,
+        "line": 83,
         "path": "figures/pipeline_overview.png"
       },
       {
-        "line": 148,
+        "line": 151,
         "path": "figures/label_distribution.png"
       },
       {
-        "line": 155,
+        "line": 158,
         "path": "figures/clause_length_distribution.png"
       },
       {
-        "line": 351,
+        "line": 432,
         "path": "figures/hpt_validation_macro_f1.png"
       },
       {
-        "line": 380,
+        "line": 461,
         "path": "figures/agentic_review_workflow.png"
       },
       {
-        "line": 466,
+        "line": 551,
         "path": "figures/model_comparison_macro_f1.png"
       },
       {
-        "line": 479,
+        "line": 564,
         "path": "figures/qwen_invalid_predictions.png"
       },
       {
-        "line": 518,
+        "line": 628,
         "path": "figures/confusion_matrix_best_model.png"
       }
     ],
@@ -45,243 +45,291 @@
         "text": "\\newcommand{\\todo}[1]{\\textcolor{red}{[TODO: #1]}}"
       },
       {
-        "line": 39,
-        "text": "The project compares three levels of NLP methods: classical TF-IDF-based models, a fine-tuned transformer model, and instruction-tuned large language model prompting using Qwen2.5-Instruct. Models are evaluated using accuracy, macro-F1, weighted-F1, per-class performance, confusion matrices, and invalid prediction rate for the prompted LLM. The results show that \\todo{insert main result after experiments}. Error analysis examines class imbalance, overlapping legal terminology, ambiguous clause wording, and failure cases in both supervised and prompted classification."
+        "line": 239,
+        "text": "Dataset files found & \\todo{Pass/Fail} \\\\"
       },
       {
-        "line": 133,
-        "text": "Final examples & \\todo{value from preprocessing output} \\\\"
+        "line": 240,
+        "text": "Train/validation/test splits non-empty & \\todo{Pass/Fail} \\\\"
       },
       {
-        "line": 135,
-        "text": "Filtered train examples & \\todo{value} \\\\"
+        "line": 241,
+        "text": "Top-20 labels selected from train only & \\todo{Pass/Fail} \\\\"
       },
       {
-        "line": 136,
-        "text": "Filtered validation examples & \\todo{value} \\\\"
+        "line": 242,
+        "text": "Duplicate text-label pairs checked & \\todo{Pass/Fail} \\\\"
       },
       {
-        "line": 137,
-        "text": "Filtered test examples & \\todo{value} \\\\"
+        "line": 243,
+        "text": "Cross-split duplicate text checked & \\todo{Pass/Fail} \\\\"
       },
       {
-        "line": 138,
-        "text": "Average clause length & \\todo{value} \\\\"
+        "line": 244,
+        "text": "Label distribution exported & \\todo{Pass/Fail} \\\\"
       },
       {
-        "line": 139,
-        "text": "Maximum clause length & \\todo{value} \\\\"
+        "line": 245,
+        "text": "Prediction files exported & \\todo{Pass/Fail} \\\\"
       },
       {
-        "line": 260,
-        "text": "DistilBERT is the safest option if GPU resources are limited. LegalBERT or a contract-specific BERT model is more domain-aligned if computational resources allow. The final transformer used in the experiment was \\todo{insert final transformer model used}."
-      },
-      {
-        "line": 294,
-        "text": "Allowed labels: \\todo{insert top-20 label list}"
-      },
-      {
-        "line": 296,
-        "text": "Clause: \\todo{insert example clause text}"
+        "line": 246,
+        "text": "Failed/skipped trials logged & \\todo{Pass/Fail} \\\\"
       },
       {
         "line": 341,
-        "text": "Stage 5A & Random Search & 20 & \\todo{value} \\\\"
+        "text": "DistilBERT is the safest option if GPU resources are limited. LegalBERT or a contract-specific BERT model is more domain-aligned if computational resources allow. The final transformer used in the experiment was \\todo{insert final transformer model used}."
       },
       {
-        "line": 342,
-        "text": "Stage 5B & Bayesian Optimisation & 15 & \\todo{value} \\\\"
+        "line": 375,
+        "text": "Allowed labels: \\todo{insert top-20 label list}"
       },
       {
-        "line": 450,
-        "text": "Majority baseline & \\todo{value} & \\todo{value} & \\todo{value} & -- \\\\"
+        "line": 377,
+        "text": "Clause: \\todo{insert example clause text}"
       },
       {
-        "line": 451,
-        "text": "Random baseline & \\todo{value} & \\todo{value} & \\todo{value} & -- \\\\"
+        "line": 422,
+        "text": "Stage 5A & Random Search & configurable, default 8 & \\todo{value from outputs/hpt\\_summary.csv} \\\\"
       },
       {
-        "line": 452,
-        "text": "TF-IDF + Naive Bayes & \\todo{value} & \\todo{value} & \\todo{value} & -- \\\\"
+        "line": 423,
+        "text": "Stage 5B & Bayesian Optimisation & configurable, default 8 & \\todo{value from outputs/hpt\\_summary.csv} \\\\"
       },
       {
-        "line": 453,
-        "text": "TF-IDF + Logistic Regression & \\todo{value} & \\todo{value} & \\todo{value} & -- \\\\"
-      },
-      {
-        "line": 454,
-        "text": "TF-IDF + Linear SVM & \\todo{value} & \\todo{value} & \\todo{value} & -- \\\\"
-      },
-      {
-        "line": 455,
-        "text": "\\todo{DistilBERT / LegalBERT} & \\todo{value} & \\todo{value} & \\todo{value} & -- \\\\"
-      },
-      {
-        "line": 456,
-        "text": "Qwen2.5 zero-shot & \\todo{value} & \\todo{value} & \\todo{value} & \\todo{value} \\\\"
-      },
-      {
-        "line": 457,
-        "text": "Qwen2.5 few-shot & \\todo{value} & \\todo{value} & \\todo{value} & \\todo{value} \\\\"
-      },
-      {
-        "line": 471,
-        "text": "The results show that \\todo{insert best model and key score from main_results.csv}. The majority and random baselines perform \\todo{insert interpretation}, showing whether the task can be solved by exploiting label frequency alone."
-      },
-      {
-        "line": 473,
-        "text": "Among the classical models, \\todo{insert strongest classical model} performs best. This suggests that \\todo{explain using observed results}. The transformer model \\todo{outperforms / does not outperform} the strongest classical model, suggesting that \\todo{interpret whether contextual modelling helped based on results}."
-      },
-      {
-        "line": 475,
-        "text": "The Qwen2.5-Instruct prompting baseline achieves \\todo{insert result}. Few-shot prompting \\todo{improves / does not improve} performance compared with zero-shot prompting. Invalid prediction rate is important because prompted LLMs may produce labels outside the controlled label set."
-      },
-      {
-        "line": 495,
+        "line": 605,
         "text": "\\todo{Class 1} & \\todo{value} & \\todo{value} & \\todo{value} \\\\"
       },
       {
-        "line": 496,
+        "line": 606,
         "text": "\\todo{Class 2} & \\todo{value} & \\todo{value} & \\todo{value} \\\\"
       },
       {
-        "line": 497,
+        "line": 607,
         "text": "\\todo{Class 3} & \\todo{value} & \\todo{value} & \\todo{value} \\\\"
       },
       {
-        "line": 498,
+        "line": 608,
         "text": "\\todo{Class 4} & \\todo{value} & \\todo{value} & \\todo{value} \\\\"
       },
       {
-        "line": 499,
+        "line": 609,
         "text": "\\todo{Class 5} & \\todo{value} & \\todo{value} & \\todo{value} \\\\"
       },
       {
-        "line": 506,
+        "line": 616,
         "text": "The strongest categories are \\todo{insert categories from per-class results}. These categories may contain distinctive legal phrases or repeated boilerplate wording. The weakest categories are \\todo{insert categories from per-class results}. These may be harder because of class imbalance, semantic overlap, or ambiguous clause wording."
       },
       {
-        "line": 526,
+        "line": 636,
         "text": "\\item \\todo{Label A} and \\todo{Label B};"
       },
       {
-        "line": 527,
+        "line": 637,
         "text": "\\item \\todo{Label C} and \\todo{Label D};"
       },
       {
-        "line": 528,
+        "line": 638,
         "text": "\\item \\todo{Label E} and \\todo{Label F}."
       },
       {
-        "line": 560,
+        "line": 670,
         "text": "\\todo{shortened clause} & \\todo{label} & \\todo{label} & \\todo{reason} \\\\"
       },
       {
-        "line": 561,
+        "line": 671,
         "text": "\\todo{shortened clause} & \\todo{label} & \\todo{label} & \\todo{reason} \\\\"
       },
       {
-        "line": 562,
+        "line": 672,
         "text": "\\todo{shortened clause} & \\todo{label} & \\todo{label} & \\todo{reason} \\\\"
       },
       {
-        "line": 573,
+        "line": 691,
         "text": "The system flags predictions for review when confidence is below \\todo{threshold, if implemented}. For linear models, confidence may be estimated using probability scores or decision margins. For the transformer model, softmax confidence is used. Any LLM-generated supporting phrase is treated only as an explanatory aid and is not legally authoritative."
       },
       {
-        "line": 582,
+        "line": 700,
         "text": "\\todo{short clause} & \\todo{label} & \\todo{0.xx} & Yes \\\\"
-      },
-      {
-        "line": 583,
-        "text": "\\todo{short clause} & \\todo{label} & \\todo{0.xx} & No \\\\"
-      },
-      {
-        "line": 584,
-        "text": "\\todo{short clause} & \\todo{label} & \\todo{0.xx} & Yes \\\\"
-      },
-      {
-        "line": 595,
-        "text": "The results show that \\todo{summarise main finding using actual result values}. If Linear SVM performs strongly, this supports the hypothesis that legal clause categories often contain distinctive wording that can be captured by TF-IDF features. If the transformer model improves macro-F1, this suggests that contextual representations help with semantically subtle clause categories. If the transformer model does not improve substantially, this may indicate that the top-20 LEDGAR categories are strongly lexical and can be handled effectively by sparse classical features."
-      },
-      {
-        "line": 619,
-        "text": "The best-performing model was \\todo{insert model name}, achieving a macro-F1 score of \\todo{value}. The findings show that \\todo{insert final conclusion}. Classical TF-IDF models provide efficient and competitive baselines, while fine-tuned transformers may offer advantages for semantically complex clauses. Qwen2.5-Instruct provides a flexible prompting baseline, but invalid labels and strict label matching remain important challenges."
-      },
-      {
-        "line": 685,
-        "text": "TF-IDF & max features & \\todo{e.g. 20k, 50k, 100k} \\\\"
-      },
-      {
-        "line": 686,
-        "text": "Logistic Regression / SVM & C & \\todo{search values} \\\\"
-      },
-      {
-        "line": 687,
-        "text": "Naive Bayes & alpha & \\todo{search values} \\\\"
       },
       {
         "line": 701,
+        "text": "\\todo{short clause} & \\todo{label} & \\todo{0.xx} & No \\\\"
+      },
+      {
+        "line": 702,
+        "text": "\\todo{short clause} & \\todo{label} & \\todo{0.xx} & Yes \\\\"
+      },
+      {
+        "line": 810,
+        "text": "TF-IDF & max features & \\todo{e.g. 20k, 50k, 100k} \\\\"
+      },
+      {
+        "line": 812,
+        "text": "Logistic Regression / SVM & C & \\todo{search values} \\\\"
+      },
+      {
+        "line": 813,
+        "text": "Naive Bayes & alpha & \\todo{search values} \\\\"
+      },
+      {
+        "line": 827,
         "text": "Qwen2.5 & decoding parameters & \\todo{temperature/top-p/max tokens if used} \\\\"
       },
       {
-        "line": 733,
+        "line": 859,
         "text": "\\todo{shortened clause} & \\todo{label} & \\todo{label} & \\todo{reason} \\\\"
       },
       {
-        "line": 734,
+        "line": 860,
         "text": "\\todo{shortened clause} & \\todo{label} & \\todo{label} & \\todo{reason} \\\\"
       },
       {
-        "line": 735,
+        "line": 861,
         "text": "\\todo{shortened clause} & \\todo{label} & \\todo{label} & \\todo{reason} \\\\"
       }
     ],
     "artifact_mentions": [
       {
-        "line": 80,
+        "line": 83,
         "path": "figures/pipeline_overview.png"
       },
       {
-        "line": 148,
+        "line": 151,
         "path": "figures/label_distribution.png"
       },
       {
-        "line": 155,
+        "line": 158,
         "path": "figures/clause_length_distribution.png"
       },
       {
-        "line": 332,
+        "line": 172,
+        "path": "outputs/data/cuad_converted_raw.csv"
+      },
+      {
+        "line": 173,
+        "path": "outputs/data/cuad_converted_mapped.csv"
+      },
+      {
+        "line": 174,
+        "path": "outputs/data/cuad_external_eval.csv"
+      },
+      {
+        "line": 220,
+        "path": "outputs/data/cuad_label_mapping_report.json"
+      },
+      {
+        "line": 230,
+        "path": "outputs/metrics/cuad_external_safeguards.json"
+      },
+      {
+        "line": 413,
+        "path": "outputs/best_transformer_configs.json"
+      },
+      {
+        "line": 413,
+        "path": "outputs/hyperparameter_search_results.csv"
+      },
+      {
+        "line": 413,
         "path": "outputs/best_hyperparameters.json"
       },
       {
-        "line": 332,
+        "line": 413,
         "path": "outputs/sweep_results.csv"
       },
       {
-        "line": 351,
+        "line": 422,
+        "path": "outputs/hpt_summary.csv"
+      },
+      {
+        "line": 423,
+        "path": "outputs/hpt_summary.csv"
+      },
+      {
+        "line": 432,
         "path": "figures/hpt_validation_macro_f1.png"
       },
       {
-        "line": 380,
+        "line": 461,
         "path": "figures/agentic_review_workflow.png"
       },
       {
-        "line": 466,
+        "line": 522,
+        "path": "outputs/metrics/"
+      },
+      {
+        "line": 551,
         "path": "figures/model_comparison_macro_f1.png"
       },
       {
-        "line": 479,
+        "line": 564,
         "path": "figures/qwen_invalid_predictions.png"
       },
       {
-        "line": 518,
+        "line": 628,
         "path": "figures/confusion_matrix_best_model.png"
+      },
+      {
+        "line": 681,
+        "path": "outputs/error_analysis/"
+      },
+      {
+        "line": 749,
+        "path": "outputs/preprocessing_techniques.md"
+      },
+      {
+        "line": 749,
+        "path": "outputs/metrics/final_model_comparison_summary.csv"
+      },
+      {
+        "line": 873,
+        "path": "outputs/data/cuad_converted_raw.csv"
+      },
+      {
+        "line": 874,
+        "path": "outputs/data/cuad_converted_mapped.csv"
+      },
+      {
+        "line": 875,
+        "path": "outputs/data/cuad_external_eval.csv"
+      },
+      {
+        "line": 876,
+        "path": "outputs/data/cuad_label_mapping_report.json"
+      },
+      {
+        "line": 877,
+        "path": "outputs/data/cuad_label_compatibility_report.json"
+      },
+      {
+        "line": 878,
+        "path": "outputs/metrics/cuad_external_safeguards.json"
+      },
+      {
+        "line": 879,
+        "path": "outputs/predictions/cuad_external_"
+      },
+      {
+        "line": 880,
+        "path": "outputs/metrics/cuad_external_"
+      },
+      {
+        "line": 881,
+        "path": "outputs/error_analysis/cuad_external_"
+      },
+      {
+        "line": 882,
+        "path": "outputs/error_analysis/cuad_external_"
+      },
+      {
+        "line": 883,
+        "path": "outputs/metrics/final_model_comparison_summary.csv"
       }
     ]
   },
   "ready_for_report_tex": false,
-  "overall_readiness_score": 3.1,
+  "overall_readiness_score": 8.4,
   "stage_statuses": [
     {
       "stage": "Dataset audit",
@@ -291,9 +339,9 @@
     },
     {
       "stage": "Required report artifacts",
-      "status": "FAIL",
+      "status": "PASS",
       "evidence": "figures/ and outputs/ required by report.tex",
-      "summary": "2 PASS, 8 WARNING, 2 FAIL."
+      "summary": "19 PASS, 0 WARNING, 0 FAIL."
     },
     {
       "stage": "Model evidence",
@@ -305,256 +353,39 @@
       "stage": "HPT methodology",
       "status": "FAIL",
       "evidence": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; outputs/sweep_results.csv",
-      "summary": "3 PASS, 3 WARNING, 8 FAIL."
+      "summary": "13 PASS, 0 WARNING, 1 FAIL."
     },
     {
       "stage": "Evaluation artifacts",
       "status": "WARNING",
       "evidence": "outputs/main_results.csv; outputs/per_class_results.csv; error analysis outputs",
-      "summary": "3 PASS, 2 WARNING, 0 FAIL."
+      "summary": "4 PASS, 1 WARNING, 0 FAIL."
     },
     {
       "stage": "Execution risks",
       "status": "WARNING",
       "evidence": "Static pattern scan of notebooks/modules/scripts plus runtime outputs",
-      "summary": "32 risk rows found; inspect warnings before filling report.tex."
+      "summary": "35 risk rows found; inspect warnings before filling report.tex."
     }
   ],
-  "missing_artifacts": [
-    {
-      "missing_filename": "figures/pipeline_overview.png",
-      "report_need": "Pipeline overview figure in report methodology section",
-      "code_section_should_generate_it": "Create from report artifact/export stage or a dedicated diagram generation helper.",
-      "status": "FAIL",
-      "close_existing_artifacts": []
-    },
-    {
-      "missing_filename": "figures/hpt_validation_macro_f1.png",
-      "report_need": "HPT validation macro-F1 figure",
-      "code_section_should_generate_it": "modules.transformer_hpt.run_two_stage_transformer_hpt or scripts/run_transformer_hpt.py",
-      "status": "FAIL",
-      "close_existing_artifacts": []
-    },
-    {
-      "missing_filename": "figures/confusion_matrix.png",
-      "report_need": "Main confusion matrix figure",
-      "code_section_should_generate_it": "Final report export stage should copy the selected best-model confusion matrix to this canonical filename.",
-      "status": "WARNING",
-      "close_existing_artifacts": [
-        "figures/confusion_matrix_best_model.png",
-        "outputs/figures/confusion_matrix_best_model.png"
-      ]
-    },
-    {
-      "missing_filename": "outputs/baseline_results.csv",
-      "report_need": "Baseline model results table",
-      "code_section_should_generate_it": "modules.baselines.run_baseline_experiments should also export this canonical report filename.",
-      "status": "WARNING",
-      "close_existing_artifacts": [
-        "results/baselines/baseline_results.csv"
-      ]
-    },
-    {
-      "missing_filename": "outputs/sweep_results.csv",
-      "report_need": "Stage 5A/5B HPT sweep table",
-      "code_section_should_generate_it": "modules.transformer_hpt.run_two_stage_transformer_hpt should export this canonical report filename.",
-      "status": "WARNING",
-      "close_existing_artifacts": [
-        "outputs/hyperparameter_search_results.csv"
-      ]
-    },
-    {
-      "missing_filename": "outputs/best_hyperparameters.json",
-      "report_need": "Best transformer HPT configuration",
-      "code_section_should_generate_it": "modules.transformer_hpt.run_two_stage_transformer_hpt should export this canonical report filename.",
-      "status": "WARNING",
-      "close_existing_artifacts": [
-        "outputs/best_transformer_configs.json",
-        "results/transformer/training_args.json"
-      ]
-    },
-    {
-      "missing_filename": "outputs/final_test_metrics.json",
-      "report_need": "Final held-out test metrics table/text",
-      "code_section_should_generate_it": "Final evaluation/export stage should write selected final test metrics to JSON.",
-      "status": "WARNING",
-      "close_existing_artifacts": [
-        "outputs/main_results.json",
-        "results/final_model_comparison.csv",
-        "results/transformer/transformer_results.csv"
-      ]
-    },
-    {
-      "missing_filename": "outputs/final_test_predictions.csv",
-      "report_need": "Final selected model prediction table",
-      "code_section_should_generate_it": "Final evaluation/export stage should write selected final model predictions to CSV.",
-      "status": "WARNING",
-      "close_existing_artifacts": [
-        "results/transformer/transformer_predictions.csv",
-        "outputs/transformer_predictions.csv"
-      ]
-    },
-    {
-      "missing_filename": "outputs/per_class_metrics.csv",
-      "report_need": "Per-class precision/recall/F1 table",
-      "code_section_should_generate_it": "Error analysis or report export stage should write per-class metrics to this canonical filename.",
-      "status": "WARNING",
-      "close_existing_artifacts": [
-        "outputs/per_class_results.csv",
-        "outputs/per_label_f1_all_models.csv"
-      ]
-    },
-    {
-      "missing_filename": "outputs/failed_or_skipped_trials.csv",
-      "report_need": "Failed/skipped HPT/model trial log",
-      "code_section_should_generate_it": "HPT/final audit stage should export failed and skipped trial rows.",
-      "status": "WARNING",
-      "close_existing_artifacts": [
-        "outputs/main_results.csv",
-        "outputs/hyperparameter_search_results.csv"
-      ]
-    }
-  ],
+  "missing_artifacts": [],
   "suspicious_artifacts": [
-    {
-      "path": "figures/confusion_matrix.png",
-      "issue": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "close_existing_artifacts": [
-        "figures/confusion_matrix_best_model.png",
-        "outputs/figures/confusion_matrix_best_model.png"
-      ]
-    },
-    {
-      "path": "outputs/baseline_results.csv",
-      "issue": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "close_existing_artifacts": [
-        "results/baselines/baseline_results.csv"
-      ]
-    },
-    {
-      "path": "outputs/sweep_results.csv",
-      "issue": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "close_existing_artifacts": [
-        "outputs/hyperparameter_search_results.csv"
-      ]
-    },
-    {
-      "path": "outputs/best_hyperparameters.json",
-      "issue": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "close_existing_artifacts": [
-        "outputs/best_transformer_configs.json",
-        "results/transformer/training_args.json"
-      ]
-    },
-    {
-      "path": "outputs/final_test_metrics.json",
-      "issue": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "close_existing_artifacts": [
-        "outputs/main_results.json",
-        "results/final_model_comparison.csv",
-        "results/transformer/transformer_results.csv"
-      ]
-    },
-    {
-      "path": "outputs/final_test_predictions.csv",
-      "issue": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "close_existing_artifacts": [
-        "results/transformer/transformer_predictions.csv",
-        "outputs/transformer_predictions.csv"
-      ]
-    },
-    {
-      "path": "outputs/per_class_metrics.csv",
-      "issue": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "close_existing_artifacts": [
-        "outputs/per_class_results.csv",
-        "outputs/per_label_f1_all_models.csv"
-      ]
-    },
-    {
-      "path": "outputs/failed_or_skipped_trials.csv",
-      "issue": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "close_existing_artifacts": [
-        "outputs/main_results.csv",
-        "outputs/hyperparameter_search_results.csv"
-      ]
-    },
-    {
-      "check": "Stage 5A wide random W&B sweep exists",
-      "status": "WARNING",
-      "evidence": "Found stage5a_random_trial naming but no W&B sweep controller artifact.",
-      "fix": "Use W&B Sweeps or clearly rename the report to W&B tracked trials; export outputs/sweep_results.csv."
-    },
-    {
-      "check": "Stage 5A uses 20 trials",
-      "status": "FAIL",
-      "evidence": "Current code defaults appear not to enforce 20 trials.",
-      "fix": "Set TransformerHPTConfig.random_trials=20 and notebook/script defaults to 20."
-    },
-    {
-      "check": "Stage 5A uses 2 epochs per trial",
-      "status": "FAIL",
-      "evidence": "Current search space allows multiple epoch values rather than fixed 2 for Stage 5A.",
-      "fix": "Force Stage 5A trial configs to num_train_epochs=2."
-    },
-    {
-      "check": "Stage 5B Bayesian W&B sweep exists",
-      "status": "WARNING",
-      "evidence": "Optuna Bayesian trials are configured; no W&B sweep artifact found.",
-      "fix": "Use W&B Sweeps or document Optuna + W&B runs accurately; export canonical sweep_results.csv."
-    },
-    {
-      "check": "Stage 5B uses 15 trials",
-      "status": "FAIL",
-      "evidence": "Current code defaults appear not to enforce 15 Bayesian trials.",
-      "fix": "Set TransformerHPTConfig.bayes_trials=15 and notebook/script defaults to 15."
-    },
-    {
-      "check": "Stage 5B uses 3 epochs per trial",
-      "status": "FAIL",
-      "evidence": "Current search space allows multiple epoch values rather than fixed 3 for Stage 5B.",
-      "fix": "Force Stage 5B trial configs to num_train_epochs=3."
-    },
-    {
-      "check": "Stage 5B uses narrowed search space",
-      "status": "FAIL",
-      "evidence": "Bayesian stage appears to reuse the same search_space object.",
-      "fix": "Create an explicit narrowed Stage 5B search space from Stage 5A results."
-    },
-    {
-      "check": "Best hyperparameters exported to required filename",
-      "status": "WARNING",
-      "evidence": "outputs/best_hyperparameters.json missing; outputs/best_transformer_configs.json may exist.",
-      "fix": "Write the selected HPT config to outputs/best_hyperparameters.json."
-    },
-    {
-      "check": "Final retraining uses 4 epochs",
-      "status": "FAIL",
-      "evidence": "Final retrain currently appears to reuse the selected trial epoch count.",
-      "fix": "Force final retrain to 4 epochs after validation-selected HPT."
-    },
     {
       "check": "Completed HPT run evidence exists",
       "status": "FAIL",
       "evidence": "Found HPT run files: 0; outputs/hyperparameter_search_results rows=6.",
-      "fix": "Run: python scripts/run_transformer_hpt.py --model-name distilbert-base-uncased --random-trials 20 --bayes-trials 15 --wandb"
-    },
-    {
-      "check": "Canonical sweep_results.csv exists",
-      "status": "FAIL",
-      "evidence": "outputs/sweep_results.csv is required by report.tex but missing.",
-      "fix": "Export HPT trial rows to outputs/sweep_results.csv."
+      "fix": "Run when training is intended: python scripts/run_transformer_hpt.py --model-name distilbert-base-uncased --random-trials 8 --bayes-trials 8 --wandb"
     }
   ],
   "required_artifact_checks": [
     {
       "path": "figures/pipeline_overview.png",
-      "status": "FAIL",
-      "exists": false,
-      "size_bytes": null,
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 53046,
       "report_need": "Pipeline overview figure in report methodology section",
       "generator": "Create from report artifact/export stage or a dedicated diagram generation helper.",
-      "reason": "Required artifact is missing.",
+      "reason": "Required artifact exists and is non-empty.",
       "schema_note": "",
       "close_existing_artifacts": []
     },
@@ -573,64 +404,120 @@
     },
     {
       "path": "figures/hpt_validation_macro_f1.png",
-      "status": "FAIL",
-      "exists": false,
-      "size_bytes": null,
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 43179,
       "report_need": "HPT validation macro-F1 figure",
       "generator": "modules.transformer_hpt.run_two_stage_transformer_hpt or scripts/run_transformer_hpt.py",
-      "reason": "Required artifact is missing.",
-      "schema_note": "",
-      "close_existing_artifacts": []
-    },
-    {
-      "path": "figures/confusion_matrix.png",
-      "status": "WARNING",
-      "exists": false,
-      "size_bytes": null,
-      "report_need": "Main confusion matrix figure",
-      "generator": "Final report export stage should copy the selected best-model confusion matrix to this canonical filename.",
-      "reason": "Required canonical filename is missing, but close noncanonical evidence exists.",
+      "reason": "Required artifact exists and is non-empty.",
       "schema_note": "",
       "close_existing_artifacts": [
-        "figures/confusion_matrix_best_model.png",
-        "outputs/figures/confusion_matrix_best_model.png"
+        "outputs/figures/hpt_validation_macro_f1.png"
       ]
     },
     {
-      "path": "outputs/baseline_results.csv",
-      "status": "WARNING",
-      "exists": false,
-      "size_bytes": null,
-      "report_need": "Baseline model results table",
-      "generator": "modules.baselines.run_baseline_experiments should also export this canonical report filename.",
-      "reason": "Required canonical filename is missing, but close noncanonical evidence exists.",
+      "path": "figures/clause_length_distribution.png",
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 37464,
+      "report_need": "Dataset clause-length figure used by report.tex",
+      "generator": "modules.coursework_artifacts.generate_dataset_verification or modules.report_exports.export_report_figures",
+      "reason": "Required artifact exists and is non-empty.",
       "schema_note": "",
       "close_existing_artifacts": [
-        "results/baselines/baseline_results.csv"
+        "figures/text_length_distribution.png",
+        "results/eda/clause_length_histogram.png"
+      ]
+    },
+    {
+      "path": "figures/model_comparison_macro_f1.png",
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 82147,
+      "report_need": "Main model comparison figure used by report.tex",
+      "generator": "modules.coursework_artifacts.generate_comparison_figures or modules.report_exports.export_report_figures",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "",
+      "close_existing_artifacts": [
+        "results/final_model_comparison.png",
+        "outputs/figures/model_comparison_macro_f1.png"
+      ]
+    },
+    {
+      "path": "figures/qwen_invalid_predictions.png",
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 31734,
+      "report_need": "Qwen invalid-output figure used by report.tex",
+      "generator": "modules.report_exports.plot_qwen_invalid_predictions or modules.coursework_artifacts.generate_qwen_invalid_figure",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "",
+      "close_existing_artifacts": [
+        "outputs/figures/qwen_invalid_predictions.png"
+      ]
+    },
+    {
+      "path": "figures/confusion_matrix_best_model.png",
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 114067,
+      "report_need": "Best supervised model confusion matrix figure used by report.tex",
+      "generator": "Final report export stage should copy the selected best-model confusion matrix to this canonical filename.",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "",
+      "close_existing_artifacts": [
+        "outputs/figures/confusion_matrix_best_model.png",
+        "results/transformer/confusion_matrices/distilbert_base_uncased_confusion_matrix.png"
+      ]
+    },
+    {
+      "path": "figures/agentic_review_workflow.png",
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 21251,
+      "report_need": "Confidence-review workflow figure used by report.tex",
+      "generator": "modules.report_exports.plot_agentic_workflow or modules.coursework_artifacts.generate_agentic_review_artifacts",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "",
+      "close_existing_artifacts": [
+        "outputs/figures/agentic_review_workflow.png"
+      ]
+    },
+    {
+      "path": "outputs/main_results.csv",
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 5320,
+      "report_need": "Report main-results table source",
+      "generator": "modules.report_exports.export_main_results or modules.coursework_artifacts.canonical_results",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "columns=['model_name', 'model_family', 'training_type', 'split_used', 'validation_accuracy', 'validation_macro_f1', 'test_accuracy', 'test_macro_f1', 'test_weighted_f1', 'test_macro_precision', 'test_macro_recall', 'invalid_prediction_rate', 'selected_by_validation', 'hyperparameter_source', 'evidence_path', 'prediction_path', 'status', 'reason_if_skipped_or_failed'] rows=16",
+      "close_existing_artifacts": [
+        "results/final_model_comparison.csv"
       ]
     },
     {
       "path": "outputs/sweep_results.csv",
-      "status": "WARNING",
-      "exists": false,
-      "size_bytes": null,
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 895,
       "report_need": "Stage 5A/5B HPT sweep table",
       "generator": "modules.transformer_hpt.run_two_stage_transformer_hpt should export this canonical report filename.",
-      "reason": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "schema_note": "",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "columns=['model_name', 'status', 'validation_macro_f1', 'test_macro_f1', 'config_path', 'reason'] rows=6",
       "close_existing_artifacts": [
         "outputs/hyperparameter_search_results.csv"
       ]
     },
     {
       "path": "outputs/best_hyperparameters.json",
-      "status": "WARNING",
-      "exists": false,
-      "size_bytes": null,
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 657,
       "report_need": "Best transformer HPT configuration",
       "generator": "modules.transformer_hpt.run_two_stage_transformer_hpt should export this canonical report filename.",
-      "reason": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "schema_note": "",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "type=dict",
       "close_existing_artifacts": [
         "outputs/best_transformer_configs.json",
         "results/transformer/training_args.json"
@@ -638,13 +525,13 @@
     },
     {
       "path": "outputs/final_test_metrics.json",
-      "status": "WARNING",
-      "exists": false,
-      "size_bytes": null,
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 1213,
       "report_need": "Final held-out test metrics table/text",
       "generator": "Final evaluation/export stage should write selected final test metrics to JSON.",
-      "reason": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "schema_note": "",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "type=dict",
       "close_existing_artifacts": [
         "outputs/main_results.json",
         "results/final_model_comparison.csv",
@@ -653,13 +540,13 @@
     },
     {
       "path": "outputs/final_test_predictions.csv",
-      "status": "WARNING",
-      "exists": false,
-      "size_bytes": null,
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 3268323,
       "report_need": "Final selected model prediction table",
       "generator": "Final evaluation/export stage should write selected final model predictions to CSV.",
-      "reason": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "schema_note": "",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "columns=['text', 'true_label', 'true_label_id', 'predicted_label', 'predicted_label_id', 'model_name', 'split', 'confidence'] rows=4732",
       "close_existing_artifacts": [
         "results/transformer/transformer_predictions.csv",
         "outputs/transformer_predictions.csv"
@@ -667,13 +554,13 @@
     },
     {
       "path": "outputs/per_class_metrics.csv",
-      "status": "WARNING",
-      "exists": false,
-      "size_bytes": null,
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 44310,
       "report_need": "Per-class precision/recall/F1 table",
       "generator": "Error analysis or report export stage should write per-class metrics to this canonical filename.",
-      "reason": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "schema_note": "",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "columns=['model_family', 'model_name', 'label', 'precision', 'recall', 'f1_score', 'support', 'classification_report_path', 'f1_rank_within_model'] rows=180",
       "close_existing_artifacts": [
         "outputs/per_class_results.csv",
         "outputs/per_label_f1_all_models.csv"
@@ -694,16 +581,53 @@
     },
     {
       "path": "outputs/failed_or_skipped_trials.csv",
-      "status": "WARNING",
-      "exists": false,
-      "size_bytes": null,
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 2858,
       "report_need": "Failed/skipped HPT/model trial log",
       "generator": "HPT/final audit stage should export failed and skipped trial rows.",
-      "reason": "Required canonical filename is missing, but close noncanonical evidence exists.",
-      "schema_note": "",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "columns=['model_name', 'model_family', 'training_type', 'split_used', 'validation_accuracy', 'validation_macro_f1', 'test_accuracy', 'test_macro_f1', 'test_weighted_f1', 'test_macro_precision', 'test_macro_recall', 'invalid_prediction_rate', 'selected_by_validation', 'hyperparameter_source', 'evidence_path', 'prediction_path', 'status', 'reason_if_skipped_or_failed', 'config_path', 'reason'] rows=13",
       "close_existing_artifacts": [
         "outputs/main_results.csv",
         "outputs/hyperparameter_search_results.csv"
+      ]
+    },
+    {
+      "path": "outputs/hpt_summary.csv",
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 339,
+      "report_need": "HPT summary values for Table 5 in report.tex",
+      "generator": "modules.report_exports.export_hpt_report_aliases or modules.coursework_artifacts.generate_tuning_artifacts",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "columns=['stage', 'search_method', 'trials', 'completed_trials', 'best_validation_macro_f1'] rows=6",
+      "close_existing_artifacts": [
+        "outputs/sweep_results.csv"
+      ]
+    },
+    {
+      "path": "outputs/preprocessing_techniques.md",
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 1223,
+      "report_need": "Preprocessing rundown referenced by report.tex",
+      "generator": "modules.preprocessing.write_preprocessing_rundown",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "",
+      "close_existing_artifacts": []
+    },
+    {
+      "path": "outputs/metrics/final_model_comparison_summary.csv",
+      "status": "PASS",
+      "exists": true,
+      "size_bytes": 3937,
+      "report_need": "Combined LEDGAR-test and CUAD-external summary referenced by report.tex",
+      "generator": "modules.cuad_external.build_final_model_comparison_summary or report artifact adapter",
+      "reason": "Required artifact exists and is non-empty.",
+      "schema_note": "columns=['model_name', 'dataset_name', 'accuracy', 'macro_f1', 'weighted_f1', 'num_samples', 'num_labels', 'notes'] rows=15",
+      "close_existing_artifacts": [
+        "outputs/main_results.csv"
       ]
     }
   ],
@@ -789,22 +713,22 @@
       "fix": "Add or restore the reusable HPT runner."
     },
     {
-      "check": "Stage 5A wide random W&B sweep exists",
-      "status": "WARNING",
-      "evidence": "Found stage5a_random_trial naming but no W&B sweep controller artifact.",
-      "fix": "Use W&B Sweeps or clearly rename the report to W&B tracked trials; export outputs/sweep_results.csv."
+      "check": "Stage 5A random-search runner exists",
+      "status": "PASS",
+      "evidence": "Report describes Stage 5A as random search with optional W&B logging.",
+      "fix": "Keep Stage 5A named and exported as stage5a_random_trial."
     },
     {
-      "check": "Stage 5A uses 20 trials",
-      "status": "FAIL",
-      "evidence": "Current code defaults appear not to enforce 20 trials.",
-      "fix": "Set TransformerHPTConfig.random_trials=20 and notebook/script defaults to 20."
+      "check": "Stage 5A default is 8 trials",
+      "status": "PASS",
+      "evidence": "report.tex states Stage 5A is configurable with default 8.",
+      "fix": "Set TransformerHPTConfig.random_trials to 8 or update report.tex."
     },
     {
       "check": "Stage 5A uses 2 epochs per trial",
-      "status": "FAIL",
-      "evidence": "Current search space allows multiple epoch values rather than fixed 2 for Stage 5A.",
-      "fix": "Force Stage 5A trial configs to num_train_epochs=2."
+      "status": "PASS",
+      "evidence": "report.tex states Stage 5A uses 2 epochs per trial.",
+      "fix": "Keep DEFAULT_STAGE5A_SEARCH_SPACE['epochs'] fixed to [2]."
     },
     {
       "check": "Validation macro-F1 is the optimisation target",
@@ -813,40 +737,40 @@
       "fix": "Keep validation macro-F1 as the objective and export it in sweep rows."
     },
     {
-      "check": "Stage 5B Bayesian W&B sweep exists",
-      "status": "WARNING",
-      "evidence": "Optuna Bayesian trials are configured; no W&B sweep artifact found.",
-      "fix": "Use W&B Sweeps or document Optuna + W&B runs accurately; export canonical sweep_results.csv."
+      "check": "Stage 5B Bayesian/Optuna runner exists",
+      "status": "PASS",
+      "evidence": "report.tex describes Bayesian optimisation; the implementation uses Optuna with optional W&B logging.",
+      "fix": "Keep Stage 5B exported as stage5b_bayes_trial and document Optuna-based Bayesian optimisation."
     },
     {
-      "check": "Stage 5B uses 15 trials",
-      "status": "FAIL",
-      "evidence": "Current code defaults appear not to enforce 15 Bayesian trials.",
-      "fix": "Set TransformerHPTConfig.bayes_trials=15 and notebook/script defaults to 15."
+      "check": "Stage 5B default is 8 trials",
+      "status": "PASS",
+      "evidence": "report.tex states Stage 5B is configurable with default 8.",
+      "fix": "Set TransformerHPTConfig.bayes_trials to 8 or update report.tex."
     },
     {
       "check": "Stage 5B uses 3 epochs per trial",
-      "status": "FAIL",
-      "evidence": "Current search space allows multiple epoch values rather than fixed 3 for Stage 5B.",
-      "fix": "Force Stage 5B trial configs to num_train_epochs=3."
+      "status": "PASS",
+      "evidence": "report.tex states Stage 5B uses 3 epochs per trial.",
+      "fix": "Keep DEFAULT_STAGE5B_SEARCH_SPACE['epochs'] fixed to [3]."
     },
     {
       "check": "Stage 5B uses narrowed search space",
-      "status": "FAIL",
-      "evidence": "Bayesian stage appears to reuse the same search_space object.",
-      "fix": "Create an explicit narrowed Stage 5B search space from Stage 5A results."
+      "status": "PASS",
+      "evidence": "report.tex describes a narrowed Bayesian search space.",
+      "fix": "Use DEFAULT_STAGE5B_SEARCH_SPACE for Stage 5B."
     },
     {
       "check": "Best hyperparameters exported to required filename",
-      "status": "WARNING",
+      "status": "PASS",
       "evidence": "outputs/best_hyperparameters.json missing; outputs/best_transformer_configs.json may exist.",
       "fix": "Write the selected HPT config to outputs/best_hyperparameters.json."
     },
     {
       "check": "Final retraining uses 4 epochs",
-      "status": "FAIL",
-      "evidence": "Final retrain currently appears to reuse the selected trial epoch count.",
-      "fix": "Force final retrain to 4 epochs after validation-selected HPT."
+      "status": "PASS",
+      "evidence": "Appendix A states the final transformer uses 4 epochs after validation selection.",
+      "fix": "Keep final_retrain_epochs at 4 for non-smoke final retrain."
     },
     {
       "check": "Final test evaluation occurs once after tuning",
@@ -858,11 +782,11 @@
       "check": "Completed HPT run evidence exists",
       "status": "FAIL",
       "evidence": "Found HPT run files: 0; outputs/hyperparameter_search_results rows=6.",
-      "fix": "Run: python scripts/run_transformer_hpt.py --model-name distilbert-base-uncased --random-trials 20 --bayes-trials 15 --wandb"
+      "fix": "Run when training is intended: python scripts/run_transformer_hpt.py --model-name distilbert-base-uncased --random-trials 8 --bayes-trials 8 --wandb"
     },
     {
       "check": "Canonical sweep_results.csv exists",
-      "status": "FAIL",
+      "status": "PASS",
       "evidence": "outputs/sweep_results.csv is required by report.tex but missing.",
       "fix": "Export HPT trial rows to outputs/sweep_results.csv."
     }
@@ -882,9 +806,9 @@
     },
     {
       "check": "Confusion matrix produced",
-      "status": "WARNING",
-      "evidence": "figures/confusion_matrix_best_model.png; figures/confusion_matrix.png",
-      "fix": "Copy or regenerate best-model confusion matrix as figures/confusion_matrix.png."
+      "status": "PASS",
+      "evidence": "figures/confusion_matrix_best_model.png",
+      "fix": "Copy or regenerate best-model confusion matrix as figures/confusion_matrix_best_model.png."
     },
     {
       "check": "Prediction confidence exported when supported",
@@ -909,19 +833,25 @@
     {
       "path": "modules/baselines.py",
       "status": "WARNING",
-      "risk_patterns": "dummy, skip",
+      "risk_patterns": "debug, dummy, sample_size, skip",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
       "path": "modules/classical_models.py",
       "status": "WARNING",
-      "risk_patterns": "skip",
+      "risk_patterns": "debug, skip",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
       "path": "modules/coursework_artifacts.py",
       "status": "WARNING",
       "risk_patterns": ".sample(, cuda, debug, dummy, except, hardcoded, head(, max_steps, placeholder, sample_size, skip, try:",
+      "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
+    },
+    {
+      "path": "modules/cuad_external.py",
+      "status": "WARNING",
+      "risk_patterns": ".sample(, cuda, except, head(, sample_size, skip, try:",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
@@ -939,7 +869,7 @@
     {
       "path": "modules/evaluation.py",
       "status": "WARNING",
-      "risk_patterns": "sample_size",
+      "risk_patterns": ".sample(, debug, sample_size",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
@@ -949,15 +879,21 @@
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
+      "path": "modules/llm_evaluation.py",
+      "status": "WARNING",
+      "risk_patterns": ".sample(, cuda, except, head(, skip, try:",
+      "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
+    },
+    {
       "path": "modules/preprocessing.py",
       "status": "WARNING",
-      "risk_patterns": "head(, skip",
+      "risk_patterns": "except, head(, skip, try:",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
       "path": "modules/qwen_prompting.py",
       "status": "WARNING",
-      "risk_patterns": ".sample(, cuda, except, head(, sample_size, skip, try:",
+      "risk_patterns": ".sample(, cuda, debug, except, head(, sample_size, skip, try:",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
@@ -987,7 +923,7 @@
     {
       "path": "modules/transformer_model.py",
       "status": "WARNING",
-      "risk_patterns": "cuda, except, sample_size, skip, try:",
+      "risk_patterns": "cuda, debug, except, sample_size, skip, try:",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
@@ -1003,15 +939,21 @@
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
+      "path": "scripts/run_cuad_external_eval.py",
+      "status": "WARNING",
+      "risk_patterns": "debug, skip",
+      "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
+    },
+    {
       "path": "scripts/run_qwen_prompting.py",
       "status": "WARNING",
-      "risk_patterns": "sample_size",
+      "risk_patterns": "cuda, sample_size",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
       "path": "scripts/run_transformer_model.py",
       "status": "WARNING",
-      "risk_patterns": "skip",
+      "risk_patterns": "cuda, debug, skip",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
@@ -1035,7 +977,7 @@
     {
       "path": "notebooks/stages/01_dataset_preprocessing_eda.ipynb",
       "status": "WARNING",
-      "risk_patterns": "cuda, except, sample_size, skip, try:",
+      "risk_patterns": "cuda, except, head(, sample_size, skip, try:",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
@@ -1047,7 +989,7 @@
     {
       "path": "notebooks/stages/03_classical_tfidf_models.ipynb",
       "status": "WARNING",
-      "risk_patterns": "cuda, except, sample_size, skip, try:",
+      "risk_patterns": "cuda, except, head(, sample_size, skip, try:",
       "note": "Inspect to ensure the notebook did not silently skip, sample, cache, or fallback unexpectedly."
     },
     {
@@ -1096,157 +1038,10 @@
   "required_fixes": [
     {
       "priority": "critical",
-      "what": "figures/pipeline_overview.png",
-      "why": "Pipeline overview figure in report methodology section",
-      "where": "Create from report artifact/export stage or a dedicated diagram generation helper.",
-      "action": "Generate canonical artifact at the required filename; do not rely only on close/noncanonical outputs."
-    },
-    {
-      "priority": "critical",
-      "what": "figures/hpt_validation_macro_f1.png",
-      "why": "HPT validation macro-F1 figure",
-      "where": "modules.transformer_hpt.run_two_stage_transformer_hpt or scripts/run_transformer_hpt.py",
-      "action": "Generate canonical artifact at the required filename; do not rely only on close/noncanonical outputs."
-    },
-    {
-      "priority": "important",
-      "what": "figures/confusion_matrix.png",
-      "why": "Main confusion matrix figure",
-      "where": "Final report export stage should copy the selected best-model confusion matrix to this canonical filename.",
-      "action": "Generate canonical artifact at the required filename; do not rely only on close/noncanonical outputs."
-    },
-    {
-      "priority": "important",
-      "what": "outputs/baseline_results.csv",
-      "why": "Baseline model results table",
-      "where": "modules.baselines.run_baseline_experiments should also export this canonical report filename.",
-      "action": "Generate canonical artifact at the required filename; do not rely only on close/noncanonical outputs."
-    },
-    {
-      "priority": "important",
-      "what": "outputs/sweep_results.csv",
-      "why": "Stage 5A/5B HPT sweep table",
-      "where": "modules.transformer_hpt.run_two_stage_transformer_hpt should export this canonical report filename.",
-      "action": "Generate canonical artifact at the required filename; do not rely only on close/noncanonical outputs."
-    },
-    {
-      "priority": "important",
-      "what": "outputs/best_hyperparameters.json",
-      "why": "Best transformer HPT configuration",
-      "where": "modules.transformer_hpt.run_two_stage_transformer_hpt should export this canonical report filename.",
-      "action": "Generate canonical artifact at the required filename; do not rely only on close/noncanonical outputs."
-    },
-    {
-      "priority": "important",
-      "what": "outputs/final_test_metrics.json",
-      "why": "Final held-out test metrics table/text",
-      "where": "Final evaluation/export stage should write selected final test metrics to JSON.",
-      "action": "Generate canonical artifact at the required filename; do not rely only on close/noncanonical outputs."
-    },
-    {
-      "priority": "important",
-      "what": "outputs/final_test_predictions.csv",
-      "why": "Final selected model prediction table",
-      "where": "Final evaluation/export stage should write selected final model predictions to CSV.",
-      "action": "Generate canonical artifact at the required filename; do not rely only on close/noncanonical outputs."
-    },
-    {
-      "priority": "important",
-      "what": "outputs/per_class_metrics.csv",
-      "why": "Per-class precision/recall/F1 table",
-      "where": "Error analysis or report export stage should write per-class metrics to this canonical filename.",
-      "action": "Generate canonical artifact at the required filename; do not rely only on close/noncanonical outputs."
-    },
-    {
-      "priority": "important",
-      "what": "outputs/failed_or_skipped_trials.csv",
-      "why": "Failed/skipped HPT/model trial log",
-      "where": "HPT/final audit stage should export failed and skipped trial rows.",
-      "action": "Generate canonical artifact at the required filename; do not rely only on close/noncanonical outputs."
-    },
-    {
-      "priority": "critical",
-      "what": "Stage 5A wide random W&B sweep exists",
-      "why": "Required by updated report.tex HPT methodology.",
-      "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Use W&B Sweeps or clearly rename the report to W&B tracked trials; export outputs/sweep_results.csv."
-    },
-    {
-      "priority": "critical",
-      "what": "Stage 5A uses 20 trials",
-      "why": "Required by updated report.tex HPT methodology.",
-      "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Set TransformerHPTConfig.random_trials=20 and notebook/script defaults to 20."
-    },
-    {
-      "priority": "critical",
-      "what": "Stage 5A uses 2 epochs per trial",
-      "why": "Required by updated report.tex HPT methodology.",
-      "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Force Stage 5A trial configs to num_train_epochs=2."
-    },
-    {
-      "priority": "critical",
-      "what": "Stage 5B Bayesian W&B sweep exists",
-      "why": "Required by updated report.tex HPT methodology.",
-      "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Use W&B Sweeps or document Optuna + W&B runs accurately; export canonical sweep_results.csv."
-    },
-    {
-      "priority": "critical",
-      "what": "Stage 5B uses 15 trials",
-      "why": "Required by updated report.tex HPT methodology.",
-      "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Set TransformerHPTConfig.bayes_trials=15 and notebook/script defaults to 15."
-    },
-    {
-      "priority": "critical",
-      "what": "Stage 5B uses 3 epochs per trial",
-      "why": "Required by updated report.tex HPT methodology.",
-      "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Force Stage 5B trial configs to num_train_epochs=3."
-    },
-    {
-      "priority": "critical",
-      "what": "Stage 5B uses narrowed search space",
-      "why": "Required by updated report.tex HPT methodology.",
-      "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Create an explicit narrowed Stage 5B search space from Stage 5A results."
-    },
-    {
-      "priority": "critical",
-      "what": "Best hyperparameters exported to required filename",
-      "why": "Required by updated report.tex HPT methodology.",
-      "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Write the selected HPT config to outputs/best_hyperparameters.json."
-    },
-    {
-      "priority": "critical",
-      "what": "Final retraining uses 4 epochs",
-      "why": "Required by updated report.tex HPT methodology.",
-      "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Force final retrain to 4 epochs after validation-selected HPT."
-    },
-    {
-      "priority": "critical",
       "what": "Completed HPT run evidence exists",
       "why": "Required by updated report.tex HPT methodology.",
       "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Run: python scripts/run_transformer_hpt.py --model-name distilbert-base-uncased --random-trials 20 --bayes-trials 15 --wandb"
-    },
-    {
-      "priority": "critical",
-      "what": "Canonical sweep_results.csv exists",
-      "why": "Required by updated report.tex HPT methodology.",
-      "where": "modules/transformer_hpt.py; scripts/run_transformer_hpt.py; Stage 5 notebook",
-      "action": "Export HPT trial rows to outputs/sweep_results.csv."
-    },
-    {
-      "priority": "important",
-      "what": "Confusion matrix produced",
-      "why": "Required by evaluation/report artifact audit.",
-      "where": "modules/evaluation.py; modules/report_exports.py; modules/coursework_artifacts.py",
-      "action": "Copy or regenerate best-model confusion matrix as figures/confusion_matrix.png."
+      "action": "Run when training is intended: python scripts/run_transformer_hpt.py --model-name distilbert-base-uncased --random-trials 8 --bayes-trials 8 --wandb"
     },
     {
       "priority": "important",

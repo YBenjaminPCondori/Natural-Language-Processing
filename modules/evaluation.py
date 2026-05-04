@@ -95,6 +95,7 @@ def evaluate_predictions_common(
     eval_split: str = "test",
     notes: str = "",
     valid_labels: list[int] | None = None,
+    confidence_scores: list[float] | None = None,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
     """Compute common metrics and save report/confusion matrix files."""
     output_dir = Path(output_dir)
@@ -113,6 +114,8 @@ def evaluate_predictions_common(
     pred_df["model_name"] = model_name
     pred_df["dataset_name"] = dataset_name
     pred_df["split"] = eval_split
+    if confidence_scores is not None:
+        pred_df["confidence"] = [float(score) for score in confidence_scores]
     predictions_path = output_dir / "predictions" / f"{safe_name(model_name)}_{safe_name(eval_split)}_predictions.csv"
     predictions_path.parent.mkdir(parents=True, exist_ok=True)
     pred_df.to_csv(predictions_path, index=False)

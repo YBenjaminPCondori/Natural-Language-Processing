@@ -1,6 +1,6 @@
 # Final Coursework Audit
 
-Created: 2026-05-03T16:53:11.049194+00:00
+Created: 2026-05-04T20:46:48.336886+00:00
 
 ## Completed Models
 | model_name | model_family | test_macro_f1 | evidence_path |

@@ -38,6 +38,10 @@ QWEN_PREDICTION_COLUMNS = [
     "predicted_label",
     "predicted_label_id",
     "is_invalid",
+    "invalid_reason",
+    "model_name",
+    "dataset_name",
+    "split",
 ]
 QWEN_RESULT_COLUMNS = [
     "model_family",
@@ -51,7 +55,10 @@ QWEN_RESULT_COLUMNS = [
     "weighted_f1",
     "invalid_prediction_rate",
     "status",
+    "error_type",
+    "error_message",
     "notes",
+    "prediction_path",
 ]
 TRANSFORMER_RESULT_COLUMNS = [
     "model_family",
@@ -385,7 +392,7 @@ def export_main_results(paths: ProjectPaths, completed_results: list[dict[str, A
                 "selected_by_validation": result.get("validation_macro_f1") is not None or family in {"classical", "transformer_encoder"},
                 "hyperparameter_source": "validation macro-F1" if family in {"classical", "transformer_encoder"} else "fixed_or_not_applicable",
                 "evidence_path": evidence,
-                "prediction_path": "",
+                "prediction_path": result.get("prediction_path", ""),
                 "status": status,
                 "reason_if_skipped_or_failed": reason,
             }
@@ -644,6 +651,14 @@ def export_qwen_tables(
             predictions["predicted_label_id"] = pd.NA
         if "is_invalid" not in predictions.columns and "predicted_label" in predictions.columns:
             predictions["is_invalid"] = predictions["predicted_label"].eq("INVALID_PREDICTION")
+        if "invalid_reason" not in predictions.columns:
+            predictions["invalid_reason"] = ""
+        if "model_name" not in predictions.columns:
+            predictions["model_name"] = "qwen_" + predictions.get("mode", pd.Series(dtype=str)).astype(str)
+        if "dataset_name" not in predictions.columns:
+            predictions["dataset_name"] = "LEDGAR"
+        if "split" not in predictions.columns:
+            predictions["split"] = "test"
         predictions = predictions.reindex(columns=QWEN_PREDICTION_COLUMNS)
     if invalid.empty:
         invalid = pd.DataFrame(columns=QWEN_PREDICTION_COLUMNS)
