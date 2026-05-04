@@ -1,0 +1,14 @@
+{
+  "created_at_utc": "2026-05-04T19:48:26.044917+00:00",
+  "min_span_chars": 20,
+  "min_span_words": 4,
+  "documents_seen": 510,
+  "answer_spans_seen": 13823,
+  "empty_spans_removed": 0,
+  "short_spans_removed": 2741,
+  "duplicate_rows_removed": 155,
+  "rows_after_short_filter": 11082,
+  "rows_after_deduplication": 10927,
+  "status": "completed",
+  "reason": ""
+}

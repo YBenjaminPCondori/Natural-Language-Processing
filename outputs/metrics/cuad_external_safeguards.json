@@ -1,0 +1,26 @@
+{
+  "created_at_utc": "2026-05-04T19:48:26.728058+00:00",
+  "status": "passed",
+  "cuad_external_eval_not_empty": true,
+  "mapped_labels_are_valid": true,
+  "invalid_eval_labels": [],
+  "no_cuad_in_ledgar_train_or_validation": true,
+  "ledgar_split_checks": {
+    "train": {
+      "path": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\data\\processed\\ledgar_train.jsonl",
+      "status": "checked",
+      "cuad_rows_found": 0
+    },
+    "validation": {
+      "path": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\data\\processed\\ledgar_validation.jsonl",
+      "status": "checked",
+      "cuad_rows_found": 0
+    }
+  },
+  "protocol": {
+    "train": "LEDGAR train only",
+    "validation": "LEDGAR validation only",
+    "test": "LEDGAR test for primary in-distribution results",
+    "external": "CUAD external post-test evaluation only"
+  }
+}

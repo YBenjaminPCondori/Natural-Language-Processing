@@ -2,8 +2,15 @@ component,parameter,value,notes
 general,random_seed,42,Used for sampling and model seeds.
 tfidf,max_features_grid,"[10000, 30000]",Classical feature grid.
 tfidf,ngram_range_grid,"[(1, 1), (1, 2)]",Classical feature grid.
-tfidf,lowercase,True,Set in modules/classical_models.py.
+preprocessing,html_entity_cleanup,True,Applied before schema-preserving LEDGAR export.
+preprocessing,legal_safe_lowercase_tokeniser,True,Lab-grounded regex tokenisation with lowercasing for sparse features.
+preprocessing,negation_aware_tokeniser,default for classical TF-IDF,Prefixes the token immediately after no/not/never.
+preprocessing,stopword_removal,False,Skipped because legal cues such as not/no/shall/without can be label-critical.
+preprocessing,bpe_inspection,training-split samples,"Used as a teaching/OOV inspection step, not as the final classifier representation."
+tfidf,tokenizer,negation_aware,Set in modules/classical_models.py.
+tfidf,lowercase,False,Lowercasing is handled inside the lab-grounded tokenizer.
 tfidf,stop_words,,Legal stopwords are retained.
+tfidf,token_pattern,,Disabled because a custom tokenizer is used.
 logistic_regression,max_iter,2000,Set in modules/classical_models.py.
 logistic_regression,class_weight_grid,"[None, 'balanced']",Validation-selected.
 linear_svm,class_weight_grid,"[None, 'balanced']",Validation-selected.

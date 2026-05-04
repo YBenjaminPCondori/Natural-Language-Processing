@@ -1,0 +1,7 @@
+stage,search_method,trials,completed_trials,best_validation_macro_f1
+bert-base-uncased,configured,1,0,
+distilbert-base-uncased,configured,1,1,0.9579914096999408
+microsoft/deberta-v3-base,configured,1,0,
+nlpaueb/bert-base-uncased-contracts,configured,1,0,
+nlpaueb/legal-bert-base-uncased,configured,1,0,
+roberta-base,configured,1,0,

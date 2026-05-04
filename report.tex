@@ -78,7 +78,7 @@ The hypothesis is that TF-IDF with Linear SVM will provide a strong classical ba
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/pipeline_overview.png}
-\caption{Overall experimental pipeline from project audit and split verification through baseline modelling, transformer tuning, final test evaluation, and error analysis.}
+\caption{Overall experimental pipeline from project audit and split verification through cell-by-cell preprocessing, feature extraction, baseline modelling, transformer tuning, final test evaluation, and error analysis.}
 \label{fig:pipeline-overview}
 \end{figure}
 
@@ -173,17 +173,17 @@ The data audit also verifies that the predefined LEDGAR train, validation, and t
 \centering
 \small
 \begin{tabular}{ll}
-    oprule
-    extbf{Audit Check} &     extbf{Status} \
+\toprule
+\textbf{Audit Check} & \textbf{Status} \\
 \midrule
-Dataset files found &     odo{Pass/Fail} \
-Train/validation/test splits non-empty &     odo{Pass/Fail} \
-Top-20 labels selected from train only &     odo{Pass/Fail} \
-Duplicate text-label pairs checked &     odo{Pass/Fail} \
-Cross-split duplicate text checked &     odo{Pass/Fail} \
-Label distribution exported &     odo{Pass/Fail} \
-Prediction files exported &     odo{Pass/Fail} \
-Failed/skipped trials logged &     odo{Pass/Fail} \
+Dataset files found & \todo{Pass/Fail} \\
+Train/validation/test splits non-empty & \todo{Pass/Fail} \\
+Top-20 labels selected from train only & \todo{Pass/Fail} \\
+Duplicate text-label pairs checked & \todo{Pass/Fail} \\
+Cross-split duplicate text checked & \todo{Pass/Fail} \\
+Label distribution exported & \todo{Pass/Fail} \\
+Prediction files exported & \todo{Pass/Fail} \\
+Failed/skipped trials logged & \todo{Pass/Fail} \\
 \bottomrule
 \end{tabular}
 \caption{Project and dataset audit checklist used before final reporting.}
@@ -192,23 +192,38 @@ Failed/skipped trials logged &     odo{Pass/Fail} \
 
 \section{Preprocessing}
 
+The preprocessing stage was updated to follow the tokenisation and feature-engineering material from the Week 2 and Week 3 labs, with selected Week 4 cleaning steps. The notebook now presents these steps cell by cell so that each transformation can be inspected before the full LEDGAR splits are processed.
+
+The pipeline distinguishes three stages that are sometimes confused in text-classification work:
+
+\begin{itemize}[leftmargin=*]
+    \item preprocessing cleans or tokenises the clause text;
+    \item feature extraction converts the cleaned text or tokens into numeric vectors;
+    \item modelling fits a classifier such as Logistic Regression, Linear SVM, or Naive Bayes.
+\end{itemize}
+
 The preprocessing pipeline includes:
 
 \begin{itemize}[leftmargin=*]
-    \item loading LEDGAR from     exttt{coastalchp/ledgar} on the Hugging Face Hub;
+    \item loading LEDGAR from \texttt{coastalchp/ledgar} on the Hugging Face Hub;
     \item preserving the predefined train, validation, and test splits;
-    \item standardising column names;
-    \item normalising whitespace while preserving legal punctuation;
-    \item removing empty or malformed examples;
+    \item standardising column names into \texttt{text}, \texttt{label}, \texttt{label\_id}, \texttt{split}, and \texttt{source\_dataset};
+    \item removing simple HTML markup and decoding HTML entities before tokenisation;
+    \item normalising whitespace while preserving the original cleaned clause text for later models and error analysis;
+    \item applying Week 2-style regex tokenisation with \texttt{\textbackslash b\textbackslash w+\textbackslash b};
+    \item applying legal-safe lowercased tokenisation for feature extraction without removing stopwords;
+    \item applying a negation-aware tokeniser that adds a \texttt{NOT\_} prefix to the token immediately after cues such as \texttt{no}, \texttt{not}, and \texttt{never};
+    \item demonstrating simple BPE training and encoding from the Week 2--3 labs as an inspection tool for subword and out-of-vocabulary behaviour;
     \item checking duplicate text-label pairs and cross-split duplicate texts;
-    \item analysing label distributions;
     \item selecting the top 20 labels from the training split only;
     \item encoding labels into numerical IDs;
     \item saving processed train, validation, and test files;
-    \item generating dataset summary outputs and figures.
+    \item generating dataset summary outputs, figures, and a readable preprocessing rundown file.
 \end{itemize}
 
-For classical models, clause text is converted into TF-IDF vectors using unigram and bigram features. For transformer models, clause text is tokenised using the relevant Hugging Face tokenizer with padding and truncation. The maximum sequence length is treated as a tunable transformer hyperparameter because clause lengths vary across the dataset.
+Stopword removal is deliberately not used as a default preprocessing step. In legal clauses, words such as \textit{not}, \textit{shall}, \textit{may}, \textit{unless}, and \textit{except} can change the legal meaning of the clause. Removing them would make the representation less faithful to the classification task.
+
+Feature extraction is reported separately from preprocessing. For classical models, clause text is converted into bag-of-words and TF-IDF feature spaces using unigrams and unigram-bigram features. The TF-IDF vectorizer uses the lab-grounded negation-aware tokeniser. For transformer models, clause text is tokenised using the relevant Hugging Face tokenizer with padding and truncation. The maximum sequence length is treated as a tunable transformer hyperparameter because clause lengths vary across the dataset.
 
 For Qwen2.5-Instruct prompting, no manual feature extraction is performed. Instead, the prompt includes the task instruction, allowed label list, and clause text.
 
@@ -226,7 +241,7 @@ This baseline predicts labels randomly using the training label distribution, so
 
 \subsection{Classical Machine Learning Models}
 
-The classical models are trained using TF-IDF features:
+The classical models are trained using TF-IDF features after the preprocessing and feature-extraction cells have run. These classifiers are modelling methods, not preprocessing methods:
 
 \begin{itemize}[leftmargin=*]
     \item TF-IDF + Logistic Regression;
@@ -238,6 +253,7 @@ The classical models are trained using TF-IDF features:
 These models are included because they are efficient, interpretable, and strong baselines for text classification. Classical model optimisation uses validation-set random search or small grid search over compact search spaces. Hyperparameter tuning considers:
 
 \begin{itemize}[leftmargin=*]
+    \item the lab-grounded tokenizer used inside TF-IDF;
     \item maximum TF-IDF features;
     \item unigram versus unigram-bigram features;
     \item regularisation strength \(C\);
@@ -303,15 +319,15 @@ Answer with exactly one label:
 
 Hyperparameter tuning is conducted after baseline validation evaluation and before final test evaluation. The test set is not used during tuning. Model selection is based on validation macro-F1 because the top-20 LEDGAR subset remains class imbalanced.
 
-For classical models, random search or a compact grid search is used because TF-IDF classifiers are relatively fast and have a small search space. For the main transformer model, a two-stage Weights \& Biases Sweeps strategy is used.
+For classical models, a compact validation grid is used because TF-IDF classifiers are relatively fast and have a small search space. For the main transformer model, the pipeline supports a two-stage hyperparameter tuning routine with random search followed by Bayesian refinement when the runtime budget allows it.
 
 \subsection{Stage 5A: Wide Random Search}
 
-The first sweep uses random search to explore a broad transformer hyperparameter space. This stage is designed to identify promising regions rather than produce the final model.
+The first stage uses random search to explore a broad transformer hyperparameter space. This stage is designed to identify promising regions rather than produce the final model. The notebook default is deliberately smaller than a full production search so that the coursework run remains feasible on constrained hardware.
 
 \begin{itemize}[leftmargin=*]
     \item Search method: random search;
-    \item Trials: 20;
+    \item Trials: configurable; notebook default 8;
     \item Epochs per trial: 2;
     \item Metric: validation macro-F1;
     \item Parameters: learning rate, batch size, weight decay, maximum sequence length, warmup ratio, dropout where supported, and random seed.
@@ -319,17 +335,17 @@ The first sweep uses random search to explore a broad transformer hyperparameter
 
 \subsection{Stage 5B: Narrow Bayesian Optimisation}
 
-The second sweep uses Bayesian optimisation to refine the best region found during random search. This is more suitable than a large grid search for BERT-style models because the search space contains interacting continuous hyperparameters such as learning rate, weight decay, and warmup ratio.
+The second stage uses Bayesian optimisation to refine the best region found during random search. This is more suitable than a large grid search for BERT-style models because the search space contains interacting continuous hyperparameters such as learning rate, weight decay, and warmup ratio.
 
 \begin{itemize}[leftmargin=*]
     \item Search method: Bayesian optimisation;
-    \item Trials: 15;
+    \item Trials: configurable; notebook default 8;
     \item Epochs per trial: 3;
     \item Metric: validation macro-F1;
     \item Test set usage: none during tuning.
 \end{itemize}
 
-After tuning, the best configuration is saved to \texttt{outputs/best\_hyperparameters.json}, and all sweep runs are summarised in \texttt{outputs/sweep\_results.csv}. Failed or skipped trials, including out-of-memory failures, are logged rather than silently ignored.
+After tuning, the canonical transformer search files are saved as \texttt{outputs/best\_transformer\_configs.json} and \texttt{outputs/hyperparameter\_search\_results.csv}. The report export step also writes report-facing aliases, \texttt{outputs/best\_hyperparameters.json} and \texttt{outputs/sweep\_results.csv}. Failed or skipped trials, including out-of-memory failures, are logged rather than silently ignored.
 
 \begin{table}[t]
 \centering
@@ -338,8 +354,8 @@ After tuning, the best configuration is saved to \texttt{outputs/best\_hyperpara
 \toprule
 \textbf{Stage} & \textbf{Search Method} & \textbf{Trials} & \textbf{Best Validation Macro-F1} \\
 \midrule
-Stage 5A & Random Search & 20 & \todo{value} \\
-Stage 5B & Bayesian Optimisation & 15 & \todo{value} \\
+Stage 5A & Random Search & configurable, default 8 & \todo{value from outputs/hpt\_summary.csv} \\
+Stage 5B & Bayesian Optimisation & configurable, default 8 & \todo{value from outputs/hpt\_summary.csv} \\
 \bottomrule
 \end{tabular}
 \caption{Hyperparameter tuning summary for the main transformer model.}
@@ -349,7 +365,7 @@ Stage 5B & Bayesian Optimisation & 15 & \todo{value} \\
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/hpt_validation_macro_f1.png}
-\caption{Validation macro-F1 across hyperparameter tuning trials. The figure compares broad random search with narrowed Bayesian optimisation.}
+\caption{Validation macro-F1 across available hyperparameter-selection results. When full transformer HPT has been run, the figure shows random-search and Bayesian trials; otherwise it shows the completed configured validation candidates.}
 \label{fig:hpt-macro-f1}
 \end{figure}
 
@@ -388,7 +404,8 @@ All experiments are implemented in Python. The main tools are:
 
 \begin{itemize}[leftmargin=*]
     \item Pandas and NumPy for data handling;
-    \item Scikit-learn for TF-IDF, classical models, metrics, and confusion matrices;
+    \item Python regular expressions and standard HTML entity handling for lecture/lab-grounded preprocessing;
+    \item Scikit-learn for bag-of-words inspection, TF-IDF, classical models, metrics, and confusion matrices;
     \item Hugging Face Datasets for dataset loading;
     \item Hugging Face Transformers for transformer training and Qwen inference;
     \item PyTorch for transformer training and inference;
@@ -396,7 +413,7 @@ All experiments are implemented in Python. The main tools are:
     \item Weights \& Biases for experiment tracking and hyperparameter sweeps.
 \end{itemize}
 
-Experiments are implemented in a Python notebook environment. Classical models are run using CPU-based Scikit-learn, while transformer fine-tuning and Qwen2.5-Instruct inference use GPU acceleration when CUDA is available. The notebook records the detected hardware configuration for reproducibility. Random seeds are fixed where possible to improve reproducibility.
+Experiments are implemented in a Python notebook environment. The preprocessing and feature-extraction notebooks are organised as small cells so that raw text, cleaned text, token lists, BPE examples, bag-of-words vectors, and TF-IDF matrices can be inspected independently. Classical models are run using CPU-based Scikit-learn, while transformer fine-tuning and Qwen2.5-Instruct inference use GPU acceleration when CUDA is available. The notebook records the detected hardware configuration for reproducibility. Random seeds are fixed where possible to improve reproducibility.
 
 \begin{table}[t]
 \centering
@@ -406,6 +423,7 @@ Experiments are implemented in a Python notebook environment. Classical models a
 \textbf{Component} & \textbf{Tool} \\
 \midrule
 Data handling & Pandas, NumPy \\
+Preprocessing & Python regular expressions, HTML entity cleanup \\
 Classical models & Scikit-learn \\
 Transformer training & Hugging Face Transformers, PyTorch \\
 LLM prompting & Qwen2.5-Instruct \\
@@ -622,7 +640,7 @@ Overall, the project demonstrates that NLP can support legal contract review by 
 
 \section*{Reproducibility Statement}
 
-The coursework code includes dataset loading, preprocessing, data audit checks, model training, validation-based hyperparameter tuning, final test evaluation, prediction saving, and visualisation. Random seeds were fixed where possible for Python, NumPy, PyTorch, and CUDA. The final results can be reproduced by running the main experimental notebook, which loads LEDGAR from Hugging Face, applies the top-20-label filtering pipeline, trains the baseline and supervised models, performs W\&B random and Bayesian sweeps for the main transformer, evaluates the selected model once on the held-out test set, and saves the result tables and figures used in this report.
+The coursework code includes dataset loading, cell-by-cell preprocessing, feature extraction, data audit checks, model training, validation-based hyperparameter tuning, final test evaluation, prediction saving, and visualisation. Random seeds were fixed where possible for Python, NumPy, PyTorch, and CUDA. The final results can be reproduced by running the staged notebooks in order, beginning with the preprocessing and EDA notebook and then the classical TF-IDF notebook, or by running the combined main experimental notebook after the staged flow has been checked. The pipeline loads LEDGAR from Hugging Face, applies the top-20-label filtering pipeline, records the preprocessing techniques in \texttt{outputs/preprocessing\_techniques.md}, trains the baseline and supervised models, supports W\&B random and Bayesian sweeps for the main transformer when enabled, evaluates the selected model once on the held-out test set, and saves the result tables and figures used in this report.
 
 \bibliographystyle{acl_natbib}
 \begin{thebibliography}{}
@@ -682,7 +700,9 @@ An Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chengyuan
 \textbf{Model/Stage} & \textbf{Parameter} & \textbf{Value or Search Space} \\
 \midrule
 TF-IDF & n-gram range & (1, 1), (1, 2) \\
+TF-IDF & tokenizer & negation-aware regex tokenizer from the Week 2 lab \\
 TF-IDF & max features & \todo{e.g. 20k, 50k, 100k} \\
+BPE inspection & merge operations & 50 merges on a training-text sample \\
 Logistic Regression / SVM & C & \todo{search values} \\
 Naive Bayes & alpha & \todo{search values} \\
 Transformer Stage 5A & learning rate & 1e-6 to 1e-4, log-uniform \\

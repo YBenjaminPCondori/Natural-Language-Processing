@@ -10,7 +10,7 @@ The project compares:
 - fine-tuned transformer encoders
 - prompt-based instruction-tuned LLMs
 
-The main dataset is LEDGAR. CUAD may be downloaded for optional qualitative inspection only; it is not merged into the LEDGAR train, validation, or test splits.
+The main dataset is LEDGAR. CUAD is treated as an external out-of-distribution evaluation dataset only; it is not merged into the LEDGAR train, validation, or test splits.
 
 ## Dataset
 
@@ -29,6 +29,32 @@ Processed files:
 - `data/processed/dataset_summary.json`
 
 Top-k labels are selected from the training split only. Validation and test are filtered using that training-selected label set. Test results must not be used for model selection or prompt tuning.
+
+## CUAD External Evaluation
+
+CUAD is span-annotated in its raw form. The project converts non-empty CUAD answer spans into clause-level classification rows only after the LEDGAR final test evaluation has been completed. Because CUAD and LEDGAR use different label spaces, a conservative manual mapping is applied before evaluation. Unmapped CUAD labels are excluded from metrics and counted in `outputs/data/cuad_label_mapping_report.json`.
+
+CUAD is not used for training, validation, hyperparameter tuning, prompt selection, or model selection. It is used to assess cross-dataset generalisation and failure modes.
+
+Run the external evaluation from existing LEDGAR-trained artifacts:
+
+```bash
+python scripts/run_cuad_external_eval.py --no-download
+```
+
+The command writes:
+
+- `outputs/data/cuad_converted_raw.csv`
+- `outputs/data/cuad_converted_mapped.csv`
+- `outputs/data/cuad_external_eval.csv`
+- `outputs/data/cuad_label_mapping_report.json`
+- `outputs/predictions/cuad_external_<model_name>_predictions.csv`
+- `outputs/metrics/cuad_external_<model_name>_metrics.json`
+- `outputs/error_analysis/cuad_external_<model_name>_errors.csv`
+- `outputs/error_analysis/cuad_external_<model_name>_summary.json`
+- `outputs/metrics/final_model_comparison_summary.csv`
+
+Prompt-only LLM rows are marked as skipped unless a reusable local model/tokenizer is available for a dedicated CUAD prompting run.
 
 ## Install
 
@@ -63,6 +89,7 @@ The notebook contains:
 7. optional DistilBERT fine-tuning
 8. optional Qwen prompting
 9. error analysis and report artifact export
+10. CUAD external evaluation and error analysis, run only after final LEDGAR test evaluation
 
 Heavy runs can be skipped with flags such as `RUN_SEQUENCE_MODEL`, `RUN_TRANSFORMER`, and `RUN_QWEN_BASELINE`.
 
@@ -96,6 +123,12 @@ Run Qwen prompting on CUDA:
 
 ```bash
 python scripts/run_qwen_prompting.py --model-name Qwen/Qwen2.5-3B-Instruct --eval-sample-size 200
+```
+
+Run CUAD external evaluation after LEDGAR models exist:
+
+```bash
+python scripts/run_cuad_external_eval.py --no-download
 ```
 
 Run inference-only instruction-tuned LLM evaluation:
@@ -163,6 +196,7 @@ Canonical report-facing artifacts are saved under `outputs/`, including:
 - `dataset_verification.json`
 - `repo_audit.md`
 - `final_coursework_audit.md`
+- `metrics/final_model_comparison_summary.csv`
 
 Figures are saved under `figures/` and copied where needed to `outputs/figures/`.
 
@@ -174,5 +208,6 @@ Existing output files are archived under `outputs/archive/<timestamp>/` before t
 - Tune hyperparameters and prompts only on validation.
 - Select checkpoints using validation macro-F1.
 - Use test only for final evaluation.
+- Use CUAD only after final LEDGAR test evaluation as external out-of-distribution evidence.
 - Mark failed/skipped runs explicitly.
 - Do not invent metrics or reuse stale predictions as fresh results.

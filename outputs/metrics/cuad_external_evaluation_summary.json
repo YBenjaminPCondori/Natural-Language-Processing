@@ -1,0 +1,115 @@
+{
+  "created_at_utc": "2026-05-04T19:50:35.271855+00:00",
+  "dataset_name": "CUAD_external",
+  "cuad_samples_extracted": 10927,
+  "cuad_samples_retained_after_mapping": 2878,
+  "cuad_samples_ready_for_external_eval": 2878,
+  "cuad_labels_mapped": [
+    {
+      "cuad_label": "Anti-Assignment",
+      "ledgar_label": "Assignments"
+    },
+    {
+      "cuad_label": "Effective Date",
+      "ledgar_label": "Terms"
+    },
+    {
+      "cuad_label": "Expiration Date",
+      "ledgar_label": "Terms"
+    },
+    {
+      "cuad_label": "Governing Law",
+      "ledgar_label": "Governing Laws"
+    },
+    {
+      "cuad_label": "Insurance",
+      "ledgar_label": "Insurances"
+    },
+    {
+      "cuad_label": "Notice Period To Terminate Renewal",
+      "ledgar_label": "Notices"
+    },
+    {
+      "cuad_label": "Renewal Term",
+      "ledgar_label": "Terms"
+    },
+    {
+      "cuad_label": "Termination For Convenience",
+      "ledgar_label": "Terminations"
+    }
+  ],
+  "cuad_labels_unmapped": [
+    "Affiliate License-Licensee",
+    "Affiliate License-Licensor",
+    "Agreement Date",
+    "Audit Rights",
+    "Cap On Liability",
+    "Change Of Control",
+    "Competitive Restriction Exception",
+    "Covenant Not To Sue",
+    "Document Name",
+    "Exclusivity",
+    "Ip Ownership Assignment",
+    "Irrevocable Or Perpetual License",
+    "Joint Ip Ownership",
+    "License Grant",
+    "Liquidated Damages",
+    "Minimum Commitment",
+    "Most Favored Nation",
+    "No-Solicit Of Customers",
+    "No-Solicit Of Employees",
+    "Non-Compete",
+    "Non-Disparagement",
+    "Non-Transferable License",
+    "Parties",
+    "Post-Termination Services",
+    "Price Restrictions",
+    "Revenue/Profit Sharing",
+    "Rofr/Rofo/Rofn",
+    "Source Code Escrow",
+    "Third Party Beneficiary",
+    "Uncapped Liability",
+    "Unlimited/All-You-Can-Eat-License",
+    "Volume Restriction",
+    "Warranty Duration"
+  ],
+  "models_evaluated_on_cuad": [
+    "logistic_regression",
+    "linear_svm",
+    "multinomial_nb",
+    "distilbert-base-uncased"
+  ],
+  "safeguards": {
+    "created_at_utc": "2026-05-04T19:48:26.728058+00:00",
+    "status": "passed",
+    "cuad_external_eval_not_empty": true,
+    "mapped_labels_are_valid": true,
+    "invalid_eval_labels": [],
+    "no_cuad_in_ledgar_train_or_validation": true,
+    "ledgar_split_checks": {
+      "train": {
+        "path": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\data\\processed\\ledgar_train.jsonl",
+        "status": "checked",
+        "cuad_rows_found": 0
+      },
+      "validation": {
+        "path": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\data\\processed\\ledgar_validation.jsonl",
+        "status": "checked",
+        "cuad_rows_found": 0
+      }
+    },
+    "protocol": {
+      "train": "LEDGAR train only",
+      "validation": "LEDGAR validation only",
+      "test": "LEDGAR test for primary in-distribution results",
+      "external": "CUAD external post-test evaluation only"
+    }
+  },
+  "outputs": {
+    "raw": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\outputs\\data\\cuad_converted_raw.csv",
+    "mapped": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\outputs\\data\\cuad_converted_mapped.csv",
+    "eval": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\outputs\\data\\cuad_external_eval.csv",
+    "mapping_report": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\outputs\\data\\cuad_label_mapping_report.json",
+    "summary": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\outputs\\metrics\\final_model_comparison_summary.csv"
+  }
+}

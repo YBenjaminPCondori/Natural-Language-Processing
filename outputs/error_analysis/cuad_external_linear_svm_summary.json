@@ -1,0 +1,1158 @@
+{
+  "created_at_utc": "2026-05-04T19:48:27.973289+00:00",
+  "status": "completed",
+  "model_name": "linear_svm",
+  "dataset_name": "CUAD_external",
+  "num_errors": 412,
+  "error_rate": 0.14315496872828348,
+  "top_confused_label_pairs": [
+    {
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "count": 108
+    },
+    {
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "count": 45
+    },
+    {
+      "true_label": "Terms",
+      "predicted_label": "Terminations",
+      "count": 42
+    },
+    {
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "count": 24
+    },
+    {
+      "true_label": "Assignments",
+      "predicted_label": "Terminations",
+      "count": 22
+    },
+    {
+      "true_label": "Terms",
+      "predicted_label": "Amendments",
+      "count": 17
+    },
+    {
+      "true_label": "Assignments",
+      "predicted_label": "General",
+      "count": 17
+    },
+    {
+      "true_label": "Insurances",
+      "predicted_label": "General",
+      "count": 9
+    },
+    {
+      "true_label": "Terminations",
+      "predicted_label": "Notices",
+      "count": 9
+    },
+    {
+      "true_label": "Insurances",
+      "predicted_label": "Indemnifications",
+      "count": 8
+    },
+    {
+      "true_label": "Notices",
+      "predicted_label": "Terminations",
+      "count": 7
+    },
+    {
+      "true_label": "Terms",
+      "predicted_label": "Waivers",
+      "count": 7
+    },
+    {
+      "true_label": "Insurances",
+      "predicted_label": "Notices",
+      "count": 6
+    },
+    {
+      "true_label": "Terms",
+      "predicted_label": "Counterparts",
+      "count": 6
+    },
+    {
+      "true_label": "Assignments",
+      "predicted_label": "Confidentiality",
+      "count": 6
+    },
+    {
+      "true_label": "Terms",
+      "predicted_label": "Expenses",
+      "count": 5
+    },
+    {
+      "true_label": "Terminations",
+      "predicted_label": "General",
+      "count": 5
+    },
+    {
+      "true_label": "Insurances",
+      "predicted_label": "Terms",
+      "count": 5
+    },
+    {
+      "true_label": "Assignments",
+      "predicted_label": "Terms",
+      "count": 5
+    },
+    {
+      "true_label": "Assignments",
+      "predicted_label": "Notices",
+      "count": 4
+    }
+  ],
+  "per_label_accuracy_f1": [
+    {
+      "label": "Assignments",
+      "accuracy": 0.8924050632911392,
+      "support": 632,
+      "precision": 0.9964664310954063,
+      "recall": 0.8924050632911392,
+      "f1": 0.9415692821368948
+    },
+    {
+      "label": "Governing Laws",
+      "accuracy": 0.984375,
+      "support": 448,
+      "precision": 1.0,
+      "recall": 0.984375,
+      "f1": 0.9921259842519685
+    },
+    {
+      "label": "Insurances",
+      "accuracy": 0.918625678119349,
+      "support": 553,
+      "precision": 0.9980353634577603,
+      "recall": 0.918625678119349,
+      "f1": 0.9566854990583804
+    },
+    {
+      "label": "Notices",
+      "accuracy": 0.01694915254237288,
+      "support": 118,
+      "precision": 0.08333333333333333,
+      "recall": 0.01694915254237288,
+      "f1": 0.028169014084507043
+    },
+    {
+      "label": "Terminations",
+      "accuracy": 0.8353909465020576,
+      "support": 243,
+      "precision": 0.7302158273381295,
+      "recall": 0.8353909465020576,
+      "f1": 0.7792706333973128
+    },
+    {
+      "label": "Terms",
+      "accuracy": 0.8461538461538461,
+      "support": 884,
+      "precision": 0.8404494382022472,
+      "recall": 0.8461538461538461,
+      "f1": 0.8432919954904171
+    }
+  ],
+  "most_confident_wrong_predictions": [
+    {
+      "text": "Unless terminated sooner, the term of this Agreement shall begin on the Effective Date and continue for three (3) years thereafter (the \"Initial Term\") and shall automatically renew for additional one (1) year terms on the terms and conditions set forth herein (each a \"Renewal Term\" and collectively, the \"Term\") unless either party gives the other Party Notice of its intention to terminate this Agreement ninety (90) days before the end of the Initial Term or Renewal Term, if any.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 2.535042245874988,
+      "contract_id": "DUOSTECHNOLOGIESGROUP,INC_04_21_2009-EX-10.1-STRATEGIC ALLIANCE AGREEMENT",
+      "span_id": "cuad_350_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Subject to the other provisions of this Agreement, the term of this Agreement shall commence on the Effective Date and shall remain in effect until terminated by either Party upon thirty (30) days' prior written notice.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 2.023922003584677,
+      "contract_id": "ENERGYXXILTD_05_08_2015-EX-10.13-Transportation AGREEMENT",
+      "span_id": "cuad_151_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "Subject to the other provisions of this Agreement, the term of this Agreement shall commence on the Effective Date and shall remain in effect until terminated by either Party upon thirty (30) days' prior written notice.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 2.023922003584677,
+      "contract_id": "ENERGYXXILTD_05_08_2015-EX-10.13-Transportation AGREEMENT",
+      "span_id": "cuad_151_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall commence on the Effective Date and shall be valid for a period of five (5) years with automatic renewal of one year thereafter until terminated",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.8682134746025736,
+      "contract_id": "Apollo Endosurgery - Manufacturing and Supply Agreement",
+      "span_id": "cuad_224_0_6_1",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This agreement begins on the Commencement Date and, subject to clause 11.2, shall continue for an initial term of one (1) years (Initial Term) and indefinitely after that until terminated by either party giving at least twelve (12) months' prior written notice to expire on or after the expiry date of the initial term.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.8038952487822342,
+      "contract_id": "FuseMedicalInc_20190321_10-K_EX-10.43_11575454_EX-10.43_Distributor Agreement",
+      "span_id": "cuad_67_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This contract shall be for a term of one year commencing on the date first above written; thereafter, it shall automatically continue until terminated by either party upon not less than thirty (30) days prior written notice to the other party.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.6814848160984397,
+      "contract_id": "ENTERPRISEPRODUCTSPARTNERSLP_07_08_1998-EX-10.3-TRANSPORTATION CONTRACT",
+      "span_id": "cuad_422_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This contract shall be for a term of one year commencing on the date first above written; thereafter, it shall automatically continue until terminated by either party upon not less than thirty (30) days prior written notice to the other party.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.6814848160984397,
+      "contract_id": "ENTERPRISEPRODUCTSPARTNERSLP_07_08_1998-EX-10.3-TRANSPORTATION CONTRACT",
+      "span_id": "cuad_422_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "After the Initial Term (including any extension thereto made in accordance with the preceding sentence), the Agreement may be extended on a yearly basis up to ten (10) years at Vericel's sole discretion, with renewal notice to be provided to MediWound no later than twelve (12) months prior to the expiry of any yearly extension (the \"Renewal Term\", and the Initial Term, together with the Renewal Term, if any, the \"Term\"); provided that unless otherwise agreed by the Parties, the Term of this Agreement (including the Initial Term, any extension of the Initial Term and any Renewal Terms) shall be no more than fifteen (15) years in total.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.5681252162750905,
+      "contract_id": "VERICELCORP_08_06_2019-EX-10.10-SUPPLY AGREEMENT",
+      "span_id": "cuad_54_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The term of this Agreement is three years from and including the date of this Agreement (the \"Initial Term\"), with automatic renewal for additional successive one-year terms (each a \"Renewal Term\" and together wit the Initial Term, the \"Term\") unless no later than [* * *] days prior to the end of the Initial Term, or any Renewal Term either party notifies the other that it wishes to terminate this Agreement effective the end of the Initial Term or that Renewal Term, as applicable.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.5557410570147723,
+      "contract_id": "VAPOTHERM, INC. - Manufacturing and Supply Agreement",
+      "span_id": "cuad_194_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The initial term of this Agreement shall be for a period of five (5) years from the date first set forth above and shall thereafter automatically renew for additional two (2) year terms unless a party provides the other party with notice of non-renewal no less than 6 months prior to the expiration of the initial term or any renewal term unless earlier terminated as follows:",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.5452839145523938,
+      "contract_id": "NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_85_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The initial term of this Agreement shall be for a period of five (5) years from the date first set forth above and shall thereafter automatically renew for additional two (2) year terms unless a party provides the other party with notice of non-renewal no less than 6 months prior to the expiration of the initial term or any renewal term unless earlier terminated as follows:",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.5452839145523938,
+      "contract_id": "NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_85_0_15_1",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "This Agreement shall have an initial term of one (1) year from the date first above written (the \"Initial Term\"), and shall thereafter automatically renew for successive two (2) year periods (each a \"Renewal Term\"), unless earlier terminated in accordance with the terms of this Agreement.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.509179540218501,
+      "contract_id": "HYPERIONSOFTWARECORP_09_28_1994-EX-10.47-EXCLUSIVE DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_198_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall commence on the Effective Date and shall continue until the four-year anniversary of the Effective Date (such period, as it may be extended, either by the mutual written agreement of the parties or automatically, or earlier terminated being referred to as the \"Consultation Period\"), unless sooner terminated in accordance with the provisions of Section 4, and shall automatically renew for successive one-year periods, unless the Company provides 90 days' notice of termination before any such successive period.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.491101216119373,
+      "contract_id": "PANDIONTHERAPEUTICSHOLDCOLLC_05_22_2020-EX-10.17-CONSULTING AGREEMENT",
+      "span_id": "cuad_377_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The term of this Agreement shall be for one (1) year commencing on the Effective Date and automatically renewing annually thereafter, unless either party provides a thirty-day notice of written termination one to the other (\"Term\").",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.478309450870738,
+      "contract_id": "EcoScienceSolutionsInc_20171117_8-K_EX-10.1_10956472_EX-10.1_Endorsement Agreement",
+      "span_id": "cuad_156_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall commence on the Effective Date and continue in full force and effect until the end of the fifteenth (15th) Contract Year, and shall continue in full force and effect thereafter until terminated by either Party by providing thirty (30) calendar days' prior written notice of termination to the other Party (such fifteen (15) Contract Year period, as may be further extended as provided herein is referred to as the \"Term\").",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.4400071239968972,
+      "contract_id": "PenntexMidstreamPartnersLp_20150416_S-1A_EX-10.4_9042833_EX-10.4_Transportation Agreement",
+      "span_id": "cuad_98_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement may be executed in one or more counterparts, all of which counterparts shall be considered one and the same agreement, and shall become effective when one or more counterparts have been signed by each Party and delivered to the other Party.",
+      "true_label": "Terms",
+      "predicted_label": "Counterparts",
+      "confidence": 1.4290885041683856,
+      "contract_id": "CerenceInc_20191002_8-K_EX-10.4_11827494_EX-10.4_Intellectual Property Agreement",
+      "span_id": "cuad_14_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "This Agreement will commence on the Effective Date and continue for an Initial Term of five (5) years, and will automatically renew for additional periods of five (5) years unless one Party notifies the other of its intention not to renew, no less than 12 months prior to the expiration of the then-current term, unless terminated as permitted under this Agreement.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.3664074945884574,
+      "contract_id": "BELLRINGBRANDS,INC_02_07_2020-EX-10.18-MASTER SUPPLY AGREEMENT",
+      "span_id": "cuad_107_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall become effective on the Effective Date and shall continue in effect until either Party informs the other Party with thirty (30) day prior written notice of termination of this Agreement.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.3500124870889194,
+      "contract_id": "UnionDentalHoldingsInc_20050204_8-KA_EX-10_3345577_EX-10_Affiliate Agreement",
+      "span_id": "cuad_419_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "This Agreement shall continue in force for a term of twelve (12) months from the Effective Date, unless terminated earlier under the provisions of this Article 8 (the \"Term\"); PROVIDED that TouchStar shall have the right to terminate this Agreement at any time after the Effective Date upon not less than fifteen (15) days' prior written notice to Reseller.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.312020999798278,
+      "contract_id": "WORLDWIDESTRATEGIESINC_11_02_2005-EX-10-RESELLER AGREEMENT",
+      "span_id": "cuad_57_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "This contract shall remain in effect initially for the five (5) year term (\"Initial Term\") from the date signed and shall be automatically extended for one (1) year periods after the Initial Term (\"Renewal Term\") unless (i) either party provides written notice of its intention not to renew the Agreement within 180 days prior to any Renewal Term; or (ii) this Agreement is otherwise terminated pursuant to the terms of this Section 12.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.255415989956377,
+      "contract_id": "SmartRxSystemsInc_20180914_1-A_EX1A-6 MAT CTRCT_11351705_EX1A-6 MAT CTRCT_Distributor Agreement",
+      "span_id": "cuad_311_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    }
+  ],
+  "shortest_wrong_predictions": [
+    {
+      "text": "[ ] day of [ ], 2020",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.5405188232205258,
+      "contract_id": "ArconicRolledProductsCorp_20191217_10-12B_EX-2.7_11923804_EX-2.7_Trademark License Agreement",
+      "span_id": "cuad_94_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "[·] day of [·], 2019",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.40257353294722453,
+      "contract_id": "MorganStanleyDirectLendingFund_20191119_10-12GA_EX-10.5_11898508_EX-10.5_Trademark License Agreement",
+      "span_id": "cuad_174_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "19 DAY OF MAY , 2010",
+      "true_label": "Terms",
+      "predicted_label": "Amendments",
+      "confidence": -0.5674278995189136,
+      "contract_id": "WASTE2ENERGYHOLDINGS,INC_06_03_2010-EX-10.2-STRATEGIC ALLIANCE AGREEMENT",
+      "span_id": "cuad_56_0_3_1",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "1st day of June, 1999",
+      "true_label": "Terms",
+      "predicted_label": "Expenses",
+      "confidence": -0.6812353985614195,
+      "contract_id": "DYNTEKINC_07_30_1999-EX-10-ONLINE HOSTING AGREEMENT",
+      "span_id": "cuad_425_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "February ____, 2017 (",
+      "true_label": "Terms",
+      "predicted_label": "Waivers",
+      "confidence": -0.7029462347949649,
+      "contract_id": "ELECTRAMECCANICA VEHICLES CORP. - Manufacturing Agreement",
+      "span_id": "cuad_76_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "2nd day of June, 2008",
+      "true_label": "Terms",
+      "predicted_label": "Expenses",
+      "confidence": -0.7162920370016248,
+      "contract_id": "MidwestEnergyEmissionsCorp_20080604_8-K_EX-10.2_3093976_EX-10.2_Content License Agreement",
+      "span_id": "cuad_500_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "15th day of May, 2013",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.44099426600205555,
+      "contract_id": "SEASPINEHOLDINGSCORP_10_10_2018-EX-10.1-SUPPLY AGREEMENT",
+      "span_id": "cuad_417_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "14th day of May, 1999",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.4588636975624105,
+      "contract_id": "STAMPSCOMINC_06_24_1999-EX-10.18-SPONSORSHIP AGREEMENT",
+      "span_id": "cuad_362_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "20th day of March 2002",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.5149190349745303,
+      "contract_id": "HOLIDAYRVSUPERSTORESINC_04_15_2002-EX-10.13-ENDORSEMENT AGREEMENT",
+      "span_id": "cuad_291_0_3_1",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "7th day of April, 2003",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.599481776940646,
+      "contract_id": "VISIUMTECHNOLOGIES,INC_10_20_2004-EX-10.20-DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_369_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "15th day of June, 2015",
+      "true_label": "Terms",
+      "predicted_label": "Waivers",
+      "confidence": -0.380120476871088,
+      "contract_id": "NakedBrandGroupInc_20150731_POS AM (on S-1)_EX-10.75_9196027_EX-10.75_Endorsement Agreement",
+      "span_id": "cuad_473_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "1s t day of June, 2004",
+      "true_label": "Terms",
+      "predicted_label": "Expenses",
+      "confidence": -0.6812353985614195,
+      "contract_id": "ASIANDRAGONGROUPINC_08_11_2005-EX-10.5-Reseller Agreement",
+      "span_id": "cuad_442_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "7th day of April, 2017",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.5779952693657091,
+      "contract_id": "BravatekSolutionsInc_20170418_8-K_EX-10.1_10205739_EX-10.1_Reseller Agreement",
+      "span_id": "cuad_273_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "16 day of August. 2012",
+      "true_label": "Terms",
+      "predicted_label": "Amendments",
+      "confidence": -0.4157164613858457,
+      "contract_id": "LIGHTBRIDGECORP_11_23_2015-EX-10.26-STRATEGIC ALLIANCE AGREEMENT",
+      "span_id": "cuad_196_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "10 day of January 2019",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.3223575354142646,
+      "contract_id": "EMERALDHEALTHTHERAPEUTICSINC_06_10_2020-EX-4.5-CONSULTING AGREEMENT - DR. GAETANO MORELLO N.D. INC.",
+      "span_id": "cuad_488_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "2nd day of January 2020",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.4357000767264173,
+      "contract_id": "GLOBALTECHNOLOGIESLTD_06_08_2020-EX-10.16-CONSULTING AGREEMENT",
+      "span_id": "cuad_29_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "the date of the Closing",
+      "true_label": "Terms",
+      "predicted_label": "Survival",
+      "confidence": -0.4305743371756796,
+      "contract_id": "GpaqAcquisitionHoldingsInc_20200123_S-4A_EX-10.6_11951677_EX-10.6_License Agreement",
+      "span_id": "cuad_146_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "31st day of March, 1998",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.2735069210986044,
+      "contract_id": "GSVINC_05_15_1998-EX-10-SPONSORSHIP AGREEMENT",
+      "span_id": "cuad_173_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "26 day of January, 2007",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.1949202795728181,
+      "contract_id": "OFGBANCORP_03_28_2007-EX-10.23-OUTSOURCING AGREEMENT",
+      "span_id": "cuad_348_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "6t h day of March, 2006",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": -0.2735069210986044,
+      "contract_id": "TubeMediaCorp_20060310_8-K_EX-10.1_513921_EX-10.1_Affiliate Agreement",
+      "span_id": "cuad_490_0_3_0",
+      "label_original": "Effective Date"
+    }
+  ],
+  "longest_wrong_predictions": [
+    {
+      "text": "Notwithstanding the foregoing, to the extent that the Services to be provided with respect to any Account which is registered as an investment company under the 1940 Act (herein referred to as a \"registered investment company\") are services referred to in the definition of \"investment advisor\" under Section 202(a)(11) of the Investment Company Act of 1940 (herein referred to as \"investment advisory services\"), then with respect to such Account, this Agreement: (i) shall not commence until the effective date of its approval by the board of directors or trustees (\"Board\") of such Account; (ii) shall continue from year to year thereafter, subject to the provisions for termination and all other terms and conditions hereof, only if such continuation shall be specifically approved at least annually by a majority of the Board, including a majority of the members of the Board who are not parties to this Agreement or interested persons of any such party (other than as members of the Board) cast in person at a meeting called for that purpose; (iii) may be terminated at any time without the payment of any penalty by the Board or by a vote of a majority of the outstanding voting securities (as defined in Section 2(a)(42) of the 1940 Act) of the Account on 60 days' written notice to the Adviser; (iv) shall automatically terminate in the event of (A) its assignment (as defined in the 1940 Act) or (B) termination of the Advisory Agreement for any reason whatsoever.",
+      "true_label": "Terms",
+      "predicted_label": "Terminations",
+      "confidence": -0.4031468332184951,
+      "contract_id": "FEDERATEDGOVERNMENTINCOMESECURITIESINC_04_28_2020-EX-99.SERV AGREE-SERVICES AGREEMENT",
+      "span_id": "cuad_160_0_4_0",
+      "label_original": "Expiration Date"
+    },
+    {
+      "text": "Notwithstanding the foregoing, to the extent that the Services to be provided with respect to any Account which is registered as an investment company under the 1940 Act (herein referred to as a \"registered investment company\") are services referred to in the definition of \"investment advisor\" under Section 202(a)(11) of the Investment Company Act of 1940 (herein referred to as \"investment advisory services\"), then with respect to such Account, this Agreement: (i) shall not commence until the effective date of its approval by the board of directors or trustees (\"Board\") of such Account; (ii) shall continue from year to year thereafter, subject to the provisions for termination and all other terms and conditions hereof, only if such continuation shall be specifically approved at least annually by a majority of the Board, including a majority of the members of the Board who are not parties to this Agreement or interested persons of any such party (other than as members of the Board) cast in person at a meeting called for that purpose; (iii) may be terminated at any time without the payment of any penalty by the Board or by a vote of a majority of the outstanding voting securities (as defined in Section 2(a)(42) of the 1940 Act) of the Account on 60 days' written notice to the Adviser; (iv) shall automatically terminate in the event of (A) its assignment (as defined in the 1940 Act) or (B) termination of the Advisory Agreement for any reason whatsoever.",
+      "true_label": "Assignments",
+      "predicted_label": "Terminations",
+      "confidence": -0.4031468332184951,
+      "contract_id": "FEDERATEDGOVERNMENTINCOMESECURITIESINC_04_28_2020-EX-99.SERV AGREE-SERVICES AGREEMENT",
+      "span_id": "cuad_160_0_18_0",
+      "label_original": "Anti-Assignment"
+    },
+    {
+      "text": "as an insurance company in its respective jurisdiction of incorporation and is duly licensed or authorized as an insurer in each other jurisdiction where it is required to be so licensed or authorized to conduct its business, in each case with such exceptions as would not have, individually or in the aggregate, a Material Adverse Effect; except as otherwise described in the Disclosure Package, each Insurance Subsidiary has all other approvals, orders, consents, authorizations, licenses, certificates, permits, registrations and qualifications (collectively, the \"Approvals\") of and from all insurance regulatory authorities to conduct its business, with such exceptions as would not have, individually or in the aggregate, a Material Adverse Effect; there is no pending or, to the knowledge of the Company, threatened action, suit, proceeding or investigation that could reasonably be expected to lead to any revocation, termination or suspension of any such Approval, the revocation, termination or suspension of which would have, individually or in the aggregate, a Material Adverse Effect; and, to the knowledge of the Company, no insurance regulatory agency or body has issued any order or decree impairing, restricting or prohibiting the payment of dividends by any Insurance Subsidiary to its parent which would have, individually or in the aggregate, a Material Adverse Effect.",
+      "true_label": "Insurances",
+      "predicted_label": "Litigations",
+      "confidence": 0.16152903997182522,
+      "contract_id": "MetLife, Inc. - Remarketing Agreement",
+      "span_id": "cuad_10_0_38_1",
+      "label_original": "Insurance"
+    },
+    {
+      "text": "You further covenant and agree that, for a continuous period of two (2) years after (1) the expiration of this Agreement, (2) the non-renewal of this Agreement, (3) the termination of this Agreement, and/or (4) a transfer as contemplated in Section 16 above: 19.5.1 you will not directly or indirectly, for yourself, or through, on behalf of, or in conjunction with any person, firm, partnership, corporation, or other entity, sell, assign, lease, and/or transfer the Approved Location to any person, firm, partnership, corporation, or other entity that you know, or have reason to know, intends to operate a Competitive Business at the Approved Location; and 19.5.2 you will not solicit, divert, or attempt to solicit or divert any actual or potential business or customer of the Franchised Business to any Competitive Business. 19.5.3 You agree that, by the terms of any conveyance, selling, assigning, leasing or transferring your interest in the Approved Location, you shall include these restrictive covenants as necessary to ensure that a Competitive Business that would violate this Section is not operated at the Approved Location for this two-year period, and you will take all steps necessary to ensure that these restrictive covenants become a matter of public record.",
+      "true_label": "Assignments",
+      "predicted_label": "Confidentiality",
+      "confidence": -0.37592612079063625,
+      "contract_id": "GOOSEHEADINSURANCE,INC_04_02_2018-EX-10.6-Franchise Agreement",
+      "span_id": "cuad_470_0_18_0",
+      "label_original": "Anti-Assignment"
+    },
+    {
+      "text": "This Agreement shall terminate upon the earliest to occur of: (i) the date on which the aggregate Required Capital Contributions paid by the Investor, and received by the Borrowers, in accordance with the terms of this Agreement equal $5,000,000; (ii) the Release Date (as defined in Section 19) or (iii) payment in full, in cash, of all Obligations and the termination of the Financing Agreement; provided, however, that this Agreement shall continue to be effective, or be reinstated, as the case may be, if at any time the aggregate Required Capital Contributions paid by the Investor, and received by the Borrowers, in accordance with the terms of this Agreement is less than $5,000,000 and any payment, or any part thereof, on account of any of the Obligations is invalidated, declared to be fraudulent or preferential, set aside, rescinded or must otherwise be restored or returned by the Agent or the Lenders upon the insolvency, bankruptcy, liquidation, dissolution or reorganization of any Borrower or upon or as a result of the appointment of a receiver, intervenor or conservator of, or trustee or similar officer for any Borrower, or any substantial part of its property, or otherwise, all as though such payment had not been made.",
+      "true_label": "Terms",
+      "predicted_label": "Terminations",
+      "confidence": 0.8290213223394767,
+      "contract_id": "SUNTRONCORP_05_17_2006-EX-10.22-MAINTENANCE AGREEMENT",
+      "span_id": "cuad_482_0_4_0",
+      "label_original": "Expiration Date"
+    },
+    {
+      "text": "This Agreement shall commence on the Effective Date and, unless terminated earlier pursuant to Section 3.2 or 3.3 of this Agreement, shall continue until the twentieth (20th) anniversary of the Effective Date; provided, however, (i) Operator shall have the right to terminate this Agreement at any time upon no less than 120 days prior written notice to Owner, if Operator provides a substitute operator acceptable to Owner, as determined in its reasonable discretion, who (A) has experience operating similar assets, (B) has the ability to provide at least the same quality of service as Operator, (C) has the financial ability to perform the obligations hereunder, and (D) is ready, willing and able to execute an operation and maintenance agreement substantially similar to this Agreement and acceptable to Owner, as determined in its reasonable discretion, and (ii) Owner shall have the right to terminate this Agreement at any time upon no less than 120 days prior written notice to Operator.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 0.4674412754458199,
+      "contract_id": "SANDRIDGEENERGYINC_08_06_2009-EX-10.6-OPERATIONS AND MAINTENANCE AGREEMENT",
+      "span_id": "cuad_430_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "corporate structure or ownership of the Company, or (b) AIG sells the Company to an acquirer, in each case, (i) having a rating from at least one of S&P, Moody's, A.M. Best or a substitute agency, which is a nationally recognized statistical rating organization, that is at least equal to the lower of (x) AIG's then-current rating from such agency or (y) the Company's then-current rating as supported by this Agreement from such agency; or (ii) such that, immediately on the effective date of the modification of corporate structure or sale by AIG of the Company, the Company's capitalization is consistent with the minimum capital adequacy standards and criteria of at least one of S&P, Moody's, A.M. Best or a substitute agency, which is a nationally recognized statistical rating organization, for a rating that is equal to or better than the Company's then-current rating on the date immediately preceding such modification of corporate structure or sale.",
+      "true_label": "Notices",
+      "predicted_label": "Confidentiality",
+      "confidence": -0.6925897421532357,
+      "contract_id": "VARIABLESEPARATEACCOUNT_04_30_2014-EX-13.C-UNCONDITIONAL CAPITAL MAINTENANCE AGREEMENT",
+      "span_id": "cuad_74_0_6_1",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Technology Errors and Omissions Insurance with minimum limits of not less than $5,000,000, covering liabilities arising from errors, omission, etc., in rendering computer or information technology services including but not limited to (1) systems analysis (2) systems programming (3) data processing (4) systems integration (5) outsourcing including outsourcing development and design (6) systems design, consulting, development and modification (7) training services relating to computer software or hardware (8) management, repair and maintenance of computer products, networks and systems (9) marketing, selling, servicing, distributing, installing and maintaining computer hardware or software (10) data entry, modification, verification, maintenance, storage, retrieval or preparation of data output.",
+      "true_label": "Insurances",
+      "predicted_label": "General",
+      "confidence": -0.2733398478764274,
+      "contract_id": "CardlyticsInc_20180112_S-1_EX-10.16_11002987_EX-10.16_Maintenance Agreement1",
+      "span_id": "cuad_154_0_38_0",
+      "label_original": "Insurance"
+    },
+    {
+      "text": "Within ninety (90) days of our receipt of your notice to renew, we will furnish you with written notice of: (i) reasons which could cause us not to grant a renewal to you including but not limited to any deficiencies which require correction and a schedule for correction by you; and (ii) our then-current requirements relating to the image, appearance, decoration, furnishing, equipping and stocking of Buffalo Wild Wings businesses, and a schedule for effecting upgrading or modifications in order to bring the Franchised Restaurant in compliance, as a condition of renewal. Renewal of the franchise shall be conditioned upon your compliance with such requirements and continued compliance with all the terms and conditions of this Agreement up to the date of termination of the initial term.",
+      "true_label": "Terms",
+      "predicted_label": "Compliance With Laws",
+      "confidence": -0.32756064669785245,
+      "contract_id": "BUFFALOWILDWINGSINC_06_05_1998-EX-10.3-FRANCHISE AGREEMENT",
+      "span_id": "cuad_199_0_5_1",
+      "label_original": "Renewal Term"
+    },
+    {
+      "text": "This Agreement shall automatically terminate at and as of (the first to occur of): (a) 12:00 midnight, New York City time, on the 30th day after the Effective Date (if Purchaser has not commenced the Offer, with the unanimous consent of the Sponsors, by then); (b) the expiration of the Offer (if the Offer is not consummated pursuant to the terms of the Offer), subject to any extension or subsequent offering period; and (c) the expiration of the Interim Period (if the Offer is consummated pursuant to the terms of the Offer), in any case, unless sooner terminated by unanimous written consent of the Participating Sponsors; provided, however, that any liability for failure to comply with this Agreement shall survive any such termination.",
+      "true_label": "Terms",
+      "predicted_label": "Terminations",
+      "confidence": 0.08148446221156913,
+      "contract_id": "LOOKSMARTLTD_07_20_2012-EX-99.(D)(I)-SPONSORSHIP AGREEMENT",
+      "span_id": "cuad_448_0_4_0",
+      "label_original": "Expiration Date"
+    },
+    {
+      "text": "In the event that Manufacturer or any of its Affiliates, directly or indirectly, sells, assigns, leases, conveys, transfers or otherwise disposes of any Facility (a \"Facility Disposition\"), then Manufacturer shall immediately notify Customer of such event and Customer shall be entitled for a period of six (6) months after the receipt of such notice to terminate any Facility Addendum with respect to such Facility for cause immediately upon written notice to Manufacturer and, in the event Customer decides not to terminate the Facility Addendum for cause, Customer shall be entitled for a period of two (2) years (or such longer period in order to obtain approval for manufacture from all applicable Governmental Authorities) after",
+      "true_label": "Assignments",
+      "predicted_label": "Terminations",
+      "confidence": -0.3561306547169778,
+      "contract_id": "UpjohnInc_20200121_10-12G_EX-2.6_11948692_EX-2.6_Manufacturing Agreement_ Supply Agreement",
+      "span_id": "cuad_71_0_18_5",
+      "label_original": "Anti-Assignment"
+    },
+    {
+      "text": "This Agreement shall be effective until the earlier of (a) its termination in accordance with the provisions of this Article 14 or (b) the date that is two (2) years after the date of this Agreement; provided, however, that this Agreement will renew automatically for successive terms of one (1) year each unless a party to this Agreement delivers written notice of termination to the other party to this Agreement at least sixty (60) days prior to the end of the original or any renewal term or the parties to this Agreement do not agree in writing to the Quota Amount referred to in subsection 14.2(b)(1) for any one (1) year renewal term at least sixty (60) days prior to the commencement of such term.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 0.39802667723402707,
+      "contract_id": "NEONSYSTEMSINC_03_01_1999-EX-10.5-DISTRIBUTOR AGREEMENT_New",
+      "span_id": "cuad_340_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "With respect to Beacon Optofluidic Machines (including related Hardware and Software), Consumables and Services for which Ginkgo has placed a Purchase Order pursuant to this Agreement, the Parties agree to the BLI Terms and Conditions that apply with respect to Beacon Optofluidic Machines (including related Hardware and Software), Consumables and Services, unless, notwithstanding anything to the contrary set forth in the BLI Terms and Conditions (including any language regarding the treatment of additional or different terms set forth therein), a term in such BLI Terms and Conditions is inconsistent with a term in this Agreement, in which case this Agreement shall control, including as follows:",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 0.13123557185625345,
+      "contract_id": "BERKELEYLIGHTS,INC_06_26_2020-EX-10.12-COLLABORATION AGREEMENT",
+      "span_id": "cuad_418_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "The Term will automatically renew for successive additional periods of one (1) year each, provided that: (a) Distributor has made all Guaranteed Minimum Purchases and has complied with the marketing requirements under paragraph 4.1(b); (b) the parties have agreed in writing upon the Guaranteed Minimum Purchase amounts and Product price discounts for the next subsequent one (1) year renewal period; (c) neither party provided the other party with notice of such party's intention not to renew this Agreement at least thirty (30) days prior to any year's Expiration Date; and (d) neither party provided the other party with such notice as may be required pursuant to paragraphs 5.2, 5.3 or 5.4.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": -0.2107124519051765,
+      "contract_id": "EUROPEANMICROHOLDINGSINC_03_06_1998-EX-10.6-DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_379_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall continue until January 18, 2022, and thereafter shall continue automatically for successive annual periods ending on January 18th of each year, provided such continuance is specifically approved at least annually by (a) the Fund's Board of Trustees and (b) a vote of a majority (as defined in the 1940 Act) of the Fund's Trustees who are not interested persons (as defined in the 1940 Act) of the Fund and who have no direct or indirect financial interest in the operation of the Plan, in this Agreement, or any agreement related to the Plan (the \"Qualified Trustees\"), by vote cast in person at a meeting called for the purpose of voting on such approval.",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": 0.015918290995178164,
+      "contract_id": "IntegrityFunds_20200121_485BPOS_EX-99.E UNDR CONTR_11948727_EX-99.E UNDR CONTR_Service Agreement",
+      "span_id": "cuad_17_0_4_0",
+      "label_original": "Expiration Date"
+    },
+    {
+      "text": "This Agreement shall continue until January 18, 2022, and thereafter shall continue automatically for successive annual periods ending on January 18th of each year, provided such continuance is specifically approved at least annually by (a) the Fund's Board of Trustees and (b) a vote of a majority (as defined in the 1940 Act) of the Fund's Trustees who are not interested persons (as defined in the 1940 Act) of the Fund and who have no direct or indirect financial interest in the operation of the Plan, in this Agreement, or any agreement related to the Plan (the \"Qualified Trustees\"), by vote cast in person at a meeting called for the purpose of voting on such approval.",
+      "true_label": "Terms",
+      "predicted_label": "General",
+      "confidence": 0.015918290995178164,
+      "contract_id": "IntegrityFunds_20200121_485BPOS_EX-99.E UNDR CONTR_11948727_EX-99.E UNDR CONTR_Service Agreement",
+      "span_id": "cuad_17_0_5_0",
+      "label_original": "Renewal Term"
+    },
+    {
+      "text": "This Agreement is effective as of the Effective Date and will expire in accordance with Section 2.1, unless, upon the occurrence of any of the following events, this Agreement is earlier terminated in accordance with this Section 18.1: a) Customer delivers written notice of termination to Supplier at least [* * *] prior to the expiration date of the Initial Term, which termination shall be effective as of the expiration date of the Initial Term; b) either Party delivers written notice of termination to the other Party at least [* * *] prior to the expiration date of the Renewal Term, which termination shall be effective as of the expiration date of the Renewal Term;",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 0.9882524473699958,
+      "contract_id": "ParatekPharmaceuticalsInc_20170505_10-KA_EX-10.29_10323872_EX-10.29_Outsourcing Agreement",
+      "span_id": "cuad_478_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Notwithstanding the foregoing, if, at the expiry of this Agreement following the Initial Term or the Renewal Term (if any), as applicable, Licensor and Rogers have not executed a new agreement governing the VOD distribution and exhibition of Licensed Programs and Rogers (or its permitted assigns) continues to distribute and exhibit Licensed Programs on the ROD Service following such expiry, such continued distribution and exhibition shall be governed by the terms of this Agreement in effect at the time of expiry, except that each of Licensor and Rogers shall have the right, on sixty (60) days' prior written notice, to terminate this Agreement, as so extended.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": -0.38625083648878344,
+      "contract_id": "EuromediaHoldingsCorp_20070215_10SB12G_EX-10.B(01)_525118_EX-10.B(01)_Content License Agreement",
+      "span_id": "cuad_191_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "No transfer, amendment, waiver, supplement, assignment or other modification of this Transaction (other than the pledge of this Transaction to the Master Servicer pursuant to the Pooling and Servicing Agreement) shall be permitted by either party unless Moody's and Fitch have been provided notice of the same and confirm in writing (including by facsimile transmission) that they will not downgrade, qualify, withdraw or otherwise modify its then-current rating of the Certificates; provided however that except with respect to a transfer at the direction of UBS, nothing in this provision shall impose any obligation on UBS to give notice to any rating agency.",
+      "true_label": "Assignments",
+      "predicted_label": "Amendments",
+      "confidence": -0.5709474574772657,
+      "contract_id": "WELLSFARGOMORTGAGEBACKEDSECURITIES2006-6TRUST_05_11_2006-EX-10.3-Yield Maintenance Agreement",
+      "span_id": "cuad_96_0_18_0",
+      "label_original": "Anti-Assignment"
+    },
+    {
+      "text": "After the Initial Term (including any extension thereto made in accordance with the preceding sentence), the Agreement may be extended on a yearly basis up to ten (10) years at Vericel's sole discretion, with renewal notice to be provided to MediWound no later than twelve (12) months prior to the expiry of any yearly extension (the \"Renewal Term\", and the Initial Term, together with the Renewal Term, if any, the \"Term\"); provided that unless otherwise agreed by the Parties, the Term of this Agreement (including the Initial Term, any extension of the Initial Term and any Renewal Terms) shall be no more than fifteen (15) years in total.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.5681252162750905,
+      "contract_id": "VERICELCORP_08_06_2019-EX-10.10-SUPPLY AGREEMENT",
+      "span_id": "cuad_54_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    }
+  ],
+  "sample_error_table": [
+    {
+      "text": "Unless terminated sooner, the term of this Agreement shall begin on the Effective Date and continue for three (3) years thereafter (the \"Initial Term\") and shall automatically renew for additional one (1) year terms on the terms and conditions set forth herein (each a \"Renewal Term\" and collectively, the \"Term\") unless either party gives the other Party Notice of its intention to terminate this Agreement ninety (90) days before the end of the Initial Term or Renewal Term, if any.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 2.535042245874988,
+      "contract_id": "DUOSTECHNOLOGIESGROUP,INC_04_21_2009-EX-10.1-STRATEGIC ALLIANCE AGREEMENT",
+      "span_id": "cuad_350_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Subject to the other provisions of this Agreement, the term of this Agreement shall commence on the Effective Date and shall remain in effect until terminated by either Party upon thirty (30) days' prior written notice.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 2.023922003584677,
+      "contract_id": "ENERGYXXILTD_05_08_2015-EX-10.13-Transportation AGREEMENT",
+      "span_id": "cuad_151_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Subject to the other provisions of this Agreement, the term of this Agreement shall commence on the Effective Date and shall remain in effect until terminated by either Party upon thirty (30) days' prior written notice.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 2.023922003584677,
+      "contract_id": "ENERGYXXILTD_05_08_2015-EX-10.13-Transportation AGREEMENT",
+      "span_id": "cuad_151_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "This Agreement shall commence on the Effective Date and shall be valid for a period of five (5) years with automatic renewal of one year thereafter until terminated",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.8682134746025736,
+      "contract_id": "Apollo Endosurgery - Manufacturing and Supply Agreement",
+      "span_id": "cuad_224_0_6_1",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This agreement begins on the Commencement Date and, subject to clause 11.2, shall continue for an initial term of one (1) years (Initial Term) and indefinitely after that until terminated by either party giving at least twelve (12) months' prior written notice to expire on or after the expiry date of the initial term.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.8038952487822342,
+      "contract_id": "FuseMedicalInc_20190321_10-K_EX-10.43_11575454_EX-10.43_Distributor Agreement",
+      "span_id": "cuad_67_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This contract shall be for a term of one year commencing on the date first above written; thereafter, it shall automatically continue until terminated by either party upon not less than thirty (30) days prior written notice to the other party.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.6814848160984397,
+      "contract_id": "ENTERPRISEPRODUCTSPARTNERSLP_07_08_1998-EX-10.3-TRANSPORTATION CONTRACT",
+      "span_id": "cuad_422_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This contract shall be for a term of one year commencing on the date first above written; thereafter, it shall automatically continue until terminated by either party upon not less than thirty (30) days prior written notice to the other party.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.6814848160984397,
+      "contract_id": "ENTERPRISEPRODUCTSPARTNERSLP_07_08_1998-EX-10.3-TRANSPORTATION CONTRACT",
+      "span_id": "cuad_422_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "After the Initial Term (including any extension thereto made in accordance with the preceding sentence), the Agreement may be extended on a yearly basis up to ten (10) years at Vericel's sole discretion, with renewal notice to be provided to MediWound no later than twelve (12) months prior to the expiry of any yearly extension (the \"Renewal Term\", and the Initial Term, together with the Renewal Term, if any, the \"Term\"); provided that unless otherwise agreed by the Parties, the Term of this Agreement (including the Initial Term, any extension of the Initial Term and any Renewal Terms) shall be no more than fifteen (15) years in total.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.5681252162750905,
+      "contract_id": "VERICELCORP_08_06_2019-EX-10.10-SUPPLY AGREEMENT",
+      "span_id": "cuad_54_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The term of this Agreement is three years from and including the date of this Agreement (the \"Initial Term\"), with automatic renewal for additional successive one-year terms (each a \"Renewal Term\" and together wit the Initial Term, the \"Term\") unless no later than [* * *] days prior to the end of the Initial Term, or any Renewal Term either party notifies the other that it wishes to terminate this Agreement effective the end of the Initial Term or that Renewal Term, as applicable.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.5557410570147723,
+      "contract_id": "VAPOTHERM, INC. - Manufacturing and Supply Agreement",
+      "span_id": "cuad_194_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The initial term of this Agreement shall be for a period of five (5) years from the date first set forth above and shall thereafter automatically renew for additional two (2) year terms unless a party provides the other party with notice of non-renewal no less than 6 months prior to the expiration of the initial term or any renewal term unless earlier terminated as follows:",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.5452839145523938,
+      "contract_id": "NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_85_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The initial term of this Agreement shall be for a period of five (5) years from the date first set forth above and shall thereafter automatically renew for additional two (2) year terms unless a party provides the other party with notice of non-renewal no less than 6 months prior to the expiration of the initial term or any renewal term unless earlier terminated as follows:",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.5452839145523938,
+      "contract_id": "NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_85_0_15_1",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "This Agreement shall have an initial term of one (1) year from the date first above written (the \"Initial Term\"), and shall thereafter automatically renew for successive two (2) year periods (each a \"Renewal Term\"), unless earlier terminated in accordance with the terms of this Agreement.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.509179540218501,
+      "contract_id": "HYPERIONSOFTWARECORP_09_28_1994-EX-10.47-EXCLUSIVE DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_198_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall commence on the Effective Date and shall continue until the four-year anniversary of the Effective Date (such period, as it may be extended, either by the mutual written agreement of the parties or automatically, or earlier terminated being referred to as the \"Consultation Period\"), unless sooner terminated in accordance with the provisions of Section 4, and shall automatically renew for successive one-year periods, unless the Company provides 90 days' notice of termination before any such successive period.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.491101216119373,
+      "contract_id": "PANDIONTHERAPEUTICSHOLDCOLLC_05_22_2020-EX-10.17-CONSULTING AGREEMENT",
+      "span_id": "cuad_377_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The term of this Agreement shall be for one (1) year commencing on the Effective Date and automatically renewing annually thereafter, unless either party provides a thirty-day notice of written termination one to the other (\"Term\").",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.478309450870738,
+      "contract_id": "EcoScienceSolutionsInc_20171117_8-K_EX-10.1_10956472_EX-10.1_Endorsement Agreement",
+      "span_id": "cuad_156_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall commence on the Effective Date and continue in full force and effect until the end of the fifteenth (15th) Contract Year, and shall continue in full force and effect thereafter until terminated by either Party by providing thirty (30) calendar days' prior written notice of termination to the other Party (such fifteen (15) Contract Year period, as may be further extended as provided herein is referred to as the \"Term\").",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.4400071239968972,
+      "contract_id": "PenntexMidstreamPartnersLp_20150416_S-1A_EX-10.4_9042833_EX-10.4_Transportation Agreement",
+      "span_id": "cuad_98_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement may be executed in one or more counterparts, all of which counterparts shall be considered one and the same agreement, and shall become effective when one or more counterparts have been signed by each Party and delivered to the other Party.",
+      "true_label": "Terms",
+      "predicted_label": "Counterparts",
+      "confidence": 1.4290885041683856,
+      "contract_id": "CerenceInc_20191002_8-K_EX-10.4_11827494_EX-10.4_Intellectual Property Agreement",
+      "span_id": "cuad_14_0_3_0",
+      "label_original": "Effective Date"
+    },
+    {
+      "text": "This Agreement will commence on the Effective Date and continue for an Initial Term of five (5) years, and will automatically renew for additional periods of five (5) years unless one Party notifies the other of its intention not to renew, no less than 12 months prior to the expiration of the then-current term, unless terminated as permitted under this Agreement.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.3664074945884574,
+      "contract_id": "BELLRINGBRANDS,INC_02_07_2020-EX-10.18-MASTER SUPPLY AGREEMENT",
+      "span_id": "cuad_107_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall become effective on the Effective Date and shall continue in effect until either Party informs the other Party with thirty (30) day prior written notice of termination of this Agreement.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.3500124870889194,
+      "contract_id": "UnionDentalHoldingsInc_20050204_8-KA_EX-10_3345577_EX-10_Affiliate Agreement",
+      "span_id": "cuad_419_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "This Agreement shall continue in force for a term of twelve (12) months from the Effective Date, unless terminated earlier under the provisions of this Article 8 (the \"Term\"); PROVIDED that TouchStar shall have the right to terminate this Agreement at any time after the Effective Date upon not less than fifteen (15) days' prior written notice to Reseller.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.312020999798278,
+      "contract_id": "WORLDWIDESTRATEGIESINC_11_02_2005-EX-10-RESELLER AGREEMENT",
+      "span_id": "cuad_57_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "This contract shall remain in effect initially for the five (5) year term (\"Initial Term\") from the date signed and shall be automatically extended for one (1) year periods after the Initial Term (\"Renewal Term\") unless (i) either party provides written notice of its intention not to renew the Agreement within 180 days prior to any Renewal Term; or (ii) this Agreement is otherwise terminated pursuant to the terms of this Section 12.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.255415989956377,
+      "contract_id": "SmartRxSystemsInc_20180914_1-A_EX1A-6 MAT CTRCT_11351705_EX1A-6 MAT CTRCT_Distributor Agreement",
+      "span_id": "cuad_311_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall terminate (a) at the option of any party, upon 90 days' advance written notice to the other parties hereto; or (b) in the event of a material breach that has not been cured within ten days following a written notice of breach to the breaching party.",
+      "true_label": "Terms",
+      "predicted_label": "Terminations",
+      "confidence": 1.2545211808350936,
+      "contract_id": "TALCOTTRESOLUTIONLIFEINSURANCECO-SEPARATEACCOUNTTWELVE_04_30_2020-EX-99.8(L)-SERVICE AGREEMENT",
+      "span_id": "cuad_455_0_4_0",
+      "label_original": "Expiration Date"
+    },
+    {
+      "text": "Unless this Agreement is terminated pursuant to Section 25, this Agreement will automatically renew for additional successive [***] terms (each a \"Renewal Term\" and together with the Initial Term, the \"Term\") unless and until either Party provides written notice of non-renewal to the other Party at least [***] prior to the end of the then-current Term.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.2254518224280417,
+      "contract_id": "PHREESIA,INC_05_28_2019-EX-10.18-STRATEGIC ALLIANCE AGREEMENT",
+      "span_id": "cuad_253_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "AIG shall have the absolute right to terminate this Agreement upon thirty (30) days' prior written notice to the Company, which notice shall state the effective date of termination (the \"Termination Date\"); provided, however, that AIG agrees not to terminate this Agreement unless (a) AIG significantly modifies the",
+      "true_label": "Notices",
+      "predicted_label": "Terminations",
+      "confidence": 1.2076065765027209,
+      "contract_id": "VARIABLESEPARATEACCOUNT_04_30_2014-EX-13.C-UNCONDITIONAL CAPITAL MAINTENANCE AGREEMENT",
+      "span_id": "cuad_74_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Unless sooner terminated in accordance with the provisions hereof, the initial term of this Agreement (\"Initial Term\") will be ten (10) years from the Effective Date, provided that at any time following the 7th anniversary of such date, either party may terminate such strategic alliance upon not less than 60 days' prior written notice to the other party.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.2011380425639926,
+      "contract_id": "REWALKROBOTICSLTD_07_10_2014-EX-10.2-STRATEGIC ALLIANCE AGREEMENT",
+      "span_id": "cuad_97_0_15_1",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "This Agreement shall be automatically renewed for successive three (3) year terms thereafter (each a \"Renewal Term\" and together with the Initial Term, the \"Term\") until and unless (i) either Party provides the other Party written notice of non-renewal no later than ninety (90) days prior the end of the Initial Term or any Renewal Term or (ii) earlier terminated as provided in this ARTICLE 11.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.1873890226399526,
+      "contract_id": "SigaTechnologiesInc_20190603_8-K_EX-10.1_11695818_EX-10.1_Promotion Agreement",
+      "span_id": "cuad_268_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The terms of this Agreement shall be one year from the effective date and will be automatically renewed on each anniversary of the effective date, for a renewal term of one year unless either party provides written notification of its intention not to renew this Agreement at least one month prior to the expiration of the initial or any renewal terms.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.1840865633987163,
+      "contract_id": "ETELOS,INC_03_09_2004-EX-10.8-DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_260_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Following the Initial Term, the Agreement shall automatically be renewed for additional periods of **** (each, a \"Renewal Term,\" and, together with the Initial Term, the \"Term\")), unless a Party provides written notification of non-renewal to the other Party at least **** of the Initial Term or a Renewal Term.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.1808326674851246,
+      "contract_id": "KitovPharmaLtd_20190326_20-F_EX-4.15_11584449_EX-4.15_Manufacturing Agreement",
+      "span_id": "cuad_381_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Upon expiration of the Initial Term, this Agreement shall automatically renew for consecutive one (1) year periods, unless terminated by Reseller within sixty (60) days prior to the expiration of the Initial Term or any renewal term, as the case may be (the Initial Term and each renewal term, collectively, the \"Term\").",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.1472541173773019,
+      "contract_id": "DIVERSINETCORP_03_01_2012-EX-4-RESELLER AGREEMENT",
+      "span_id": "cuad_279_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Unless otherwise terminated as provided herein, the initial term of this Agreement shall be three (3) years from the Effective Date and shall thereafter be automatically renewed for subsequent one (1) year periods unless either party notifies the other in writing of its election not to renew the Agreement at least one hundred twenty (120) days prior to the expiration of the then-current term.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.130354192692585,
+      "contract_id": "VISIUMTECHNOLOGIES,INC_10_20_2004-EX-10.20-DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_369_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The initial term of this Agreement and any renewal term thereof shall be automatically extended at the end of the initial term and any renewal term thereof for an additional one (1) year period unless either Party notifies the other Party not less than six (6) months before the end of the then in effect term of its intent to terminate this Agreement",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.110645363624148,
+      "contract_id": "RitterPharmaceuticalsInc_20200313_S-4A_EX-10.54_12055220_EX-10.54_Development Agreement",
+      "span_id": "cuad_149_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall automatically continue following the Initial Term, for an additional period of three (3) years, unless a party to this Agreement provides written notice of termination to the other parties at least sixty (60) days prior to the expiration of the Initial Term or this Agreement (\"Extended Term\" and, with the Initial Term, \"Term\").",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.074879047932371,
+      "contract_id": "TomOnlineInc_20060501_20-F_EX-4.46_749700_EX-4.46_Co-Branding Agreement",
+      "span_id": "cuad_185_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The Term will be 3 years from Effective Date with an automatic 2 year term extensions unless otherwise advised by one of the Parties.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.066281621062906,
+      "contract_id": "HEMISPHERX - Sales, Marketing, Distribution, and Supply Agreement",
+      "span_id": "cuad_183_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "At any time that there is no uncompleted Statement of Work outstanding, either party may terminate this Agreement for any or no reason upon fifteen (15) days advance notice to the other.",
+      "true_label": "Terms",
+      "predicted_label": "Terminations",
+      "confidence": 1.0618107543804736,
+      "contract_id": "MERITLIFEINSURANCECO_06_19_2020-EX-10.(XIV)-MASTER SERVICES AGREEMENT",
+      "span_id": "cuad_506_0_4_1",
+      "label_original": "Expiration Date"
+    },
+    {
+      "text": "Unless earlier terminated as provided herein, this Agreement continues in effect for an initial term of seven (7) years (\"Initial Term\") and will automatically renew for one or more annual periods after the Initial Term (each a \"Renewal Term\") unless either party gives notice of non-renewal at least one hundred eighty (180) days prior to the beginning of any Renewal Term.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.0458643878756488,
+      "contract_id": "ENERGOUSCORP_03_16_2017-EX-10.24-STRATEGIC ALLIANCE AGREEMENT",
+      "span_id": "cuad_38_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The term of this Agreement shall commence on the Effective Date and shall end on the 60th day following a written notice from one party to the other of its decision to terminate this Agreement at the end of such 60-day period or upon termination of the applicable Distribution Agreement with respect to a Fund.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.0378431169467741,
+      "contract_id": "CcRealEstateIncomeFundadv_20181205_POS 8C_EX-99.(H)(3)_11447739_EX-99.(H)(3)_Marketing Agreement",
+      "span_id": "cuad_503_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "This Agreement shall automatically terminate in the event the Management Agreement is assigned or otherwise terminated.",
+      "true_label": "Assignments",
+      "predicted_label": "Terminations",
+      "confidence": 1.034934803098361,
+      "contract_id": "PFSFUNDS_06_26_2020-EX-99.H OTH MAT CONT-SERVICES AGREEMENT",
+      "span_id": "cuad_457_0_18_0",
+      "label_original": "Anti-Assignment"
+    },
+    {
+      "text": "Each Insurance Subsidiary is in compliance with and conducts its businesses in conformity with all applicable insurance laws and regulations of its respective jurisdiction of incorporation and the insurance laws and regulations of other jurisdictions which are applicable to it, in each case with such exceptions as would not have, individually or in the aggregate, a Material Adverse Effect.",
+      "true_label": "Insurances",
+      "predicted_label": "Compliance With Laws",
+      "confidence": 1.0330357523006857,
+      "contract_id": "MetLife, Inc. - Remarketing Agreement",
+      "span_id": "cuad_10_0_38_2",
+      "label_original": "Insurance"
+    },
+    {
+      "text": "Unless earlier terminated as provided in this Agreement, upon the expiration of the Support Period, this Agreement shall immediately and automatically terminate in its entirety and no Party shall have any further rights or obligations under this Agreement; provided, however, (i) that this Section 8 shall survive any such termination and (ii) no Party shall be released from any breach of this Agreement that occurred prior to the termination of this Agreement.",
+      "true_label": "Terms",
+      "predicted_label": "Terminations",
+      "confidence": 1.0324067355872915,
+      "contract_id": "ELFBEAUTY,INC_07_02_2020-EX-10.1-COOPERATION AGREEMENT",
+      "span_id": "cuad_127_0_4_0",
+      "label_original": "Expiration Date"
+    },
+    {
+      "text": "\"Distribution Term\" means the period commencing on the first Regulatory Approval of the Product in the Territory and continuing until [***], or if this Agreement is terminated earlier pursuant to Article 12, the effective date of such termination.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 1.0320881291846606,
+      "contract_id": "ZogenixInc_20190509_10-Q_EX-10.2_11663313_EX-10.2_Distributor Agreement",
+      "span_id": "cuad_216_0_15_1",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "This Agreement will automatically renew for successive one year terms (each a \"Renewal Term\", and together with the Initial Term, the \"Term\"), unless either Charterer or Owner elects not to renew this Agreement by providing the other party with written notice of such election 30 days prior to the expiration of the Initial Term or Renewal Term, as applicable, at which point this Agreement will automatically terminate.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.0189521206886254,
+      "contract_id": "MARTINMIDSTREAMPARTNERSLP_01_23_2004-EX-10.3-TRANSPORTATION SERVICES AGREEMENT",
+      "span_id": "cuad_116_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Thereafter, the Agreement shall be automatically renewed for additional two year periods (each a \"Renewal Term\", the Initial Term and all Renewal Terms, the \"Term\") unless either Party notifies the other Party of its intention not to renew in writing at least three calendar months before the expiration of the then current Term.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 1.011541505032623,
+      "contract_id": "ULTRAGENYXPHARMACEUTICALINC_12_23_2013-EX-10.9-SUPPLY AGREEMENT",
+      "span_id": "cuad_239_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement is effective as of the Effective Date and will expire in accordance with Section 2.1, unless, upon the occurrence of any of the following events, this Agreement is earlier terminated in accordance with this Section 18.1: a) Customer delivers written notice of termination to Supplier at least [* * *] prior to the expiration date of the Initial Term, which termination shall be effective as of the expiration date of the Initial Term; b) either Party delivers written notice of termination to the other Party at least [* * *] prior to the expiration date of the Renewal Term, which termination shall be effective as of the expiration date of the Renewal Term;",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 0.9882524473699958,
+      "contract_id": "ParatekPharmaceuticalsInc_20170505_10-KA_EX-10.29_10323872_EX-10.29_Outsourcing Agreement",
+      "span_id": "cuad_478_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "The Services Term of this Agreement shall be automatically renewed for successive two-year terms thereafter unless written notice is given by either party to the other, indicating that party's intention not to renew the Services Term of this Agreement, at least ninety (90) days prior to the end of the initial Services Term or any renewed Services Term.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 0.936649599708584,
+      "contract_id": "EmeraldHealthBioceuticalsInc_20200218_1-A_EX1A-6 MAT CTRCT_11987205_EX1A-6 MAT CTRCT_Development Agreement",
+      "span_id": "cuad_360_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Upon the occurrence of any of the following, WGT may terminate the Term by giving Distributor written notice of such termination for:",
+      "true_label": "Assignments",
+      "predicted_label": "Terminations",
+      "confidence": 0.9336931436648854,
+      "contract_id": "EUROPEANMICROHOLDINGSINC_03_06_1998-EX-10.6-DISTRIBUTOR AGREEMENT",
+      "span_id": "cuad_379_0_18_1",
+      "label_original": "Anti-Assignment"
+    },
+    {
+      "text": "This Agreement will automatically renew at the end of the Initial Term or a subsequent renewal term on a year to year basis (each, a \"Renewal Term\"), unless either party notifies the other at least 30 days prior to the end of the Initial Term or then current Renewal Term, as applicable, of its intention not to renew this Agreement.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 0.9327936517364421,
+      "contract_id": "PaperexchangeComInc_20000322_S-1A_EX-10.4_5202103_EX-10.4_Co-Branding Agreement",
+      "span_id": "cuad_322_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "Following the Initial Term, this Agreement shall automatically renew for successive terms of six (6) months (each a \"Renewal Term\", and together with the Initial Term, the \"Term\") unless written notice is given by either Party no later than thirty (30) days in advance of the expiration of the Initial Term or the applicable Renewal Term.",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 0.927187154343369,
+      "contract_id": "XpresspaGroupInc_20190401_10-K_EX-10.28_11599457_EX-10.28_Marketing Agreement",
+      "span_id": "cuad_410_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "This Agreement shall be in effect until March 18. 2021, unless sooner terminated by either party upon (30) days written notice, without cause.",
+      "true_label": "Terminations",
+      "predicted_label": "Terms",
+      "confidence": 0.9232105740635428,
+      "contract_id": "PrecheckHealthServicesInc_20200320_8-K_EX-99.2_12070169_EX-99.2_Distributor Agreement",
+      "span_id": "cuad_101_0_15_0",
+      "label_original": "Termination For Convenience"
+    },
+    {
+      "text": "Thereafter, this Agreement shall renew automatically for one (1) additional three (3) year period (the \"Renewal Term\" and collectively, together with the Initial Term, the \"Term\") unless either party provides the other with written notice of non-renewal at least ninety (90) days before the expiration of the Initial Term].",
+      "true_label": "Notices",
+      "predicted_label": "Terms",
+      "confidence": 0.9106560024481094,
+      "contract_id": "GopageCorp_20140221_10-K_EX-10.1_8432966_EX-10.1_Content License Agreement",
+      "span_id": "cuad_77_0_6_0",
+      "label_original": "Notice Period To Terminate Renewal"
+    },
+    {
+      "text": "ISO may terminate this Agreement prior to its expiration for cause upon prior written notice to SERVICERS as follows:",
+      "true_label": "Assignments",
+      "predicted_label": "Terminations",
+      "confidence": 0.8872572633357241,
+      "contract_id": "IPAYMENT,INC_05_14_2007-EX-10.1-SPONSORSHIP AGREEMENT",
+      "span_id": "cuad_323_0_18_2",
+      "label_original": "Anti-Assignment"
+    },
+    {
+      "text": "SERVICERS may terminate this Agreement prior to its expiration for cause upon prior written notice to ISO as follows:",
+      "true_label": "Assignments",
+      "predicted_label": "Terminations",
+      "confidence": 0.8872572633357241,
+      "contract_id": "IPAYMENT,INC_05_14_2007-EX-10.1-SPONSORSHIP AGREEMENT",
+      "span_id": "cuad_323_0_18_4",
+      "label_original": "Anti-Assignment"
+    }
+  ]
+}

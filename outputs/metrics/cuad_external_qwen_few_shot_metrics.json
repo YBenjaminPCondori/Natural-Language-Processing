@@ -1,0 +1,13 @@
+{
+  "created_at_utc": "2026-05-04T19:50:35.195343+00:00",
+  "status": "skipped",
+  "model_name": "qwen_few_shot",
+  "dataset_name": "CUAD_external",
+  "accuracy": null,
+  "macro_f1": null,
+  "weighted_f1": null,
+  "num_samples": 2878,
+  "num_labels": 0,
+  "notes": "CUAD external prompting was not run because the LEDGAR prompting stage does not save a reusable local model/tokenizer artifact. Run a dedicated CUAD prompting job with the model loaded to evaluate it.",
+  "reason": "CUAD external prompting was not run because the LEDGAR prompting stage does not save a reusable local model/tokenizer artifact. Run a dedicated CUAD prompting job with the model loaded to evaluate it."
+}

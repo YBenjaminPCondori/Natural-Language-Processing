@@ -16,6 +16,7 @@ import pandas as pd
 
 from .data_setup import ProjectPaths, normalise_whitespace, write_json
 from .evaluation import safe_name
+from .preprocessing import write_preprocessing_rundown
 
 
 STANDARD_PREDICTION_COLUMNS = [
@@ -425,8 +426,50 @@ def export_hyperparameters(
             "value": ngram_ranges if ngram_ranges is not None else "",
             "notes": "Classical feature grid.",
         },
-        {"component": "tfidf", "parameter": "lowercase", "value": True, "notes": "Set in modules/classical_models.py."},
+        {
+            "component": "preprocessing",
+            "parameter": "html_entity_cleanup",
+            "value": True,
+            "notes": "Applied before schema-preserving LEDGAR export.",
+        },
+        {
+            "component": "preprocessing",
+            "parameter": "legal_safe_lowercase_tokeniser",
+            "value": True,
+            "notes": "Lab-grounded regex tokenisation with lowercasing for sparse features.",
+        },
+        {
+            "component": "preprocessing",
+            "parameter": "negation_aware_tokeniser",
+            "value": "default for classical TF-IDF",
+            "notes": "Prefixes the token immediately after no/not/never.",
+        },
+        {
+            "component": "preprocessing",
+            "parameter": "stopword_removal",
+            "value": False,
+            "notes": "Skipped because legal cues such as not/no/shall/without can be label-critical.",
+        },
+        {
+            "component": "preprocessing",
+            "parameter": "bpe_inspection",
+            "value": "training-split samples",
+            "notes": "Used as a teaching/OOV inspection step, not as the final classifier representation.",
+        },
+        {
+            "component": "tfidf",
+            "parameter": "tokenizer",
+            "value": "negation_aware",
+            "notes": "Set in modules/classical_models.py.",
+        },
+        {
+            "component": "tfidf",
+            "parameter": "lowercase",
+            "value": False,
+            "notes": "Lowercasing is handled inside the lab-grounded tokenizer.",
+        },
         {"component": "tfidf", "parameter": "stop_words", "value": None, "notes": "Legal stopwords are retained."},
+        {"component": "tfidf", "parameter": "token_pattern", "value": None, "notes": "Disabled because a custom tokenizer is used."},
         {"component": "logistic_regression", "parameter": "max_iter", "value": 2000, "notes": "Set in modules/classical_models.py."},
         {
             "component": "logistic_regression",
@@ -658,11 +701,208 @@ def _copy_figure(source: Path | None, targets: list[Path]) -> Path | None:
     return copied
 
 
-def _find_first_existing(candidates: list[Path]) -> Path | None:
+def _find_first_existing(candidates: list[Path | None]) -> Path | None:
     for candidate in candidates:
-        if candidate.exists():
+        if candidate is not None and candidate.exists():
             return candidate
     return None
+
+
+def _read_csv_if_exists(path: Path | None) -> pd.DataFrame:
+    if path is None or not path.exists():
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return pd.DataFrame()
+
+
+def _latest_transformer_hpt_file(paths: ProjectPaths, filename: str) -> Path | None:
+    candidates = sorted(
+        (paths.results_dir / "transformer_hpt").glob(f"*/{filename}"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    return candidates[0] if candidates else None
+
+
+def export_hpt_report_aliases(paths: ProjectPaths) -> dict[str, Path | None]:
+    """Write report-facing HPT filenames from the canonical pipeline outputs."""
+    outputs_dir = paths.project_root / "outputs"
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+
+    source_sweep = _find_first_existing(
+        [
+            outputs_dir / "hyperparameter_search_results.csv",
+            _latest_transformer_hpt_file(paths, "hyperparameter_search_results.csv"),
+        ]
+    )
+    sweep_path = outputs_dir / "sweep_results.csv"
+    if source_sweep is not None and source_sweep.exists():
+        shutil.copy2(source_sweep, sweep_path)
+    elif not sweep_path.exists():
+        pd.DataFrame(
+            columns=[
+                "stage",
+                "trial_number",
+                "model_name",
+                "status",
+                "validation_macro_f1",
+                "test_macro_f1",
+                "reason",
+            ]
+        ).to_csv(sweep_path, index=False)
+
+    source_best = _find_first_existing(
+        [
+            outputs_dir / "best_transformer_configs.json",
+            _latest_transformer_hpt_file(paths, "best_transformer_configs.json"),
+        ]
+    )
+    best_path = outputs_dir / "best_hyperparameters.json"
+    if source_best is not None and source_best.exists():
+        try:
+            payload = json.loads(source_best.read_text(encoding="utf-8"))
+        except Exception:
+            payload = {"source": _safe_relative(source_best, paths.project_root)}
+        write_json(best_path, payload)
+    else:
+        sweep_df = _read_csv_if_exists(sweep_path)
+        completed = sweep_df[sweep_df.get("validation_macro_f1").notna()].copy() if not sweep_df.empty else pd.DataFrame()
+        if not completed.empty:
+            best = completed.sort_values("validation_macro_f1", ascending=False).iloc[0].to_dict()
+            write_json(best_path, {"best_validation_trial": best})
+        elif not best_path.exists():
+            write_json(best_path, {"status": "unavailable", "reason": "No completed HPT run found."})
+
+    summary_rows = []
+    sweep_df = _read_csv_if_exists(sweep_path)
+    if not sweep_df.empty and "validation_macro_f1" in sweep_df:
+        stage_column = "stage" if "stage" in sweep_df else "model_name"
+        for stage, stage_df in sweep_df.groupby(stage_column, dropna=False):
+            completed = stage_df[stage_df["validation_macro_f1"].notna()]
+            summary_rows.append(
+                {
+                    "stage": stage,
+                    "search_method": "random" if "random" in str(stage).lower() else "bayesian" if "bayes" in str(stage).lower() else "configured",
+                    "trials": int(len(stage_df)),
+                    "completed_trials": int(len(completed)),
+                    "best_validation_macro_f1": float(completed["validation_macro_f1"].max()) if not completed.empty else pd.NA,
+                }
+            )
+    hpt_summary = outputs_dir / "hpt_summary.csv"
+    pd.DataFrame(summary_rows).to_csv(hpt_summary, index=False)
+
+    return {"sweep_results": sweep_path, "best_hyperparameters": best_path, "hpt_summary": hpt_summary}
+
+
+def plot_pipeline_overview(output_path: Path) -> Path:
+    """Save the high-level pipeline figure referenced by report.tex."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(11, 3.5))
+    ax.axis("off")
+    labels = [
+        "LEDGAR\nraw splits",
+        "Cell-by-cell\npreprocessing",
+        "BoW / TF-IDF\nfeatures",
+        "Classical and\ntransformer models",
+        "Validation\nselection",
+        "Test evaluation\nand report exports",
+    ]
+    xs = [0.08, 0.245, 0.41, 0.575, 0.74, 0.905]
+    for index, (x, label) in enumerate(zip(xs, labels), start=1):
+        ax.text(
+            x,
+            0.55,
+            label,
+            ha="center",
+            va="center",
+            bbox={"boxstyle": "round,pad=0.42", "facecolor": "#f3f6f8", "edgecolor": "#31485f", "linewidth": 1.1},
+            fontsize=9,
+        )
+        ax.text(x, 0.83, f"{index}", ha="center", va="center", fontsize=9, color="#31485f", fontweight="bold")
+    for start, end in zip(xs[:-1], xs[1:]):
+        ax.annotate(
+            "",
+            xy=(end - 0.07, 0.55),
+            xytext=(start + 0.07, 0.55),
+            arrowprops={"arrowstyle": "->", "color": "#31485f", "linewidth": 1.2},
+        )
+    ax.text(
+        0.245,
+        0.18,
+        "HTML/entities, whitespace, regex tokens, legal-safe lowercase, negation-aware tokens, BPE inspection",
+        ha="center",
+        va="center",
+        fontsize=8,
+        color="#4d5f6c",
+    )
+    ax.text(
+        0.41,
+        0.18,
+        "CountVectorizer and TF-IDF unigrams/bigrams",
+        ha="center",
+        va="center",
+        fontsize=8,
+        color="#4d5f6c",
+    )
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return output_path
+
+
+def plot_hpt_validation_macro_f1(paths: ProjectPaths, output_path: Path) -> Path:
+    """Plot validation macro-F1 from available transformer HPT results."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    source = _find_first_existing(
+        [
+            paths.project_root / "outputs" / "sweep_results.csv",
+            paths.project_root / "outputs" / "hyperparameter_search_results.csv",
+            _latest_transformer_hpt_file(paths, "hyperparameter_search_results.csv"),
+        ]
+    )
+    sweep_df = _read_csv_if_exists(source)
+
+    fig, ax = plt.subplots(figsize=(9, 4.5))
+    if sweep_df.empty or "validation_macro_f1" not in sweep_df:
+        ax.axis("off")
+        ax.text(0.5, 0.55, "No completed hyperparameter tuning results found.", ha="center", va="center", fontsize=11)
+        ax.text(0.5, 0.42, "Run the transformer HPT stage to populate outputs/sweep_results.csv.", ha="center", va="center", fontsize=9)
+    else:
+        plot_df = sweep_df.copy()
+        plot_df["validation_macro_f1"] = pd.to_numeric(plot_df["validation_macro_f1"], errors="coerce")
+        completed = plot_df[plot_df["validation_macro_f1"].notna()].copy()
+        if completed.empty:
+            ax.axis("off")
+            ax.text(0.5, 0.55, "HPT search space is configured; no completed validation scores yet.", ha="center", va="center", fontsize=11)
+        elif {"stage", "trial_number"}.issubset(completed.columns):
+            completed = completed.sort_values(["stage", "trial_number"])
+            labels = completed.apply(lambda row: f"{str(row['stage']).replace('stage5', '5')}\n{int(row['trial_number'])}", axis=1)
+            ax.plot(range(len(completed)), completed["validation_macro_f1"], marker="o", linewidth=1.8)
+            ax.set_xticks(range(len(completed)))
+            ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=8)
+            ax.set_xlabel("HPT stage and trial")
+        else:
+            completed = completed.sort_values("validation_macro_f1", ascending=False)
+            x_labels = completed["model_name"].astype(str) if "model_name" in completed else completed.index.astype(str)
+            ax.bar(x_labels, completed["validation_macro_f1"], color="#527a9a")
+            ax.tick_params(axis="x", labelrotation=35)
+            for tick in ax.get_xticklabels():
+                tick.set_horizontalalignment("right")
+            ax.set_xlabel("Configured candidate")
+        ax.set_title("Validation Macro-F1 During Hyperparameter Selection")
+        ax.set_ylabel("Validation macro-F1")
+        if not completed.empty:
+            lower = max(0.0, float(completed["validation_macro_f1"].min()) - 0.05)
+            upper = min(1.0, float(completed["validation_macro_f1"].max()) + 0.05)
+            if lower < upper:
+                ax.set_ylim(lower, upper)
+            ax.grid(axis="y", alpha=0.25)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return output_path
 
 
 def plot_qwen_invalid_predictions(comparison_df: pd.DataFrame, output_path: Path) -> Path | None:
@@ -729,6 +969,10 @@ def export_report_figures(paths: ProjectPaths, comparison_df: pd.DataFrame, erro
     figure_map: dict[str, Path | None] = {}
     report_targets = lambda name: [root_figures / name, output_figures / name]
 
+    pipeline = plot_pipeline_overview(root_figures / "pipeline_overview.png")
+    _copy_figure(pipeline, [output_figures / "pipeline_overview.png"])
+    figure_map["pipeline_overview"] = pipeline
+
     class_source = _find_first_existing(
         [
             results_dir / "eda" / "class_distribution.png",
@@ -752,6 +996,10 @@ def export_report_figures(paths: ProjectPaths, comparison_df: pd.DataFrame, erro
         ]
     )
     figure_map["model_comparison_macro_f1"] = _copy_figure(comparison_source, report_targets("model_comparison_macro_f1.png"))
+
+    hpt = plot_hpt_validation_macro_f1(paths, root_figures / "hpt_validation_macro_f1.png")
+    _copy_figure(hpt, [output_figures / "hpt_validation_macro_f1.png"])
+    figure_map["hpt_validation_macro_f1"] = hpt
 
     best_cm = error_outputs.get("confusion_matrix_path")
     best_source = Path(best_cm) if best_cm else None
@@ -830,6 +1078,8 @@ def export_report_artifacts(
     artifacts["qwen_results"] = export_qwen_results(paths, completed_results)
     artifacts.update(export_qwen_tables(paths, qwen_predictions_df, qwen_invalid_outputs_df))
     artifacts["qwen_prompt_examples"] = export_qwen_prompt_examples(paths, processed_splits, label_names)
+    artifacts["preprocessing_techniques"] = write_preprocessing_rundown(outputs_dir / "preprocessing_techniques.md")
+    artifacts["hpt_report_aliases"] = export_hpt_report_aliases(paths)
 
     comparison_df = pd.DataFrame(completed_results)
     artifacts["figures"] = export_report_figures(paths, comparison_df, error_outputs)
