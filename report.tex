@@ -36,7 +36,7 @@ City St George's, University of London \\
 \begin{abstract}
 Legal contracts contain dense and technical language, making it difficult for non-experts to identify and interpret important contractual provisions. This coursework investigates Natural Language Processing methods for legal clause classification using LEDGAR, a pre-annotated dataset of contract provisions. The task is framed as supervised clause type classification rather than legal risk prediction, unfairness detection, or enforceability assessment, since those tasks would require specialist legal judgement and dedicated legal-risk labels.
 
-The project compares three levels of NLP methods: classical TF-IDF-based models, a fine-tuned transformer model, and instruction-tuned large language model prompting using Qwen2.5-Instruct. Models are evaluated using accuracy, macro-F1, weighted-F1, per-class performance, confusion matrices, and invalid prediction rate for the prompted LLM. The results show that \todo{insert main result after experiments}. Error analysis examines class imbalance, overlapping legal terminology, ambiguous clause wording, and failure cases in both supervised and prompted classification.
+The project compares three levels of NLP methods: classical TF-IDF-based models, a fine-tuned transformer model, and instruction-tuned large language model prompting using Qwen2.5-Instruct. Models are evaluated using accuracy, macro-F1, weighted-F1, per-class performance, confusion matrices, and invalid prediction rate for the prompted LLM. LEDGAR remains the primary supervised dataset: training uses the LEDGAR train split, validation uses the LEDGAR validation split, and final in-distribution reporting uses the LEDGAR test split. CUAD is added only after final LEDGAR evaluation as an external out-of-distribution dataset, after converting span annotations into clause-level examples and applying a conservative manual label mapping. The strongest LEDGAR test result is DistilBERT with macro-F1 0.9544, closely followed by Linear SVM with macro-F1 0.9534. On mapped CUAD external data, the best macro-F1 is 0.7593 from Logistic Regression. Error analysis examines class imbalance, overlapping legal terminology, ambiguous clause wording, cross-dataset failures, and invalid prompted outputs.
 \end{abstract}
 
 \section{Introduction}
@@ -55,6 +55,7 @@ The main contributions of this coursework are:
     \item a comparison of dummy baselines, classical models, a fine-tuned transformer model, and instruction-tuned LLM prompting;
     \item a two-stage hyperparameter tuning strategy using wide random search followed by narrowed Bayesian optimisation with Weights \& Biases Sweeps;
     \item an evaluation of whether supervised training outperforms prompting for controlled multiclass legal classification;
+    \item a CUAD external evaluation path that converts annotated spans into clause-level examples without using CUAD for training or validation;
     \item an analysis of class imbalance, label ambiguity, invalid LLM outputs, and model failure cases;
     \item a discussion of how confidence-based review could support human-in-the-loop contract triage.
 \end{itemize}
@@ -71,14 +72,16 @@ This coursework addresses the following research questions:
     \item What clause categories are most difficult to classify, and are errors mainly caused by class imbalance, overlapping legal terminology, or label ambiguity?
 
     \item How can confidence scores and invalid-output analysis be used to identify predictions that may require human review?
+
+    \item How well do final LEDGAR-trained models generalise to mapped CUAD spans used as an external out-of-distribution test set?
 \end{enumerate}
 
-The hypothesis is that TF-IDF with Linear SVM will provide a strong classical baseline because legal clauses often contain repeated wording and distinctive phrase patterns. Fine-tuned transformer models are expected to perform better on semantically subtle categories where context matters more than keywords. Qwen2.5-Instruct is expected to perform reasonably in few-shot settings, especially for common and clearly named labels. However, it may produce invalid labels, overly general categories, or semantically plausible but non-matching predictions.
+The hypothesis is that TF-IDF with Linear SVM will provide a strong classical baseline because legal clauses often contain repeated wording and distinctive phrase patterns. Fine-tuned transformer models are expected to perform better on semantically subtle categories where context matters more than keywords. Qwen2.5-Instruct is expected to perform reasonably in few-shot settings, especially for common and clearly named labels. However, it may produce invalid labels, overly general categories, or semantically plausible but non-matching predictions. CUAD external performance is expected to be lower than LEDGAR test performance because the examples are span annotations from a different dataset with a different original label scheme.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/pipeline_overview.png}
-\caption{Overall experimental pipeline from project audit and split verification through cell-by-cell preprocessing, feature extraction, baseline modelling, transformer tuning, final test evaluation, and error analysis.}
+\caption{Overall experimental pipeline from project audit and split verification through cell-by-cell preprocessing, feature extraction, baseline modelling, transformer tuning, LEDGAR test evaluation, CUAD external evaluation, and error analysis.}
 \label{fig:pipeline-overview}
 \end{figure}
 
@@ -86,7 +89,7 @@ The hypothesis is that TF-IDF with Linear SVM will provide a strong classical ba
 
 Legal NLP is challenging because legal text contains formal vocabulary, long sentences, repeated boilerplate language, and subtle distinctions between similar legal provisions. Clause classification is useful because it can organise contract content and support faster human review.
 
-The Contract Understanding Atticus Dataset (CUAD) is an important legal NLP dataset containing expert annotations for contract review \citep{hendrycks2021cuad}. However, CUAD is primarily structured around contract review and span extraction rather than direct multiclass classification. For this reason, CUAD was considered as a possible secondary dataset but was not used as the main dataset in the experimental pipeline.
+The Contract Understanding Atticus Dataset (CUAD) is an important legal NLP dataset containing expert annotations for contract review \citep{hendrycks2021cuad}. However, CUAD is primarily structured around contract review and span extraction rather than direct multiclass classification. For this reason, CUAD is not used as the main supervised dataset. Instead, this project uses CUAD only as an external out-of-distribution evaluation set after final LEDGAR test evaluation.
 
 LEDGAR is more directly suitable for this coursework because it contains legal provisions labelled by clause type \citep{tuggener2020ledgar}. Each instance can be treated as a text classification example, making it appropriate for comparing supervised NLP models.
 
@@ -100,7 +103,7 @@ Recent instruction-tuned large language models also make it possible to test cla
 
 The primary dataset is LEDGAR, a legal clause classification dataset containing contract provisions labelled by clause type. Each example consists of clause text and a corresponding label. The task is therefore formulated as multiclass text classification.
 
-The dataset was loaded from the Hugging Face Hub dataset \texttt{coastalchp/ledgar} using the Hugging Face \texttt{datasets} library. This version is provided in Hugging Face/Parquet format and contains predefined train, validation, and test splits. The raw dataset contains 80,000 examples across 100 clause labels, with 60,000 training examples, 10,000 validation examples, and 10,000 test examples.
+The dataset was loaded from the Hugging Face Hub using \texttt{load\_dataset("coastalcph/lex\_glue", "ledgar")} with the Hugging Face \texttt{datasets} library. This version is provided in Hugging Face/Parquet format and contains predefined train, validation, and test splits. The raw dataset contains 80,000 examples across 100 clause labels, with 60,000 training examples, 10,000 validation examples, and 10,000 test examples.
 
 \subsection{Label Selection}
 
@@ -130,13 +133,13 @@ Raw labels & 100 \\
 Original train examples & 60,000 \\
 Original validation examples & 10,000 \\
 Original test examples & 10,000 \\
-Final examples & \todo{value from preprocessing output} \\
+Final examples & 37,989 \\
 Final labels & 20 \\
-Filtered train examples & \todo{value} \\
-Filtered validation examples & \todo{value} \\
-Filtered test examples & \todo{value} \\
-Average clause length & \todo{value} \\
-Maximum clause length & \todo{value} \\
+Filtered train examples & 28,587 \\
+Filtered validation examples & 4,670 \\
+Filtered test examples & 4,732 \\
+Average clause length & 103.38 words \\
+Maximum clause length & 1,167 words \\
 \bottomrule
 \end{tabular}
 \caption{Summary statistics for the LEDGAR dataset and the processed top-20-label classification subset.}
@@ -157,17 +160,74 @@ Maximum clause length & \todo{value} \\
 \label{fig:clause-length}
 \end{figure}
 
-\subsection{Considered Secondary Dataset: CUAD}
+\subsection{External Dataset: CUAD}
 
-CUAD was considered as a possible secondary dataset because it contains expert annotations for contract review. However, it was not treated as the main classification dataset because it was originally designed for contract review and span extraction rather than direct multiclass clause classification.
+CUAD is included as an external evaluation dataset because it contains expert annotations for contract review. It is not treated as the main classification dataset because it was originally designed for span extraction and question answering rather than direct multiclass clause classification.
 
-The main experimental pipeline therefore uses LEDGAR only. CUAD remains relevant as related work and as a possible future extension for external validation or span-to-label adaptation.
+The main experimental pipeline therefore uses LEDGAR only for training, validation, model selection, and primary test reporting. CUAD is processed only after final LEDGAR evaluation. Non-empty CUAD answer spans are extracted, stripped of whitespace, deduplicated using \texttt{text + label\_original}, filtered for clearly invalid very short spans, and then mapped conservatively into the current LEDGAR label space.
+
+The CUAD conversion exports three report-facing datasets:
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{outputs/data/cuad\_converted\_raw.csv};
+    \item \texttt{outputs/data/cuad\_converted\_mapped.csv};
+    \item \texttt{outputs/data/cuad\_external\_eval.csv}.
+\end{itemize}
+
+The final CUAD external evaluation file contains \texttt{text}, \texttt{label\_original}, \texttt{label\_mapped}, \texttt{source\_dataset}, \texttt{contract\_id}, and \texttt{span\_id}, plus the LEDGAR-compatible \texttt{label} and \texttt{label\_id} fields needed for evaluation.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lr}
+\toprule
+\textbf{CUAD Conversion Statistic} & \textbf{Value} \\
+\midrule
+CUAD documents seen & 510 \\
+Annotated answer spans seen & 13,823 \\
+Very short/noisy spans removed & 2,741 \\
+Duplicate text-label rows removed & 155 \\
+Rows after filtering and deduplication & 10,927 \\
+Original CUAD labels found & 41 \\
+Mapped CUAD labels & 8 \\
+Unmapped CUAD labels & 33 \\
+Rows retained after mapping & 2,878 \\
+Rows dropped because labels were unmapped & 8,049 \\
+Final external-evaluation labels & 6 \\
+\bottomrule
+\end{tabular}
+\caption{CUAD span-to-clause conversion and manual label-mapping coverage. CUAD is used only for external evaluation and error analysis.}
+\label{tab:cuad-conversion}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{CUAD Label} & \textbf{Mapped LEDGAR Label} \\
+\midrule
+Governing Law & Governing Laws \\
+Anti-Assignment & Assignments \\
+Termination For Convenience & Terminations \\
+Insurance & Insurances \\
+Notice Period To Terminate Renewal & Notices \\
+Effective Date & Terms \\
+Expiration Date & Terms \\
+Renewal Term & Terms \\
+\bottomrule
+\end{tabular}
+\caption{Manual CUAD-to-LEDGAR label mapping used for external evaluation. Labels without a defensible semantic match are excluded from CUAD metrics and counted in \texttt{outputs/data/cuad\_label\_mapping\_report.json}.}
+\label{tab:cuad-label-map}
+\end{table}
 
 \section{Project and Data Audit}
 
 Before model training, the project folder and processed artefacts are audited to check that the experiment genuinely uses the intended dataset and does not rely on stale, placeholder, or cached outputs. The audit records whether the expected train, validation, and test files exist, whether the splits are non-empty, whether output folders are created, and whether all result files are generated by the current pipeline.
 
 The data audit also verifies that the predefined LEDGAR train, validation, and test splits are preserved. The top 20 labels are selected from the training split only. This prevents validation or test information from influencing preprocessing decisions. Exact duplicate text-label pairs are removed within each split, and potential duplicate clause texts across splits are logged so that leakage can be inspected rather than ignored.
+
+For CUAD, the audit verifies the opposite protocol: CUAD must remain outside the LEDGAR train and validation splits. The external-evaluation safeguard file, \texttt{outputs/metrics/cuad\_external\_safeguards.json}, confirms that CUAD external evaluation is non-empty, all mapped labels are valid LEDGAR labels, and no CUAD rows appear in the processed LEDGAR train or validation files.
 
 \begin{table}[t]
 \centering
@@ -184,6 +244,9 @@ Cross-split duplicate text checked & \todo{Pass/Fail} \\
 Label distribution exported & \todo{Pass/Fail} \\
 Prediction files exported & \todo{Pass/Fail} \\
 Failed/skipped trials logged & \todo{Pass/Fail} \\
+CUAD external evaluation non-empty & Pass \\
+CUAD mapped labels valid in LEDGAR label space & Pass \\
+CUAD absent from LEDGAR train/validation & Pass \\
 \bottomrule
 \end{tabular}
 \caption{Project and dataset audit checklist used before final reporting.}
@@ -205,7 +268,7 @@ The pipeline distinguishes three stages that are sometimes confused in text-clas
 The preprocessing pipeline includes:
 
 \begin{itemize}[leftmargin=*]
-    \item loading LEDGAR from \texttt{coastalchp/ledgar} on the Hugging Face Hub;
+    \item loading LEDGAR with \texttt{load\_dataset("coastalcph/lex\_glue", "ledgar")} from the Hugging Face Hub;
     \item preserving the predefined train, validation, and test splits;
     \item standardising column names into \texttt{text}, \texttt{label}, \texttt{label\_id}, \texttt{split}, and \texttt{source\_dataset};
     \item removing simple HTML markup and decoding HTML entities before tokenisation;
@@ -222,6 +285,8 @@ The preprocessing pipeline includes:
 \end{itemize}
 
 Stopword removal is deliberately not used as a default preprocessing step. In legal clauses, words such as \textit{not}, \textit{shall}, \textit{may}, \textit{unless}, and \textit{except} can change the legal meaning of the clause. Removing them would make the representation less faithful to the classification task.
+
+CUAD preprocessing is separate from LEDGAR preprocessing. CUAD raw annotations are span-based, so the external-evaluation stage extracts only non-empty annotated answer spans, removes very short noisy spans, removes duplicate \texttt{text + label\_original} pairs, maps only defensible CUAD labels into the already selected LEDGAR label space, and saves the resulting external-evaluation file. This stage does not create training or validation rows and does not alter the LEDGAR label encoder.
 
 Feature extraction is reported separately from preprocessing. For classical models, clause text is converted into bag-of-words and TF-IDF feature spaces using unigrams and unigram-bigram features. The TF-IDF vectorizer uses the lab-grounded negation-aware tokeniser. For transformer models, clause text is tokenised using the relevant Hugging Face tokenizer with padding and truncation. The maximum sequence length is treated as a tunable transformer hyperparameter because clause lengths vary across the dataset.
 
@@ -454,6 +519,8 @@ Macro-F1 is treated as the primary metric because the dataset is imbalanced. Wei
 
 For the Qwen experiment, invalid predictions are analysed separately. An invalid prediction occurs when the model returns a label outside the allowed label set, produces multiple labels, or gives an explanation instead of the required single label.
 
+For CUAD external evaluation, the same accuracy, macro-F1, weighted-F1, per-class precision/recall/F1, and confusion-matrix data are saved under \texttt{outputs/metrics/}. CUAD results are reported separately from LEDGAR test results using the dataset name \texttt{CUAD\_external}. Because CUAD is mapped into only a subset of the LEDGAR label space, CUAD metrics should be interpreted as external generalisation evidence for the mapped labels rather than as a replacement for the main LEDGAR test score.
+
 \section{Results}
 
 Table~\ref{tab:main-results} reports the main test-set results.
@@ -465,14 +532,14 @@ Table~\ref{tab:main-results} reports the main test-set results.
 \toprule
 \textbf{Model} & \textbf{Accuracy} & \textbf{Macro-F1} & \textbf{Weighted-F1} & \textbf{Invalid Rate} \\
 \midrule
-Majority baseline & \todo{value} & \todo{value} & \todo{value} & -- \\
-Random baseline & \todo{value} & \todo{value} & \todo{value} & -- \\
-TF-IDF + Naive Bayes & \todo{value} & \todo{value} & \todo{value} & -- \\
-TF-IDF + Logistic Regression & \todo{value} & \todo{value} & \todo{value} & -- \\
-TF-IDF + Linear SVM & \todo{value} & \todo{value} & \todo{value} & -- \\
-\todo{DistilBERT / LegalBERT} & \todo{value} & \todo{value} & \todo{value} & -- \\
-Qwen2.5 zero-shot & \todo{value} & \todo{value} & \todo{value} & \todo{value} \\
-Qwen2.5 few-shot & \todo{value} & \todo{value} & \todo{value} & \todo{value} \\
+Majority baseline & 0.1200 & 0.0107 & 0.0257 & -- \\
+Random train-distribution baseline & 0.0594 & 0.0445 & 0.0600 & -- \\
+TF-IDF + Naive Bayes & 0.9326 & 0.9113 & 0.9307 & -- \\
+TF-IDF + Logistic Regression & 0.9550 & 0.9419 & 0.9549 & -- \\
+TF-IDF + Linear SVM & 0.9639 & 0.9534 & 0.9635 & -- \\
+DistilBERT & 0.9649 & 0.9544 & 0.9648 & -- \\
+Qwen2.5 zero-shot & 0.5650 & 0.5039 & 0.5688 & 0.0450 \\
+Qwen2.5 few-shot & 0.1100 & 0.0099 & 0.0218 & 1.0000 \\
 \bottomrule
 \end{tabular}
 \caption{Test-set performance of baselines, classical models, fine-tuned transformer model, and Qwen2.5 prompting baselines. Macro-F1 is the primary metric.}
@@ -486,11 +553,11 @@ Qwen2.5 few-shot & \todo{value} & \todo{value} & \todo{value} & \todo{value} \\
 \label{fig:model-comparison}
 \end{figure}
 
-The results show that \todo{insert best model and key score from main_results.csv}. The majority and random baselines perform \todo{insert interpretation}, showing whether the task can be solved by exploiting label frequency alone.
+The results show that the fine-tuned DistilBERT model is the strongest LEDGAR test model, with macro-F1 0.9544 and accuracy 0.9649. Linear SVM is very close, with macro-F1 0.9534 and accuracy 0.9639. The majority and random baselines perform far below the trained models, showing that the task cannot be solved by exploiting label frequency alone.
 
-Among the classical models, \todo{insert strongest classical model} performs best. This suggests that \todo{explain using observed results}. The transformer model \todo{outperforms / does not outperform} the strongest classical model, suggesting that \todo{interpret whether contextual modelling helped based on results}.
+Among the classical models, Linear SVM performs best. This suggests that LEDGAR top-20 categories contain distinctive lexical and phrase-level patterns that are captured well by TF-IDF features. The transformer model only slightly outperforms the strongest classical model, suggesting that contextual modelling helps, but the gain is small for this filtered LEDGAR setting.
 
-The Qwen2.5-Instruct prompting baseline achieves \todo{insert result}. Few-shot prompting \todo{improves / does not improve} performance compared with zero-shot prompting. Invalid prediction rate is important because prompted LLMs may produce labels outside the controlled label set.
+The Qwen2.5-Instruct zero-shot baseline achieves macro-F1 0.5039 on a 200-example test sample. The few-shot run performs poorly in the saved run because all few-shot outputs were invalid under the strict one-label evaluation format. Invalid prediction rate is important because prompted LLMs may produce labels outside the controlled label set.
 
 \begin{figure}[t]
 \centering
@@ -498,6 +565,31 @@ The Qwen2.5-Instruct prompting baseline achieves \todo{insert result}. Few-shot 
 \caption{Invalid prediction rate for Qwen2.5-Instruct under zero-shot and few-shot prompting. Invalid outputs include labels outside the allowed label set, multiple labels, or explanatory text instead of a single label.}
 \label{fig:qwen-invalid}
 \end{figure}
+
+\subsection{CUAD External Evaluation}
+
+After the LEDGAR test evaluation is complete, the fitted models are evaluated on CUAD as an external out-of-distribution dataset. CUAD is not used for training, validation, hyperparameter tuning, prompt tuning, or model selection. The purpose of this evaluation is to test how far LEDGAR-trained models generalise to a related but differently annotated contract dataset.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{Accuracy} & \textbf{Macro-F1} & \textbf{Weighted-F1} & \textbf{Samples} \\
+\midrule
+TF-IDF + Logistic Regression & 0.8610 & 0.7593 & 0.8742 & 2,878 \\
+TF-IDF + Linear SVM & 0.8568 & 0.7569 & 0.8710 & 2,878 \\
+TF-IDF + Naive Bayes & 0.8586 & 0.7425 & 0.8654 & 2,878 \\
+DistilBERT & 0.8624 & 0.7555 & 0.8698 & 2,878 \\
+\bottomrule
+\end{tabular}
+\caption{External CUAD evaluation after converting span annotations into clause-level examples and mapping labels into the LEDGAR label space. CUAD is not used for training or model selection.}
+\label{tab:cuad-external-results}
+\end{table}
+
+The external CUAD scores are lower than the main LEDGAR test scores, which is expected because CUAD has a different annotation format and original label scheme. Logistic Regression has the highest CUAD macro-F1 at 0.7593, while DistilBERT has the highest CUAD accuracy at 0.8624. The small differences between these models suggest that the mapped CUAD labels are still largely lexical, but cross-dataset variation makes the task harder than the in-distribution LEDGAR test split.
+
+Prompt-based Qwen results are not reported for CUAD because the LEDGAR prompting stage does not save a reusable local model/tokenizer artifact for post-hoc external inference. The pipeline writes explicit skipped status files for these rows rather than silently omitting them.
 
 \section{Per-Class Analysis}
 
@@ -525,7 +617,7 @@ The strongest categories are \todo{insert categories from per-class results}. Th
 
 \section{Error Analysis}
 
-Error analysis is conducted using confusion matrices, misclassified examples, and invalid Qwen outputs.
+Error analysis is conducted using confusion matrices, misclassified examples, invalid Qwen outputs, and CUAD external error summaries. LEDGAR and CUAD error tables are saved separately so that in-distribution and out-of-distribution failures are not mixed.
 
 \subsection{Confusion Matrix}
 
@@ -584,6 +676,14 @@ The Qwen2.5-Instruct baseline is analysed separately because prompted LLMs can f
 \label{tab:misclassifications}
 \end{table}
 
+\subsection{CUAD External Errors}
+
+CUAD external error analysis is saved under \texttt{outputs/error\_analysis/} for each evaluated model. The files include top confused label pairs, per-label accuracy/F1, most confident wrong predictions where confidence is available, shortest wrong predictions, longest wrong predictions, and a sample error table.
+
+Across the evaluated CUAD runs, the most persistent external confusion is \textit{Notices} predicted as \textit{Terms}. For example, Logistic Regression makes 106 such errors, Linear SVM makes 108, Naive Bayes makes 114, and DistilBERT makes 96. This suggests that the mapped CUAD notice-period spans often resemble term or duration language. The \textit{Notices} class is therefore the weakest mapped CUAD label, with recall below 0.05 for the evaluated models.
+
+Other CUAD confusions include \textit{Terms} predicted as \textit{Terminations} and \textit{Assignments} predicted as \textit{Terminations} or \textit{General}. These failures are plausible because CUAD spans are extracted from full contracts and may contain surrounding language that is less cleanly separated than LEDGAR clause examples.
+
 \section{Confidence-Based Review Results}
 
 The confidence-based review workflow is evaluated as a prototype rather than a core classifier if implementation outputs are available. The goal is to show how a model could support human-in-the-loop contract triage.
@@ -610,9 +710,11 @@ This extension demonstrates practical triage but should not be interpreted as a 
 
 \section{Discussion}
 
-The results show that \todo{summarise main finding using actual result values}. If Linear SVM performs strongly, this supports the hypothesis that legal clause categories often contain distinctive wording that can be captured by TF-IDF features. If the transformer model improves macro-F1, this suggests that contextual representations help with semantically subtle clause categories. If the transformer model does not improve substantially, this may indicate that the top-20 LEDGAR categories are strongly lexical and can be handled effectively by sparse classical features.
+The LEDGAR results show that DistilBERT achieves the strongest macro-F1, but Linear SVM is almost identical in performance. This supports the hypothesis that many LEDGAR top-20 clause categories contain distinctive wording that can be captured by TF-IDF features. The small DistilBERT improvement suggests that contextual representations help, but the filtered top-20 LEDGAR setup remains strongly lexical.
 
-The Qwen2.5-Instruct experiment provides a useful comparison between supervised classification and prompting. If Qwen performs well in few-shot settings, this suggests that instruction-tuned LLMs can classify some legal clauses without task-specific fine-tuning. However, invalid prediction rate and strict label matching remain important limitations. In controlled multiclass evaluation, supervised models have the advantage of always predicting from the allowed label set.
+The Qwen2.5-Instruct experiment provides a useful comparison between supervised classification and prompting. The zero-shot result shows that instruction-tuned LLMs can classify some legal clauses without task-specific fine-tuning, but performance remains well below the supervised models in this controlled label-space setting. The failed few-shot run highlights that invalid prediction rate and strict label matching are important limitations. In controlled multiclass evaluation, supervised models have the advantage of always predicting from the allowed label set.
+
+The CUAD external evaluation adds a cross-dataset perspective. Macro-F1 drops from approximately 0.94--0.95 on LEDGAR test for the strongest supervised models to approximately 0.74--0.76 on mapped CUAD spans. This drop is expected because CUAD is span-annotated, uses different original categories, and must be mapped into only part of the LEDGAR label space. The external results are still useful because they reveal failure modes that are less visible in the in-distribution LEDGAR test set, especially the tendency to confuse notice-period language with general terms.
 
 The confidence-based review workflow shows how classification could support human review. However, the system does not provide legal advice and should only be viewed as a research prototype.
 
@@ -628,19 +730,23 @@ Third, only one fine-tuned transformer model is used due to time and computation
 
 Fourth, Qwen2.5-Instruct may be evaluated on a smaller test sample because LLM inference is more computationally expensive than classical model prediction.
 
+Fifth, CUAD external evaluation depends on a manual label mapping. The mapping is intentionally conservative, so many CUAD labels are excluded from evaluation. The CUAD results therefore measure external generalisation only for mapped labels, not for the full CUAD label set.
+
+Sixth, CUAD examples are extracted answer spans rather than full LEDGAR-style clause examples. This makes the external evaluation useful for stress testing but not directly comparable with the main LEDGAR test set.
+
 Fifth, the confidence-based review workflow is only a demonstration. It is not a legal advisor and should not be used for real contract decision-making.
 
 \section{Conclusion}
 
-This coursework investigated legal clause classification using classical models, a fine-tuned transformer model, and instruction-tuned LLM prompting. LEDGAR was used as the main supervised dataset, while CUAD was considered as a possible secondary dataset but was not used in the main experimental pipeline.
+This coursework investigated legal clause classification using classical models, a fine-tuned transformer model, and instruction-tuned LLM prompting. LEDGAR was used as the main supervised dataset, while CUAD was used only after final model evaluation as an external out-of-distribution dataset for mapped-label error analysis.
 
-The best-performing model was \todo{insert model name}, achieving a macro-F1 score of \todo{value}. The findings show that \todo{insert final conclusion}. Classical TF-IDF models provide efficient and competitive baselines, while fine-tuned transformers may offer advantages for semantically complex clauses. Qwen2.5-Instruct provides a flexible prompting baseline, but invalid labels and strict label matching remain important challenges.
+The best-performing LEDGAR model was DistilBERT, achieving macro-F1 0.9544. Linear SVM was extremely close at macro-F1 0.9534, showing that classical TF-IDF models remain highly competitive for this clause classification setting. On mapped CUAD external evaluation, Logistic Regression achieved the strongest macro-F1 at 0.7593. These results show that the supervised models generalise meaningfully to mapped CUAD spans, but cross-dataset performance is clearly lower than in-distribution LEDGAR performance. Qwen2.5-Instruct provides a flexible prompting baseline, but invalid labels and strict label matching remain important challenges.
 
 Overall, the project demonstrates that NLP can support legal contract review by automatically categorising clause types. However, automated clause classification should be treated as a decision-support tool rather than a replacement for human legal judgement.
 
 \section*{Reproducibility Statement}
 
-The coursework code includes dataset loading, cell-by-cell preprocessing, feature extraction, data audit checks, model training, validation-based hyperparameter tuning, final test evaluation, prediction saving, and visualisation. Random seeds were fixed where possible for Python, NumPy, PyTorch, and CUDA. The final results can be reproduced by running the staged notebooks in order, beginning with the preprocessing and EDA notebook and then the classical TF-IDF notebook, or by running the combined main experimental notebook after the staged flow has been checked. The pipeline loads LEDGAR from Hugging Face, applies the top-20-label filtering pipeline, records the preprocessing techniques in \texttt{outputs/preprocessing\_techniques.md}, trains the baseline and supervised models, supports W\&B random and Bayesian sweeps for the main transformer when enabled, evaluates the selected model once on the held-out test set, and saves the result tables and figures used in this report.
+The coursework code includes dataset loading, cell-by-cell preprocessing, feature extraction, data audit checks, model training, validation-based hyperparameter tuning, final test evaluation, prediction saving, CUAD external evaluation, and visualisation. Random seeds were fixed where possible for Python, NumPy, PyTorch, and CUDA. The final results can be reproduced by running the staged notebooks in order, beginning with the preprocessing and EDA notebook and then the classical TF-IDF notebook, or by running the combined main experimental notebook after the staged flow has been checked. The pipeline loads LEDGAR from Hugging Face, applies the top-20-label filtering pipeline, records the preprocessing techniques in \texttt{outputs/preprocessing\_techniques.md}, trains the baseline and supervised models, supports W\&B random and Bayesian sweeps for the main transformer when enabled, evaluates the selected model once on the held-out LEDGAR test set, then converts CUAD spans into mapped external evaluation rows and saves CUAD predictions, metrics, safeguards, and error-analysis files. The combined summary is saved as \texttt{outputs/metrics/final\_model\_comparison\_summary.csv}.
 
 \bibliographystyle{acl_natbib}
 \begin{thebibliography}{}
@@ -758,5 +864,29 @@ Return exactly one label and nothing else.
 \caption{Examples of misclassified clauses.}
 \label{tab:appendix-misclassifications}
 \end{table}
+
+\section{Appendix D: CUAD External Evaluation Artefacts}
+
+The CUAD external evaluation stage writes the following artefacts:
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{outputs/data/cuad\_converted\_raw.csv};
+    \item \texttt{outputs/data/cuad\_converted\_mapped.csv};
+    \item \texttt{outputs/data/cuad\_external\_eval.csv};
+    \item \texttt{outputs/data/cuad\_label\_mapping\_report.json};
+    \item \texttt{outputs/data/cuad\_label\_compatibility\_report.json};
+    \item \texttt{outputs/metrics/cuad\_external\_safeguards.json};
+    \item \texttt{outputs/predictions/cuad\_external\_<model>\_predictions.csv};
+    \item \texttt{outputs/metrics/cuad\_external\_<model>\_metrics.json};
+    \item \texttt{outputs/error\_analysis/cuad\_external\_<model>\_errors.csv};
+    \item \texttt{outputs/error\_analysis/cuad\_external\_<model>\_summary.json};
+    \item \texttt{outputs/metrics/final\_model\_comparison\_summary.csv}.
+\end{itemize}
+
+The intended execution order is:
+
+\begin{quote}
+LEDGAR train $\rightarrow$ train models; LEDGAR validation $\rightarrow$ tune/select models; LEDGAR test $\rightarrow$ primary metrics; CUAD raw $\rightarrow$ convert spans $\rightarrow$ map labels $\rightarrow$ external evaluation $\rightarrow$ error analysis.
+\end{quote}
 
 \end{document}
