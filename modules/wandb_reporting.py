@@ -15,14 +15,21 @@ from .data_setup import ProjectPaths, ensure_package
 
 
 SAFE_CSV_ARTIFACTS = [
+    "outputs/baseline_results.csv",
     "outputs/data_summary.csv",
+    "outputs/failed_or_skipped_trials.csv",
+    "outputs/hpt_summary.csv",
     "outputs/label_distribution.csv",
     "outputs/main_results.csv",
+    "outputs/per_class_metrics.csv",
     "outputs/per_class_results.csv",
     "outputs/confusion_pairs.csv",
     "outputs/hyperparameters.csv",
+    "outputs/hyperparameter_search_results.csv",
+    "outputs/sweep_results.csv",
     "outputs/transformer_results.csv",
     "outputs/qwen_results.csv",
+    "outputs/metrics/final_model_comparison_summary.csv",
     "results/final_model_comparison.csv",
     "results/baselines/baseline_results.csv",
     "results/classical/classical_results.csv",
@@ -34,10 +41,18 @@ SAFE_CSV_ARTIFACTS = [
     "results/qwen/qwen_results.csv",
 ]
 SAFE_JSON_ARTIFACTS = [
+    "outputs/best_hyperparameters.json",
+    "outputs/best_transformer_configs.json",
+    "outputs/data_audit.json",
+    "outputs/dataset_verification.json",
     "outputs/environment.json",
+    "outputs/final_test_metrics.json",
     "outputs/leakage_audit.json",
     "outputs/label_mapping.json",
+    "outputs/project_audit_summary.json",
     "outputs/report_artifact_manifest.json",
+    "outputs/data/cuad_label_mapping_report.json",
+    "outputs/metrics/cuad_external_safeguards.json",
     "data/processed/dataset_summary.json",
     "data/processed/label_counts.json",
     "results/transformer/runtime.json",
@@ -47,7 +62,13 @@ SAFE_JSON_ARTIFACTS = [
     "results/qwen/qwen_run_config.json",
 ]
 TEXT_CONTAINING_ARTIFACTS = [
+    "outputs/data/cuad_converted_raw.csv",
+    "outputs/data/cuad_converted_mapped.csv",
+    "outputs/data/cuad_external_eval.csv",
+    "outputs/error_analysis_examples.csv",
+    "outputs/final_test_predictions.csv",
     "outputs/misclassified_examples.csv",
+    "outputs/report_tex_values.json",
     "outputs/qwen_predictions.csv",
     "outputs/qwen_invalid_outputs.csv",
     "outputs/qwen_prompt_examples.txt",
@@ -154,12 +175,24 @@ def _log_scalar_metrics(run: Any, comparison_df: pd.DataFrame) -> dict[str, floa
 
     for row in comparison_df.to_dict("records"):
         model_key = _safe_key(row.get("model_name", row.get("model_family", "model")))
-        for metric_name in ("accuracy", "macro_f1", "weighted_f1", "invalid_prediction_rate"):
-            value = row.get(metric_name)
+        dataset_key = _safe_key(row.get("dataset_name", row.get("dataset", row.get("split_used", "test"))))
+        aliases = {
+            "accuracy": ("accuracy", "test_accuracy"),
+            "macro_f1": ("macro_f1", "test_macro_f1"),
+            "weighted_f1": ("weighted_f1", "test_weighted_f1"),
+            "invalid_prediction_rate": ("invalid_prediction_rate",),
+        }
+        for metric_name, columns in aliases.items():
+            value = next((row.get(column) for column in columns if column in row and pd.notna(row.get(column))), None)
             if pd.notna(value):
-                metrics[f"test/{model_key}/{metric_name}"] = float(value)
+                metrics[f"{dataset_key}/{model_key}/{metric_name}"] = float(value)
+                if dataset_key in {"test", "ledgar_test"}:
+                    metrics[f"test/{model_key}/{metric_name}"] = float(value)
 
-    ranked = comparison_df.dropna(subset=["macro_f1"]).copy()
+    ranked = comparison_df.copy()
+    if "macro_f1" not in ranked and "test_macro_f1" in ranked:
+        ranked["macro_f1"] = ranked["test_macro_f1"]
+    ranked = ranked.dropna(subset=["macro_f1"]) if "macro_f1" in ranked else pd.DataFrame()
     if not ranked.empty:
         best = ranked.sort_values("macro_f1", ascending=False).iloc[0]
         metrics["test/best_macro_f1"] = float(best["macro_f1"])
@@ -184,19 +217,52 @@ def _log_csv_table(run: Any, path: Path, *, max_rows: int) -> bool:
         return False
 
 
-def _artifact_files(paths: ProjectPaths, *, log_text_tables: bool, log_model_files: bool) -> list[Path]:
-    root = paths.project_root
-    files = _existing_files(root, SAFE_CSV_ARTIFACTS + SAFE_JSON_ARTIFACTS)
+def _figure_files(root: Path) -> list[Path]:
+    files: list[Path] = []
     for directory in (root / "outputs" / "figures", root / "figures", root / "results"):
         if directory.exists():
             files.extend(path for path in directory.glob("**/*.png") if path.is_file() and path.stat().st_size > 0)
+    seen: set[Path] = set()
+    unique_files = []
+    for path in files:
+        resolved = path.resolve()
+        if resolved not in seen:
+            unique_files.append(path)
+            seen.add(resolved)
+    return unique_files
+
+
+def _log_image_panels(run: Any, root: Path) -> int:
+    try:
+        import wandb
+
+        images = {}
+        for path in _figure_files(root):
+            key = f"figures/{_safe_key(path.stem)}"
+            images[key] = wandb.Image(str(path), caption=str(path.relative_to(root)))
+        if images:
+            run.log(images)
+        return len(images)
+    except Exception as exc:
+        print(f"W&B image logging skipped: {type(exc).__name__}: {exc}")
+        return 0
+
+
+def _artifact_files(paths: ProjectPaths, *, log_text_tables: bool, log_model_files: bool) -> list[Path]:
+    root = paths.project_root
+    files = _existing_files(root, SAFE_CSV_ARTIFACTS + SAFE_JSON_ARTIFACTS)
+    files.extend(_figure_files(root))
     files.extend(path for path in (root / "results").glob("**/classification_reports/*.json") if path.is_file() and path.stat().st_size > 0)
+    files.extend(path for path in (root / "outputs" / "metrics").glob("*.json") if path.is_file() and path.stat().st_size > 0)
 
     if log_text_tables:
         files.extend(_existing_files(root, TEXT_CONTAINING_ARTIFACTS))
         predictions_dir = root / "outputs" / "predictions"
         if predictions_dir.exists():
             files.extend(path for path in predictions_dir.glob("*.jsonl") if path.is_file() and path.stat().st_size > 0)
+        report_tables_dir = root / "outputs" / "report_tables"
+        if report_tables_dir.exists():
+            files.extend(path for path in report_tables_dir.glob("*.tex") if path.is_file() and path.stat().st_size > 0)
 
     if log_model_files:
         for directory in (root / "models", root / "checkpoints", root / "results" / "transformer" / "model"):
@@ -236,15 +302,22 @@ def log_wandb_outputs(
             root,
             [
                 "outputs/main_results.csv",
+                "outputs/per_class_metrics.csv",
                 "outputs/per_class_results.csv",
                 "outputs/confusion_pairs.csv",
                 "outputs/data_summary.csv",
+                "outputs/failed_or_skipped_trials.csv",
+                "outputs/hpt_summary.csv",
                 "outputs/label_distribution.csv",
                 "outputs/hyperparameters.csv",
+                "outputs/hyperparameter_search_results.csv",
+                "outputs/sweep_results.csv",
+                "outputs/metrics/final_model_comparison_summary.csv",
                 "results/final_model_comparison.csv",
             ],
         )
         tables_logged = sum(_log_csv_table(run, path, max_rows=table_max_rows) for path in table_files)
+        images_logged = _log_image_panels(run, root)
 
         artifact_count = 0
         if log_artifacts:
@@ -265,12 +338,13 @@ def log_wandb_outputs(
 
         print(
             "W&B logging complete: "
-            f"{len(metrics_logged)} scalar metrics, {tables_logged} tables, {artifact_count} artifact files."
+            f"{len(metrics_logged)} scalar metrics, {tables_logged} tables, {images_logged} images, {artifact_count} artifact files."
         )
         return {
             "status": "completed",
             "scalar_metrics": len(metrics_logged),
             "tables": int(tables_logged),
+            "images": int(images_logged),
             "artifact_files": artifact_count,
             "text_artifacts_logged": bool(log_text_tables),
             "model_files_logged": bool(log_model_files),
