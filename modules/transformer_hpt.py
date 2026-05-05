@@ -14,10 +14,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from .data_setup import ensure_package, write_json
+from .data_setup import build_project_paths, ensure_package, write_json
 from .evaluation import write_stage_status
 from .transformer_model import train_transformer_classifier
-from .wandb_reporting import finish_wandb_run, start_wandb_run
+from .wandb_reporting import finish_wandb_run, log_wandb_outputs, start_wandb_run
 
 
 HPT_RESULT_COLUMNS = [
@@ -589,6 +589,60 @@ def _write_hpt_artifacts(
     return results
 
 
+def _log_hpt_summary_to_wandb(
+    *,
+    project_root: Path,
+    config: TransformerHPTConfig,
+    results: pd.DataFrame,
+    run_root: Path,
+    wandb_enabled: bool,
+    wandb_project: str,
+    wandb_entity: str | None,
+    wandb_mode: str,
+) -> None:
+    """Log HPT summary artifacts after plots have been created."""
+    if not wandb_enabled:
+        return
+    run = start_wandb_run(
+        enabled=wandb_enabled,
+        project=wandb_project,
+        entity=wandb_entity,
+        run_name="stage5_hpt_summary",
+        group="stage5_transformer_hpt",
+        tags=["hpt", "summary", "smoke-test" if config.smoke_test else "full-run"],
+        config={
+            "model_name": config.model_name,
+            "run_root": str(run_root),
+            "smoke_test": bool(config.smoke_test),
+            "random_trials": int(config.random_trials),
+            "bayes_trials": int(config.bayes_trials),
+            "final_retrain": bool(config.final_retrain),
+        },
+        mode=wandb_mode,
+    )
+    try:
+        if run is None:
+            return
+        comparison_df = results.copy()
+        if "validation_macro_f1" in comparison_df:
+            comparison_df["macro_f1"] = comparison_df["validation_macro_f1"]
+        if "validation_accuracy" in comparison_df:
+            comparison_df["accuracy"] = comparison_df["validation_accuracy"]
+        if "validation_weighted_f1" in comparison_df:
+            comparison_df["weighted_f1"] = comparison_df["validation_weighted_f1"]
+        comparison_df["dataset_name"] = "LEDGAR_validation"
+        log_wandb_outputs(
+            run,
+            paths=build_project_paths(project_root),
+            comparison_df=comparison_df,
+            log_artifacts=True,
+            log_text_tables=False,
+            log_model_files=False,
+        )
+    finally:
+        finish_wandb_run(run)
+
+
 def run_two_stage_transformer_hpt(
     train_df: pd.DataFrame,
     validation_df: pd.DataFrame,
@@ -772,6 +826,16 @@ def run_two_stage_transformer_hpt(
             finish_wandb_run(run)
 
     results = _write_hpt_artifacts(project_root=project_root, run_root=run_root, config=config, rows=rows, best_config=best_config, final_output=final_output)
+    _log_hpt_summary_to_wandb(
+        project_root=project_root,
+        config=config,
+        results=results,
+        run_root=run_root,
+        wandb_enabled=wandb_enabled,
+        wandb_project=wandb_project,
+        wandb_entity=wandb_entity,
+        wandb_mode=wandb_mode,
+    )
     return {
         "status": "completed" if best_config is not None else "failed",
         "reason": "" if best_config is not None else "No completed HPT trial produced validation macro-F1.",
