@@ -1,28 +1,14 @@
-# Stage Notebooks
+# Normal Exhaustive Stage Notebooks
 
-These notebooks are generated from `../ledgar_clause_classification_pipeline.ipynb` by
-`../../scripts/split_notebook_by_stage.py`.
+These stage notebooks are synced from `ledgar_clause_classification_pipeline_NORMAL_EXHAUSTIVE_ALL_VARIANTS.ipynb`.
 
-The master notebook remains the source of truth. The split notebooks are for clearer
-stage-by-stage execution and review.
+Use the master notebook as the source of truth. These are split copies for staged execution/review.
 
-Recommended order:
+Core stages are 00–06, 08–11. Stage 07 agentic review is optional/non-core for the marking scheme.
 
-1. `00_setup_and_config.ipynb`
-2. `01_dataset_preprocessing_eda.ipynb`
-3. `02_dummy_baselines.ipynb`
-4. `03_classical_tfidf_models.ipynb`
-5. `04_neural_sequence_bilstm.ipynb`
-6. `05_transformer_finetuning.ipynb`
-7. `06_qwen_prompting.ipynb`
-8. `07_agentic_review.ipynb`
-9. `08_results_error_exports.ipynb`
-10. `09_final_artifact_audit.ipynb`
 
-Notes:
+## ContractBERT update
 
-- Stage notebooks have outputs cleared.
-- Model stages include setup and LEDGAR preprocessing cells so they can run on their own.
-- Expensive stages still obey the same flags as the master notebook.
-- The transformer stage includes optional two-stage HPT via `RUN_TRANSFORMER_HPT`.
-- `08_results_error_exports.ipynb` rebuilds report-facing artifacts from saved outputs; it does not retrain models.
+Transformer variants now include DistilBERT, Legal-BERT, and Contracts-BERT (`nlpaueb/bert-base-uncased-contracts`). This applies to configured transformer baselines and transformer HPT variants.
+
+Updated transformer training count if all variants run: 3 configured baselines + 3 × (32 random + 32 Bayesian) HPT trials + 3 final HPT retrains = 198 transformer trainings.
