@@ -1,16 +1,16 @@
 rank,true_label,predicted_label,count
-1,Terms,General,9
-2,General,Terminations,8
+1,General,Terminations,11
+2,Terms,General,9
 3,General,Taxes,6
 4,General,Assignments,6
-5,General,Terms,6
-6,Notices,General,5
-7,Terminations,Terms,5
-8,Amendments,Entire Agreements,5
+5,Terminations,Terms,5
+6,Terms,Terminations,5
+7,Amendments,Entire Agreements,5
+8,General,Terms,4
 9,General,Waivers,4
-10,Terms,Terminations,4
-11,Terminations,General,4
-12,Terminations,Survival,3
-13,Terminations,Amendments,3
-14,Amendments,Waivers,3
-15,General,Compliance With Laws,3
+10,Terminations,General,4
+11,Terminations,Survival,4
+12,Terminations,Amendments,4
+13,Notices,General,4
+14,General,Notices,3
+15,Governing Laws,Severability,3

@@ -1,16 +1,16 @@
 label,predicted_label,count
+General,Terminations,11
 Terms,General,9
-General,Terminations,8
 General,Taxes,6
 General,Assignments,6
-General,Terms,6
-Notices,General,5
 Terminations,Terms,5
+Terms,Terminations,5
 Amendments,Entire Agreements,5
+General,Terms,4
 General,Waivers,4
-Terms,Terminations,4
 Terminations,General,4
-Terminations,Survival,3
-Terminations,Amendments,3
-Amendments,Waivers,3
-General,Compliance With Laws,3
+Terminations,Survival,4
+Terminations,Amendments,4
+Notices,General,4
+General,Notices,3
+Governing Laws,Severability,3

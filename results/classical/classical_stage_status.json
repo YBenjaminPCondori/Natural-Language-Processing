@@ -1,0 +1,60 @@
+{
+  "created_at_utc": "2026-05-05T01:21:57.267403+00:00",
+  "started_at_utc": "2026-05-05T00:35:31.439961+00:00",
+  "stage": "classical_models",
+  "status": "completed",
+  "error_type": "",
+  "error_message": "",
+  "notes": "Hyperparameters selected on LEDGAR validation; final metrics use LEDGAR test only.",
+  "config": {
+    "dataset_name": "LEDGAR",
+    "seed": 42,
+    "tokenizer_name": "negation_aware",
+    "max_features_list": [
+      10000,
+      30000
+    ],
+    "ngram_ranges": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "min_df_list": [
+      1,
+      2,
+      5
+    ],
+    "c_values": [
+      0.1,
+      1.0,
+      3.0,
+      10.0
+    ],
+    "nb_alpha_values": [
+      0.1,
+      0.5,
+      1.0
+    ],
+    "run_naive_bayes": true,
+    "max_train_samples": null,
+    "max_validation_samples": null,
+    "max_eval_samples": null,
+    "smoke_test": false,
+    "train_rows_available": 28587,
+    "validation_rows_available": 4670,
+    "test_rows_available": 4732,
+    "cuad_policy": "Classical models train and tune only on LEDGAR train/validation.",
+    "train_rows_used": 28587,
+    "validation_rows_used": 4670,
+    "test_rows_used": 4732
+  },
+  "outputs": {
+    "results": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/classical/classical_results.csv",
+    "validation_grid": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/classical/classical_validation_grid.csv"
+  }
+}

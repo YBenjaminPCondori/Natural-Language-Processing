@@ -1,0 +1,15 @@
+{
+  "validation_loss": 0.1682521402835846,
+  "validation_accuracy": 0.9659528907922912,
+  "validation_macro_f1": 0.9583599007418577,
+  "validation_weighted_f1": 0.9659354999679587,
+  "validation_runtime": 4.1053,
+  "validation_samples_per_second": 1137.556,
+  "validation_steps_per_second": 71.128,
+  "epoch": 3.0,
+  "model_name": "distilbert-base-uncased",
+  "selection_metric": "validation_macro_f1",
+  "best_checkpoint": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/transformer/checkpoints/checkpoint-5361",
+  "best_metric": 0.9583599007418577,
+  "trial_metadata": {}
+}

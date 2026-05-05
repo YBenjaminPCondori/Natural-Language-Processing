@@ -1,5 +1,6 @@
 {
   "dataset": "LEDGAR",
+  "top_k_selected_from_split": "train",
   "top_k_labels": 20,
   "rows_per_split": {
     "train": 28587,

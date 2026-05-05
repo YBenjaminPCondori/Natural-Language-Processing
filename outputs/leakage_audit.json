@@ -1,5 +1,6 @@
 {
   "dataset": "LEDGAR",
+  "top_k_selected_from_split": "train",
   "split_priority": [
     "train",
     "validation",
@@ -29,6 +30,11 @@
     "train": 28587,
     "validation": 4670,
     "test": 4732
+  },
+  "cuad_rows_found_after_preprocessing": {
+    "train": 0,
+    "validation": 0,
+    "test": 0
   },
   "cross_split_overlaps_before_deduplication": {
     "train_vs_validation": {

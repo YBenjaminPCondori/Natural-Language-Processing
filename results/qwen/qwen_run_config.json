@@ -6,10 +6,10 @@
   "few_shot_examples_per_class": 1,
   "decoding": {
     "do_sample": false,
-    "max_new_tokens": 24
+    "max_new_tokens": 12
   },
   "output_requirement": "Return exactly one allowed label.",
-  "fuzzy_matching_cutoff": 0.8,
+  "parser_policy": "Strict exact-label match after whitespace/case normalisation; all non-allowed outputs are marked invalid and logged.",
   "seed": 42,
   "allowed_labels": [
     "Governing Laws",
@@ -32,5 +32,9 @@
     "Compliance With Laws",
     "Indemnifications",
     "Waivers"
-  ]
+  ],
+  "max_eval_samples": null,
+  "smoke_test": false,
+  "train_rows_available": 28587,
+  "test_rows_used": 200
 }

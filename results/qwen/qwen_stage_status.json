@@ -1,0 +1,58 @@
+{
+  "created_at_utc": "2026-05-05T01:30:26.472189+00:00",
+  "started_at_utc": "2026-05-05T01:26:20.738974+00:00",
+  "stage": "qwen_prompting",
+  "status": "completed",
+  "error_type": "",
+  "error_message": "",
+  "notes": "Qwen outputs are accepted only if they match the allowed label set exactly.",
+  "config": {
+    "status": "running_or_completed",
+    "reason": null,
+    "model_name_configured": "Qwen/Qwen2.5-3B-Instruct",
+    "eval_sample_size_configured": 200,
+    "few_shot_examples_per_class": 1,
+    "decoding": {
+      "do_sample": false,
+      "max_new_tokens": 12
+    },
+    "output_requirement": "Return exactly one allowed label.",
+    "parser_policy": "Strict exact-label match after whitespace/case normalisation; all non-allowed outputs are marked invalid and logged.",
+    "seed": 42,
+    "allowed_labels": [
+      "Governing Laws",
+      "Notices",
+      "Counterparts",
+      "Entire Agreements",
+      "Severability",
+      "Amendments",
+      "Survival",
+      "Assignments",
+      "Expenses",
+      "Terms",
+      "Terminations",
+      "Insurances",
+      "Taxes",
+      "Litigations",
+      "Further Assurances",
+      "Confidentiality",
+      "General",
+      "Compliance With Laws",
+      "Indemnifications",
+      "Waivers"
+    ],
+    "max_eval_samples": null,
+    "smoke_test": false,
+    "train_rows_available": 28587,
+    "test_rows_available": 4732,
+    "cuad_policy": "Qwen prompting uses LEDGAR train examples only for prompts/retrieval and LEDGAR test for evaluation.",
+    "allowed_output_policy": "Only labels in label_names are accepted; invalid generations are excluded as labels and logged.",
+    "test_rows_used": 200
+  },
+  "outputs": {
+    "results": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/qwen/qwen_results.csv",
+    "predictions": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/qwen/qwen_predictions.csv",
+    "invalid_outputs": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/qwen/qwen_invalid_outputs.csv",
+    "prompt_examples": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/qwen/qwen_prompt_examples.txt"
+  }
+}

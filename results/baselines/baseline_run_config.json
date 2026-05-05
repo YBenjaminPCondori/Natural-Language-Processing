@@ -1,0 +1,9 @@
+{
+  "dataset_name": "LEDGAR",
+  "seed": 42,
+  "max_eval_samples": null,
+  "train_rows_available": 28587,
+  "test_rows_available": 4732,
+  "num_labels": 20,
+  "test_rows_evaluated": 4732
+}

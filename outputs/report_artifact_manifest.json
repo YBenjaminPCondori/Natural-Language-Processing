@@ -1,5 +1,5 @@
 {
-  "created_at_utc": "2026-05-03T15:37:46.206781+00:00",
+  "created_at_utc": "2026-05-05T01:31:13.651396+00:00",
   "artifacts": {
     "data_summary": "outputs/data_summary.csv",
     "label_distribution": "outputs/label_distribution.csv",
@@ -23,10 +23,18 @@
     "qwen_predictions": "outputs/qwen_predictions.csv",
     "qwen_invalid_outputs": "outputs/qwen_invalid_outputs.csv",
     "qwen_prompt_examples": "outputs/qwen_prompt_examples.txt",
+    "preprocessing_techniques": "outputs/preprocessing_techniques.md",
+    "hpt_report_aliases": {
+      "sweep_results": "outputs/sweep_results.csv",
+      "best_hyperparameters": "outputs/best_hyperparameters.json",
+      "hpt_summary": "outputs/hpt_summary.csv"
+    },
     "figures": {
+      "pipeline_overview": "figures/pipeline_overview.png",
       "label_distribution": "outputs/figures/label_distribution.png",
       "clause_length_distribution": "outputs/figures/clause_length_distribution.png",
       "model_comparison_macro_f1": "outputs/figures/model_comparison_macro_f1.png",
+      "hpt_validation_macro_f1": "figures/hpt_validation_macro_f1.png",
       "confusion_matrix_best_model": "outputs/figures/confusion_matrix_best_model.png",
       "qwen_invalid_predictions": "figures/qwen_invalid_predictions.png",
       "agentic_review_workflow": "figures/agentic_review_workflow.png"
