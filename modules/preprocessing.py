@@ -10,7 +10,10 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 from .data_setup import ProjectPaths, normalise_whitespace, save_jsonl, write_json
 from .evaluation import utc_now_iso, write_stage_status
@@ -375,16 +378,20 @@ def preprocess_ledgar(
 
 
 def create_ledgar_eda(processed: dict[str, pd.DataFrame], results_dir: Path) -> pd.DataFrame:
-    """Create LEDGAR EDA plots, examples, and split summary."""
+    """Create LEDGAR EDA plots, audits, feature-inspection files, and split summary."""
     if not processed:
         return pd.DataFrame()
 
     eda_dir = Path(results_dir) / "eda"
     eda_dir.mkdir(parents=True, exist_ok=True)
+
     combined = pd.concat(processed.values(), ignore_index=True)
+    combined["text"] = combined["text"].astype(str)
+    combined["label"] = combined["label"].astype(str)
     combined["word_count"] = combined["text"].str.split().str.len()
     label_counts = combined["label"].value_counts()
 
+    # 1. Class distribution
     fig, ax = plt.subplots(figsize=(12, 6))
     label_counts.plot(kind="bar", ax=ax)
     ax.set_title("LEDGAR Class Distribution")
@@ -395,6 +402,7 @@ def create_ledgar_eda(processed: dict[str, pd.DataFrame], results_dir: Path) -> 
     fig.savefig(eda_dir / "class_distribution.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
+    # 2. Clause length histogram
     fig, ax = plt.subplots(figsize=(10, 5))
     combined["word_count"].plot(kind="hist", bins=50, ax=ax)
     ax.set_title("LEDGAR Clause Length Histogram")
@@ -404,14 +412,115 @@ def create_ledgar_eda(processed: dict[str, pd.DataFrame], results_dir: Path) -> 
     fig.savefig(eda_dir / "clause_length_histogram.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
+    # 3. Missing / empty value audit
+    missing_audit = pd.DataFrame(
+        [
+            {
+                "column": column,
+                "missing_values": int(combined[column].isna().sum()),
+                "empty_strings": int(combined[column].astype(str).str.strip().eq("").sum()),
+                "total_rows": int(len(combined)),
+            }
+            for column in ["text", "label", "split", "source_dataset"]
+            if column in combined.columns
+        ]
+    )
+    missing_audit.to_csv(eda_dir / "missing_value_audit.csv", index=False)
+
+    # 4. Outlier clause report: shortest and longest clauses
+    shortest = combined.sort_values("word_count", ascending=True).head(25).copy()
+    shortest["outlier_type"] = "shortest"
+
+    longest = combined.sort_values("word_count", ascending=False).head(25).copy()
+    longest["outlier_type"] = "longest"
+
+    outlier_clauses = pd.concat([shortest, longest], ignore_index=True)
+    outlier_columns = ["outlier_type", "split", "label", "label_id", "word_count", "text"]
+    outlier_clauses[[column for column in outlier_columns if column in outlier_clauses.columns]].to_csv(
+        eda_dir / "outlier_clauses.csv",
+        index=False,
+    )
+
+    # 5. Label-wise length statistics
+    label_length_statistics = (
+        combined.groupby("label")["word_count"]
+        .agg(["count", "mean", "median", "std", "min", "max"])
+        .reset_index()
+        .sort_values("count", ascending=False)
+    )
+    label_length_statistics.to_csv(eda_dir / "label_length_statistics.csv", index=False)
+
+    # 6. Top TF-IDF unigram/bigram terms per label
+    label_documents = (
+        combined.groupby("label")["text"]
+        .apply(lambda texts: " ".join(texts.astype(str)))
+        .reset_index()
+    )
+
+    vectorizer = TfidfVectorizer(
+        lowercase=True,
+        tokenizer=legal_safe_tokenise,
+        token_pattern=None,
+        ngram_range=(1, 2),
+        max_features=5000,
+    )
+
+    tfidf_matrix = vectorizer.fit_transform(label_documents["text"])
+    feature_names = np.array(vectorizer.get_feature_names_out())
+
+    top_term_records: list[dict[str, Any]] = []
+    for label_index, label in enumerate(label_documents["label"]):
+        row = tfidf_matrix[label_index].toarray().ravel()
+        top_indices = row.argsort()[::-1][:20]
+
+        for rank, feature_index in enumerate(top_indices, start=1):
+            if row[feature_index] <= 0:
+                continue
+            top_term_records.append(
+                {
+                    "label": label,
+                    "rank": rank,
+                    "term": feature_names[feature_index],
+                    "tfidf_score": float(row[feature_index]),
+                }
+            )
+
+    top_tfidf_terms = pd.DataFrame(top_term_records)
+    top_tfidf_terms.to_csv(eda_dir / "top_tfidf_terms_per_label.csv", index=False)
+
+    # 7. Label similarity heatmap using TF-IDF label vectors
+    similarity_matrix = cosine_similarity(tfidf_matrix)
+
+    fig, ax = plt.subplots(figsize=(12, 10))
+    image = ax.imshow(similarity_matrix, aspect="auto")
+    ax.set_title("LEDGAR Label Similarity Heatmap using TF-IDF")
+    ax.set_xticks(range(len(label_documents)))
+    ax.set_yticks(range(len(label_documents)))
+    ax.set_xticklabels(label_documents["label"], rotation=90, fontsize=7)
+    ax.set_yticklabels(label_documents["label"], fontsize=7)
+    fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(eda_dir / "label_similarity_heatmap.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+    # 8. Example clauses per label
     examples = []
     for label in label_counts.index:
         for row in combined[combined["label"] == label].head(3).to_dict(orient="records"):
             examples.append({"label": label, "split": row["split"], "text": row["text"]})
     save_jsonl(pd.DataFrame(examples), eda_dir / "examples_per_label.jsonl")
 
+    # 9. Split summary
     split_summary = pd.DataFrame(
-        [{"split": split, "rows": len(df), "classes": df["label"].nunique()} for split, df in processed.items()]
+        [
+            {
+                "split": split,
+                "rows": len(df),
+                "classes": df["label"].nunique(),
+            }
+            for split, df in processed.items()
+        ]
     )
     split_summary.to_csv(eda_dir / "dataset_split_summary.csv", index=False)
+
     return split_summary

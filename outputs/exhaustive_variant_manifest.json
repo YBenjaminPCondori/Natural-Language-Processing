@@ -1,0 +1,120 @@
+{
+  "requires_modules_folder": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/modules",
+  "flags": {
+    "RUN_CLASSICAL_MODELS": true,
+    "RUN_NAIVE_BAYES": true,
+    "RUN_SEQUENCE_MODEL": true,
+    "RUN_CONFIGURED_TRANSFORMER_BASELINES": true,
+    "RUN_TRANSFORMER": true,
+    "RUN_TRANSFORMER_HPT": true,
+    "RUN_QWEN_BASELINE": true,
+    "RUN_INSTRUCTION_LLM_EVAL": true,
+    "RUN_AGENTIC_EXTENSION": true,
+    "RUN_CUAD_EXTERNAL_EVAL": true
+  },
+  "smoke_mode": false,
+  "sample_caps": {
+    "HPT_MAX_TRAIN_SAMPLES": null,
+    "HPT_MAX_VALIDATION_SAMPLES": null,
+    "HPT_MAX_EVAL_SAMPLES": null,
+    "QWEN_MAX_EVAL_SAMPLES": null,
+    "INSTRUCTION_LLM_MAX_EXAMPLES_PER_SPLIT": null,
+    "CUAD_EXTERNAL_MAX_EVAL_SAMPLES": null
+  },
+  "classical": {
+    "tokenizers": [
+      "negation_aware",
+      "legal_safe"
+    ],
+    "models_exposed_by_module": [
+      "logistic_regression",
+      "linear_svm",
+      "multinomial_nb",
+      "complement_nb"
+    ],
+    "max_features_list": [
+      10000,
+      30000
+    ],
+    "ngram_ranges": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "min_df_list": [
+      1,
+      2,
+      5
+    ],
+    "c_values": [
+      0.1,
+      1.0,
+      3.0,
+      10.0
+    ],
+    "nb_alpha_values": [
+      0.1,
+      0.5,
+      1.0
+    ]
+  },
+  "sequence": {
+    "enabled": true,
+    "variant": "BiLSTM"
+  },
+  "configured_transformers": [
+    "distilbert-base-uncased",
+    "nlpaueb/legal-bert-base-uncased",
+    "nlpaueb/bert-base-uncased-contracts"
+  ],
+  "transformer_hpt": {
+    "models": [
+      "distilbert-base-uncased",
+      "nlpaueb/legal-bert-base-uncased",
+      "nlpaueb/bert-base-uncased-contracts"
+    ],
+    "random_trials_per_model": 32,
+    "bayes_trials_per_model": 32,
+    "final_retrain_epochs": 4
+  },
+  "qwen_prompting": {
+    "models": [
+      "Qwen/Qwen2.5-3B-Instruct",
+      "Qwen/Qwen2.5-7B-Instruct"
+    ],
+    "prompt_modes_inside_module": [
+      "zero_shot",
+      "static_few_shot",
+      "retrieval_few_shot"
+    ]
+  },
+  "instruction_llms": {
+    "model_keys": [
+      "saullm_7b",
+      "qwen_small",
+      "qwen_7b"
+    ],
+    "tune_decoding_on_validation": true,
+    "evaluate_test": true,
+    "quantization": "none"
+  },
+  "agentic_review": {
+    "enabled": true
+  },
+  "cuad_external": {
+    "enabled": true,
+    "max_eval_samples": null
+  },
+  "wandb": {
+    "enabled": true,
+    "mode": "online",
+    "run_strategy": "per_stage",
+    "enabled_stages": "all",
+    "stage_group": "ledgar-coursework-all-variants-stages"
+  }
+}

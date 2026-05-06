@@ -58,7 +58,7 @@ DEFAULT_STAGE5A_SEARCH_SPACE = {
 
 DEFAULT_STAGE5B_SEARCH_SPACE = {
     "learning_rate": [1e-5, 2e-5, 3e-5, 5e-5],
-    "batch_size": [16, 32],
+    "batch_size": [8, 16, 32],
     "epochs": [3],
     "weight_decay": [0.01, 0.05, 0.1],
     "warmup_ratio": [0.05, 0.1, 0.15],

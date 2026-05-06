@@ -1,0 +1,23 @@
+{
+  "model_family": "neural_sequence",
+  "model_name": "bilstm",
+  "training_type": "neural_sequence",
+  "dataset": "LEDGAR",
+  "dataset_name": "LEDGAR",
+  "eval_split": "test",
+  "sample_size": 4732,
+  "accuracy": 0.9482248520710059,
+  "macro_f1": 0.9318893208762219,
+  "weighted_f1": 0.9478238708766561,
+  "status": "completed",
+  "error_type": "",
+  "error_message": "",
+  "notes": "BiLSTM selected by validation macro-F1. best_epoch=6; validation_macro_f1=0.939928",
+  "prediction_path": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/sequence/predictions/bilstm_test_predictions.csv",
+  "classification_report_path": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/sequence/classification_reports/bilstm_report.json",
+  "confusion_matrix_path": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/sequence/confusion_matrices/bilstm_confusion_matrix.png",
+  "validation_macro_f1": 0.9399276301847446,
+  "best_epoch": 6,
+  "checkpoint_path": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/sequence/bilstm_best.pt",
+  "reason": ""
+}
