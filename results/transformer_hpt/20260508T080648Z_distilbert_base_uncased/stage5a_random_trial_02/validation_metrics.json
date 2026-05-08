@@ -1,0 +1,33 @@
+{
+  "validation_loss": 0.25561127066612244,
+  "validation_accuracy": 0.9445396145610279,
+  "validation_macro_f1": 0.9285647766144386,
+  "validation_weighted_f1": 0.9440092364061469,
+  "validation_runtime": 5.913,
+  "validation_samples_per_second": 789.788,
+  "validation_steps_per_second": 98.766,
+  "epoch": 2.0,
+  "model_name": "distilbert-base-uncased",
+  "selection_metric": "validation_macro_f1",
+  "best_checkpoint": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/transformer_hpt/20260508T080648Z_distilbert_base_uncased/stage5a_random_trial_02/checkpoints/checkpoint-7148",
+  "best_metric": 0.9285647766144386,
+  "trial_metadata": {
+    "stage": "stage5a_random_trial",
+    "trial_number": 2,
+    "model_name": "distilbert-base-uncased",
+    "objective": "validation_macro_f1",
+    "search_config": {
+      "learning_rate": 3e-06,
+      "batch_size": 8,
+      "epochs": 2,
+      "weight_decay": 0.0,
+      "warmup_ratio": 0.0,
+      "max_length": 128
+    },
+    "early_stopping_patience": 1,
+    "save_total_limit": 1,
+    "stage5a_policy": "random search, 2 epochs per trial, validation macro-F1 objective",
+    "stage5b_policy": "narrowed Bayesian search, 3 epochs per trial, validation macro-F1 objective",
+    "test_used": false
+  }
+}

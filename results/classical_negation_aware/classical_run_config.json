@@ -1,0 +1,47 @@
+{
+  "dataset_name": "LEDGAR",
+  "seed": 42,
+  "tokenizer_name": "negation_aware",
+  "max_features_list": [
+    10000,
+    30000
+  ],
+  "ngram_ranges": [
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ]
+  ],
+  "min_df_list": [
+    1,
+    2,
+    5
+  ],
+  "c_values": [
+    0.1,
+    1.0,
+    3.0,
+    10.0
+  ],
+  "nb_alpha_values": [
+    0.1,
+    0.5,
+    1.0
+  ],
+  "run_naive_bayes": true,
+  "max_train_samples": null,
+  "max_validation_samples": null,
+  "max_eval_samples": null,
+  "smoke_test": false,
+  "train_rows_available": 28587,
+  "validation_rows_available": 4670,
+  "test_rows_available": 4732,
+  "cuad_policy": "Classical models train and tune only on LEDGAR train/validation.",
+  "train_rows_used": 28587,
+  "validation_rows_used": 4670,
+  "test_rows_used": 4732
+}

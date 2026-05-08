@@ -1,0 +1,48 @@
+{
+  "output_dir": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/transformer_hpt/20260508T053954Z_distilbert_base_uncased/stage5a_random_trial_03/checkpoints",
+  "evaluation_strategy": "epoch",
+  "save_strategy": "epoch",
+  "learning_rate": 1e-05,
+  "per_device_train_batch_size": 8,
+  "per_device_eval_batch_size": 8,
+  "num_train_epochs": 2,
+  "weight_decay": 0.2,
+  "warmup_ratio": 0.06,
+  "load_best_model_at_end": true,
+  "metric_for_best_model": "macro_f1",
+  "greater_is_better": true,
+  "save_total_limit": 1,
+  "report_to": [
+    "wandb"
+  ],
+  "fp16": true,
+  "seed": 42,
+  "logging_strategy": "epoch",
+  "run_name": "stage5a_random_trial_03",
+  "early_stopping_patience": 1,
+  "trial_metadata": {
+    "stage": "stage5a_random_trial",
+    "trial_number": 3,
+    "model_name": "distilbert-base-uncased",
+    "objective": "validation_macro_f1",
+    "search_config": {
+      "learning_rate": 1e-05,
+      "batch_size": 8,
+      "epochs": 2,
+      "weight_decay": 0.2,
+      "warmup_ratio": 0.06,
+      "max_length": 512
+    },
+    "early_stopping_patience": 1,
+    "save_total_limit": 1,
+    "stage5a_policy": "random search, 2 epochs per trial, validation macro-F1 objective",
+    "stage5b_policy": "narrowed Bayesian search, 3 epochs per trial, validation macro-F1 objective",
+    "test_used": false
+  },
+  "selection_metric": "validation_macro_f1",
+  "test_evaluation_enabled": false,
+  "smoke_test": false,
+  "max_train_samples": null,
+  "max_validation_samples": null,
+  "max_eval_samples": null
+}

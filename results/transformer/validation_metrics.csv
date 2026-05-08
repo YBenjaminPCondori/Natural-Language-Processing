@@ -1,2 +1,0 @@
-validation_loss,validation_accuracy,validation_macro_f1,validation_weighted_f1,validation_runtime,validation_samples_per_second,validation_steps_per_second,epoch,model_name,selection_metric,best_checkpoint,best_metric,trial_metadata
-0.1682521402835846,0.9659528907922912,0.9583599007418577,0.9659354999679587,4.1053,1137.556,71.128,3.0,distilbert-base-uncased,validation_macro_f1,/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/transformer/checkpoints/checkpoint-5361,0.9583599007418577,{}

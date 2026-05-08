@@ -1,0 +1,60 @@
+{
+  "created_at_utc": "2026-05-08T05:59:23.094837+00:00",
+  "started_at_utc": "2026-05-08T05:57:04.703134+00:00",
+  "stage": "transformer_model",
+  "status": "completed",
+  "error_type": "",
+  "error_message": "",
+  "notes": "Validation-only transformer run for HPT; test split was not evaluated.",
+  "config": {
+    "model_name": "distilbert-base-uncased",
+    "dataset_name": "LEDGAR",
+    "max_length": 128,
+    "learning_rate": 1e-05,
+    "num_train_epochs": 2,
+    "weight_decay": 0.05,
+    "warmup_ratio": 0.06,
+    "batch_size_override": 16,
+    "seed": 42,
+    "run_transformer": true,
+    "evaluate_test": false,
+    "early_stopping_patience": 1,
+    "save_total_limit": 1,
+    "trial_metadata": {
+      "stage": "stage5a_random_trial",
+      "trial_number": 5,
+      "model_name": "distilbert-base-uncased",
+      "objective": "validation_macro_f1",
+      "search_config": {
+        "learning_rate": 1e-05,
+        "batch_size": 16,
+        "epochs": 2,
+        "weight_decay": 0.05,
+        "warmup_ratio": 0.06,
+        "max_length": 128
+      },
+      "early_stopping_patience": 1,
+      "save_total_limit": 1,
+      "stage5a_policy": "random search, 2 epochs per trial, validation macro-F1 objective",
+      "stage5b_policy": "narrowed Bayesian search, 3 epochs per trial, validation macro-F1 objective",
+      "test_used": false
+    },
+    "max_train_samples": null,
+    "max_validation_samples": null,
+    "max_eval_samples": null,
+    "smoke_test": false,
+    "train_rows_available": 28587,
+    "validation_rows_available": 4670,
+    "test_rows_available": 4732,
+    "cuad_policy": "Transformer training/tuning uses LEDGAR train/validation only; CUAD is external.",
+    "train_rows_used": 28587,
+    "validation_rows_used": 4670,
+    "test_rows_used": 4732
+  },
+  "outputs": {
+    "validation_metrics": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/transformer_hpt/20260508T053954Z_distilbert_base_uncased/stage5a_random_trial_05/validation_metrics.json",
+    "training_args": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/transformer_hpt/20260508T053954Z_distilbert_base_uncased/stage5a_random_trial_05/training_args.json",
+    "training_log": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/transformer_hpt/20260508T053954Z_distilbert_base_uncased/stage5a_random_trial_05/training_log_history.json",
+    "model": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/transformer_hpt/20260508T053954Z_distilbert_base_uncased/stage5a_random_trial_05/model"
+  }
+}

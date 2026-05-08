@@ -1,0 +1,2 @@
+validation_loss,validation_accuracy,validation_macro_f1,validation_weighted_f1,validation_runtime,validation_samples_per_second,validation_steps_per_second,epoch,model_name,selection_metric,best_checkpoint,best_metric,trial_metadata
+0.1499500274658203,0.9693790149892934,0.9622183950425885,0.9693911597826874,7.2851,641.036,40.082,3.0,nlpaueb/legal-bert-base-uncased,validation_macro_f1,/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/transformer_configured_nlpaueb_legal_bert_base_uncased/checkpoints/checkpoint-5361,0.9622183950425885,{}

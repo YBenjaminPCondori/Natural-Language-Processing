@@ -78,9 +78,9 @@
       "nlpaueb/legal-bert-base-uncased",
       "nlpaueb/bert-base-uncased-contracts"
     ],
-    "random_trials_per_model": 32,
-    "bayes_trials_per_model": 32,
-    "final_retrain_epochs": 4
+    "random_trials_per_model": 5,
+    "bayes_trials_per_model": 5,
+    "final_retrain_epochs": 3
   },
   "qwen_prompting": {
     "models": [

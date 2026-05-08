@@ -1,0 +1,15 @@
+{
+  "validation_loss": 0.1499500274658203,
+  "validation_accuracy": 0.9693790149892934,
+  "validation_macro_f1": 0.9622183950425885,
+  "validation_weighted_f1": 0.9693911597826874,
+  "validation_runtime": 7.2851,
+  "validation_samples_per_second": 641.036,
+  "validation_steps_per_second": 40.082,
+  "epoch": 3.0,
+  "model_name": "nlpaueb/legal-bert-base-uncased",
+  "selection_metric": "validation_macro_f1",
+  "best_checkpoint": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/transformer_configured_nlpaueb_legal_bert_base_uncased/checkpoints/checkpoint-5361",
+  "best_metric": 0.9622183950425885,
+  "trial_metadata": {}
+}

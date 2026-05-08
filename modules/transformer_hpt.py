@@ -47,23 +47,31 @@ HPT_RESULT_COLUMNS = [
 ]
 
 
+# Stage 5A: broader random search.
 DEFAULT_STAGE5A_SEARCH_SPACE = {
-    "learning_rate": [1e-6, 3e-6, 1e-5, 3e-5, 1e-4],
-    "batch_size": [8, 16, 32],
+    "learning_rate": [3e-6, 1e-5, 3e-5, 5e-5],
+    "batch_size": [8, 16],
     "epochs": [2],
     "weight_decay": [0.0, 0.01, 0.05, 0.1, 0.2],
     "warmup_ratio": [0.0, 0.06, 0.1, 0.2],
     "max_length": [128, 256, 512],
 }
 
+
+# Stage 5B: Bayesian search.
+# Important: this includes all possible Stage 5A values that may be enqueued.
+# Otherwise Optuna can crash with errors like:
+# ValueError: '2' not in (3,)
+# ValueError: '0.2' not in (0.01, 0.05, 0.1)
 DEFAULT_STAGE5B_SEARCH_SPACE = {
-    "learning_rate": [1e-5, 2e-5, 3e-5, 5e-5],
-    "batch_size": [8, 16, 32],
-    "epochs": [3],
-    "weight_decay": [0.01, 0.05, 0.1],
-    "warmup_ratio": [0.05, 0.1, 0.15],
-    "max_length": [256, 512],
+    "learning_rate": [3e-6, 1e-5, 2e-5, 3e-5, 5e-5],
+    "batch_size": [8, 16],
+    "epochs": [2, 3],
+    "weight_decay": [0.0, 0.01, 0.05, 0.1, 0.2],
+    "warmup_ratio": [0.0, 0.05, 0.06, 0.1, 0.15, 0.2],
+    "max_length": [128, 256, 512],
 }
+
 
 # Backwards-compatible alias used by older notebooks.
 DEFAULT_SEARCH_SPACE = DEFAULT_STAGE5A_SEARCH_SPACE
@@ -239,6 +247,7 @@ def _run_single_trial(
     started_at = datetime.now(timezone.utc).isoformat()
     tags = ["hpt", "transformer", "legal-clause-classification"]
     tags.append("random-search" if "stage5a" in stage else "bayes-opt")
+
     trial_payload = {
         "stage": stage,
         "trial_number": trial_number,
@@ -247,10 +256,11 @@ def _run_single_trial(
         "search_config": trial_config,
         "early_stopping_patience": config.early_stopping_patience,
         "save_total_limit": config.save_total_limit,
-        "stage5a_policy": "random search, 2 epochs per trial, validation macro-F1 objective",
-        "stage5b_policy": "narrowed Bayesian search, 3 epochs per trial, validation macro-F1 objective",
+        "stage5a_policy": "Random search, validation macro-F1 objective.",
+        "stage5b_policy": "Bayesian search over Stage 5A-compatible values, validation macro-F1 objective.",
         "test_used": False,
     }
+
     run = _start_trial_run(
         enabled=wandb_enabled,
         project=wandb_project,
@@ -261,8 +271,10 @@ def _run_single_trial(
         tags=tags,
         config=trial_payload,
     )
+
     _log_trial_distribution(run, label_distribution)
     trial_epochs = 1 if config.smoke_test else int(trial_config["epochs"])
+
     try:
         output = train_transformer_classifier(
             train_df,
@@ -292,7 +304,9 @@ def _run_single_trial(
             max_eval_samples=config.max_eval_samples,
             smoke_test=config.smoke_test,
         )
+
         validation_metrics = output.get("validation_metrics") or {}
+
         if output.get("skip_result") is not None:
             status = "skipped"
             reason = output["skip_result"].get("notes", "trial skipped")
@@ -302,6 +316,7 @@ def _run_single_trial(
         else:
             status = "failed"
             reason = "No validation metrics were produced."
+
         row = _trial_row(
             stage=stage,
             trial_number=trial_number,
@@ -314,6 +329,7 @@ def _run_single_trial(
             reason=reason,
             started_at_utc=started_at,
         )
+
         if run is not None and status == "completed":
             run.log(
                 {
@@ -322,7 +338,9 @@ def _run_single_trial(
                     "validation/weighted_f1": row["validation_weighted_f1"],
                 }
             )
+
         return row
+
     except Exception as exc:
         return _trial_row(
             stage=stage,
@@ -335,6 +353,7 @@ def _run_single_trial(
             reason=f"{type(exc).__name__}: {exc}",
             started_at_utc=started_at,
         )
+
     finally:
         finish_wandb_run(run)
 
@@ -355,6 +374,34 @@ def _row_to_config(row: pd.Series) -> dict[str, Any]:
         "warmup_ratio": float(row["warmup_ratio"]),
         "max_length": int(row["max_length"]),
     }
+
+
+def _stage5b_space_with_enqueued_best(
+    stage5b_space: dict[str, list[Any]],
+    best_config: dict[str, Any] | None,
+) -> dict[str, list[Any]]:
+    """
+    Return a Stage 5B search space that is guaranteed to contain the enqueued Stage 5A best config.
+
+    This prevents Optuna categorical mismatch crashes such as:
+    - ValueError: '2' not in (3,)
+    - ValueError: '0.2' not in (0.01, 0.05, 0.1)
+    """
+
+    safe_space = {key: list(values) for key, values in stage5b_space.items()}
+
+    if best_config is None:
+        return safe_space
+
+    for key, value in best_config.items():
+        if key not in safe_space:
+            safe_space[key] = [value]
+            continue
+
+        if value not in safe_space[key]:
+            safe_space[key].append(value)
+
+    return safe_space
 
 
 def _run_bayes_search(
@@ -397,13 +444,17 @@ def _run_bayes_search(
 
     stage_rows: list[dict[str, Any]] = []
     study = optuna.create_study(direction="maximize", study_name=f"{safe_name(config.model_name)}_stage5b_bayes")
+
     random_frame = pd.DataFrame(existing_rows)
     best_random = _best_completed(random_frame) if not random_frame.empty else None
-    if best_random is not None:
-        study.enqueue_trial(_row_to_config(best_random))
+    best_random_config = _row_to_config(best_random) if best_random is not None else None
+
+    bayes_space = _stage5b_space_with_enqueued_best(config.stage5b_search_space, best_random_config)
+
+    if best_random_config is not None:
+        study.enqueue_trial(best_random_config)
 
     def objective(trial: Any) -> float:
-        bayes_space = config.stage5b_search_space
         trial_config = {
             "learning_rate": trial.suggest_categorical("learning_rate", bayes_space["learning_rate"]),
             "batch_size": trial.suggest_categorical("batch_size", bayes_space["batch_size"]),
@@ -412,6 +463,7 @@ def _run_bayes_search(
             "warmup_ratio": trial.suggest_categorical("warmup_ratio", bayes_space["warmup_ratio"]),
             "max_length": trial.suggest_categorical("max_length", bayes_space["max_length"]),
         }
+
         row = _run_single_trial(
             train_df=train_df,
             validation_df=validation_df,
@@ -430,14 +482,19 @@ def _run_bayes_search(
             wandb_mode=wandb_mode,
             label_distribution=label_distribution,
         )
+
         stage_rows.append(row)
+
         score = row.get("validation_macro_f1")
         if row.get("status") != "completed" or pd.isna(score):
             return 0.0
+
         return float(score)
 
     study.optimize(objective, n_trials=config.bayes_trials)
+
     write_json(run_root / "bayes_study_best_params.json", study.best_params if len(study.trials) else {})
+
     return stage_rows
 
 
@@ -445,33 +502,47 @@ def _archive_existing_final(results_dir: Path, archive_root: Path) -> None:
     final_dir = results_dir / "transformer"
     if not final_dir.exists():
         return
+
     archive_target = archive_root / "previous_results_transformer"
+
     if archive_target.exists():
         shutil.rmtree(archive_target)
+
     shutil.copytree(final_dir, archive_target)
 
 
 def _plot_hpt(results: pd.DataFrame, project_root: Path) -> None:
     figure_path = project_root / "figures" / "hpt_validation_macro_f1.png"
     output_figure_path = project_root / "outputs" / "figures" / "hpt_validation_macro_f1.png"
+
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     output_figure_path.parent.mkdir(parents=True, exist_ok=True)
 
     completed = results[(results["status"] == "completed") & results["validation_macro_f1"].notna()].copy()
+
     fig, ax = plt.subplots(figsize=(10, 5))
+
     if completed.empty:
         ax.text(0.5, 0.5, "No completed transformer HPT trials yet", ha="center", va="center")
         ax.set_axis_off()
     else:
-        completed["trial_label"] = completed["stage"].astype(str).str.replace("_trial", "", regex=False) + "-" + completed["trial_number"].astype(str)
+        completed["trial_label"] = (
+            completed["stage"].astype(str).str.replace("_trial", "", regex=False)
+            + "-"
+            + completed["trial_number"].astype(str)
+        )
+
         ax.plot(range(len(completed)), completed["validation_macro_f1"], marker="o", linewidth=1)
         ax.set_xticks(range(len(completed)))
         ax.set_xticklabels(completed["trial_label"], rotation=45, ha="right", fontsize=8)
+
         for stage, group in completed.groupby("stage"):
             ax.axhline(group["validation_macro_f1"].max(), linestyle="--", linewidth=1, label=f"{stage} best")
+
         ax.set_ylabel("Validation macro-F1")
         ax.set_title("Transformer HPT Validation Macro-F1 by Trial")
         ax.legend(fontsize=8)
+
     fig.tight_layout()
     fig.savefig(figure_path, dpi=150, bbox_inches="tight")
     fig.savefig(output_figure_path, dpi=150, bbox_inches="tight")
@@ -481,12 +552,19 @@ def _plot_hpt(results: pd.DataFrame, project_root: Path) -> None:
 def _markdown_table(df: pd.DataFrame) -> str:
     if df.empty:
         return "_No rows._"
+
     frame = df.fillna("")
     headers = list(frame.columns)
-    lines = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
+
+    lines = [
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join("---" for _ in headers) + " |",
+    ]
+
     for _, row in frame.iterrows():
         values = [str(row[column]).replace("\n", " ") for column in headers]
         lines.append("| " + " | ".join(values) + " |")
+
     return "\n".join(lines)
 
 
@@ -500,16 +578,22 @@ def _write_hpt_artifacts(
     final_output: dict[str, Any] | None,
 ) -> pd.DataFrame:
     results = pd.DataFrame(rows).reindex(columns=HPT_RESULT_COLUMNS)
+
     best = _best_completed(results)
+
     if best is not None:
         results.loc[best.name, "selected_for_final"] = True
+
     random_best = _best_completed(results[results["stage"] == "stage5a_random_trial"]) if not results.empty else None
+
     if random_best is not None:
         results.loc[random_best.name, "selected_for_bayes"] = True
 
     results.to_csv(run_root / "hyperparameter_search_results.csv", index=False)
+
     project_outputs = project_root / "outputs"
     project_outputs.mkdir(parents=True, exist_ok=True)
+
     results.to_csv(project_outputs / "hyperparameter_search_results.csv", index=False)
 
     summary = {
@@ -519,16 +603,18 @@ def _write_hpt_artifacts(
         "early_stopping_patience": config.early_stopping_patience,
         "save_total_limit": config.save_total_limit,
         "test_policy": "Test split is not evaluated during HPT trials; final retrain evaluates test only after validation selection.",
-        "stage5a_policy": "Random search with 2 epochs per trial.",
-        "stage5b_policy": "Narrowed Bayesian search with 3 epochs per trial.",
+        "stage5a_policy": "Random search over broad Stage 5A values.",
+        "stage5b_policy": "Bayesian search over Stage 5A-compatible values.",
         "final_retrain_epochs": config.final_retrain_epochs,
         "class_imbalance_policy": "Label distribution is logged and macro F1 is the main metric; class weights are not added by this HPT runner.",
         "secondary_transformer_policy": config.secondary_transformer_policy,
         "best_config": best_config,
         "final_retrain_output_dir": str(final_output.get("output_dir")) if final_output else None,
     }
+
     write_json(run_root / "best_transformer_configs.json", summary)
     write_json(project_outputs / "best_transformer_configs.json", summary)
+
     if not results.empty and results["status"].eq("completed").any():
         stage_status = "completed"
         error_type = ""
@@ -541,6 +627,7 @@ def _write_hpt_artifacts(
         stage_status = "failed"
         error_type = "NoCompletedTrial"
         error_message = "; ".join(results["reason"].dropna().astype(str).unique().tolist())
+
     write_stage_status(
         run_root / "transformer_hpt_stage_status.json",
         stage="transformer_hpt",
@@ -555,6 +642,7 @@ def _write_hpt_artifacts(
         },
         notes="HPT trials evaluate validation only; final retrain/test runs only after validation selection.",
     )
+
     write_stage_status(
         project_outputs / "transformer_hpt_stage_status.json",
         stage="transformer_hpt",
@@ -579,13 +667,18 @@ def _write_hpt_artifacts(
         "- Early stopping: patience=1 by default.",
         "- Checkpoint policy: save only the best checkpoint per trial.",
         "- Test policy: test split is reserved for final retraining/evaluation only.",
+        "- Stage 5A policy: random search over broad values.",
+        "- Stage 5B policy: Bayesian search over Stage 5A-compatible values.",
         "- Secondary transformer policy: reuse the selected config or run only a light search.",
         "",
         "## Trials",
         _markdown_table(results),
     ]
+
     (project_outputs / "transformer_training_summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
     _plot_hpt(results, project_root)
+
     return results
 
 
@@ -601,8 +694,10 @@ def _log_hpt_summary_to_wandb(
     wandb_mode: str,
 ) -> None:
     """Log HPT summary artifacts after plots have been created."""
+
     if not wandb_enabled:
         return
+
     run = start_wandb_run(
         enabled=wandb_enabled,
         project=wandb_project,
@@ -620,17 +715,24 @@ def _log_hpt_summary_to_wandb(
         },
         mode=wandb_mode,
     )
+
     try:
         if run is None:
             return
+
         comparison_df = results.copy()
+
         if "validation_macro_f1" in comparison_df:
             comparison_df["macro_f1"] = comparison_df["validation_macro_f1"]
+
         if "validation_accuracy" in comparison_df:
             comparison_df["accuracy"] = comparison_df["validation_accuracy"]
+
         if "validation_weighted_f1" in comparison_df:
             comparison_df["weighted_f1"] = comparison_df["validation_weighted_f1"]
+
         comparison_df["dataset_name"] = "LEDGAR_validation"
+
         log_wandb_outputs(
             run,
             paths=build_project_paths(project_root),
@@ -639,6 +741,7 @@ def _log_hpt_summary_to_wandb(
             log_text_tables=False,
             log_model_files=False,
         )
+
     finally:
         finish_wandb_run(run)
 
@@ -658,11 +761,14 @@ def run_two_stage_transformer_hpt(
     wandb_mode: str = "online",
 ) -> dict[str, Any]:
     """Run random search, Bayesian search, then validation-selected final retraining."""
+
     config = config or TransformerHPTConfig()
+
     if config.smoke_test:
         config.random_trials = min(config.random_trials, 1)
         config.bayes_trials = 0
         config.final_retrain = False
+
     results_dir = Path(results_dir)
     project_root = results_dir.parent
     run_root = results_dir / "transformer_hpt" / f"{utc_stamp()}_{safe_name(config.model_name)}"
@@ -670,8 +776,10 @@ def run_two_stage_transformer_hpt(
 
     label_distribution = _label_distribution(train_df)
     label_distribution.to_csv(run_root / "label_distribution.csv", index=False)
+
     (project_root / "outputs").mkdir(parents=True, exist_ok=True)
     label_distribution.to_csv(project_root / "outputs" / "transformer_hpt_label_distribution.csv", index=False)
+
     write_json(run_root / "hpt_config.json", asdict(config))
 
     rows: list[dict[str, Any]] = []
@@ -695,10 +803,28 @@ def run_two_stage_transformer_hpt(
                     started_at_utc=datetime.now(timezone.utc).isoformat(),
                 )
             )
-            results = _write_hpt_artifacts(project_root=project_root, run_root=run_root, config=config, rows=rows, best_config=None, final_output=None)
-            return {"status": "skipped", "reason": reason, "run_root": run_root, "results": results, "best_config": None, "final_output": None}
+
+            results = _write_hpt_artifacts(
+                project_root=project_root,
+                run_root=run_root,
+                config=config,
+                rows=rows,
+                best_config=None,
+                final_output=None,
+            )
+
+            return {
+                "status": "skipped",
+                "reason": reason,
+                "run_root": run_root,
+                "results": results,
+                "best_config": None,
+                "final_output": None,
+            }
+
     except Exception as exc:
         reason = f"Torch/CUDA check failed: {type(exc).__name__}: {exc}"
+
         rows.append(
             _trial_row(
                 stage="stage5a_random_trial",
@@ -712,8 +838,24 @@ def run_two_stage_transformer_hpt(
                 started_at_utc=datetime.now(timezone.utc).isoformat(),
             )
         )
-        results = _write_hpt_artifacts(project_root=project_root, run_root=run_root, config=config, rows=rows, best_config=None, final_output=None)
-        return {"status": "failed", "reason": reason, "run_root": run_root, "results": results, "best_config": None, "final_output": None}
+
+        results = _write_hpt_artifacts(
+            project_root=project_root,
+            run_root=run_root,
+            config=config,
+            rows=rows,
+            best_config=None,
+            final_output=None,
+        )
+
+        return {
+            "status": "failed",
+            "reason": reason,
+            "run_root": run_root,
+            "results": results,
+            "best_config": None,
+            "final_output": None,
+        }
 
     for index, trial_config in enumerate(_random_configs(config), start=1):
         rows.append(
@@ -763,7 +905,9 @@ def run_two_stage_transformer_hpt(
 
     if best_config is not None and config.final_retrain:
         _archive_existing_final(results_dir, run_root)
+
         run_name = "final_retrain_best_transformer"
+
         run = _start_trial_run(
             enabled=wandb_enabled,
             project=wandb_project,
@@ -779,6 +923,7 @@ def run_two_stage_transformer_hpt(
                 "test_used": True,
             },
         )
+
         try:
             final_output = train_transformer_classifier(
                 train_df,
@@ -813,6 +958,7 @@ def run_two_stage_transformer_hpt(
                 max_eval_samples=config.max_eval_samples,
                 smoke_test=config.smoke_test,
             )
+
             if run is not None and final_output and final_output.get("result"):
                 result = final_output["result"]
                 run.log(
@@ -822,10 +968,19 @@ def run_two_stage_transformer_hpt(
                         "test/weighted_f1": float(result["weighted_f1"]),
                     }
                 )
+
         finally:
             finish_wandb_run(run)
 
-    results = _write_hpt_artifacts(project_root=project_root, run_root=run_root, config=config, rows=rows, best_config=best_config, final_output=final_output)
+    results = _write_hpt_artifacts(
+        project_root=project_root,
+        run_root=run_root,
+        config=config,
+        rows=rows,
+        best_config=best_config,
+        final_output=final_output,
+    )
+
     _log_hpt_summary_to_wandb(
         project_root=project_root,
         config=config,
@@ -836,6 +991,7 @@ def run_two_stage_transformer_hpt(
         wandb_entity=wandb_entity,
         wandb_mode=wandb_mode,
     )
+
     return {
         "status": "completed" if best_config is not None else "failed",
         "reason": "" if best_config is not None else "No completed HPT trial produced validation macro-F1.",
