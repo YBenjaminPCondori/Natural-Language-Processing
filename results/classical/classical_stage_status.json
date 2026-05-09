@@ -1,6 +1,6 @@
 {
-  "created_at_utc": "2026-05-08T07:48:34.041660+00:00",
-  "started_at_utc": "2026-05-08T07:03:19.612528+00:00",
+  "created_at_utc": "2026-05-08T14:37:03.397259+00:00",
+  "started_at_utc": "2026-05-08T14:03:17.299554+00:00",
   "stage": "classical_models",
   "status": "completed",
   "error_type": "",
@@ -9,7 +9,7 @@
   "config": {
     "dataset_name": "LEDGAR",
     "seed": 42,
-    "tokenizer_name": "legal_safe",
+    "tokenizer_name": "negation_aware",
     "max_features_list": [
       10000,
       30000
@@ -54,7 +54,7 @@
     "test_rows_used": 4732
   },
   "outputs": {
-    "results": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/classical/classical_results.csv",
-    "validation_grid": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/classical/classical_validation_grid.csv"
+    "results": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\results\\classical\\classical_results.csv",
+    "validation_grid": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\results\\classical\\classical_validation_grid.csv"
   }
 }

@@ -1,6 +1,6 @@
 {
-  "created_at_utc": "2026-05-08T06:16:25.704489+00:00",
-  "started_at_utc": "2026-05-08T06:16:23.626149+00:00",
+  "created_at_utc": "2026-05-08T16:29:14.583055+00:00",
+  "started_at_utc": "2026-05-08T16:29:13.002537+00:00",
   "stage": "baseline_models",
   "status": "completed",
   "error_type": "",
@@ -16,6 +16,6 @@
     "test_rows_evaluated": 4732
   },
   "outputs": {
-    "results": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/results/baselines/baseline_results.csv"
+    "results": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\results\\baselines\\baseline_results.csv"
   }
 }

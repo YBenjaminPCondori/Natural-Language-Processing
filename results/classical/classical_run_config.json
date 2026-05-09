@@ -3,33 +3,25 @@
   "seed": 42,
   "tokenizer_name": "legal_safe",
   "max_features_list": [
-    10000,
     30000
   ],
   "ngram_ranges": [
-    [
-      1,
-      1
-    ],
     [
       1,
       2
     ]
   ],
   "min_df_list": [
-    1,
     2,
     5
   ],
   "c_values": [
     0.1,
     1.0,
-    3.0,
     10.0
   ],
   "nb_alpha_values": [
     0.1,
-    0.5,
     1.0
   ],
   "run_naive_bayes": true,

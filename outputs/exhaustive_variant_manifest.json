@@ -1,5 +1,5 @@
 {
-  "requires_modules_folder": "/content/drive/MyDrive/Colab Notebooks/Education/NLP/Natural-Language-Processing/modules",
+  "requires_modules_folder": "C:\\Users\\ybenj\\Documents\\GitHub\\Education\\INM434 Natural-Language-Processing\\Natural-Language-Processing\\modules",
   "flags": {
     "RUN_CLASSICAL_MODELS": true,
     "RUN_NAIVE_BAYES": true,
@@ -23,8 +23,8 @@
   },
   "classical": {
     "tokenizers": [
-      "negation_aware",
-      "legal_safe"
+      "legal_safe",
+      "negation_aware"
     ],
     "models_exposed_by_module": [
       "logistic_regression",
@@ -33,33 +33,25 @@
       "complement_nb"
     ],
     "max_features_list": [
-      10000,
       30000
     ],
     "ngram_ranges": [
-      [
-        1,
-        1
-      ],
       [
         1,
         2
       ]
     ],
     "min_df_list": [
-      1,
       2,
       5
     ],
     "c_values": [
       0.1,
       1.0,
-      3.0,
       10.0
     ],
     "nb_alpha_values": [
       0.1,
-      0.5,
       1.0
     ]
   },
